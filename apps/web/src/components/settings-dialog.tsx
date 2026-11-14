@@ -11,7 +11,12 @@ import { useTheme } from "@/components/theme-provider";
 import { AccountSettings } from "@/components/auth/account-settings";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BellIcon, PaletteIcon, UserRoundIcon, XIcon } from "lucide-react";
+import {
+  BellIcon,
+  ArrowLeftIcon,
+  PaletteIcon,
+  UserRoundIcon,
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -452,18 +457,6 @@ export function SettingsDialog() {
         <DialogDescription className="sr-only">
           Manage your workspace appearance and account settings.
         </DialogDescription>
-        <DialogClose
-          render={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="absolute top-[max(1.125rem,env(safe-area-inset-top))] right-[max(1.125rem,env(safe-area-inset-right))] z-20 md:top-[1.125rem] md:right-[1.125rem]"
-            />
-          }
-        >
-          <XIcon />
-          <span className="sr-only">Close settings</span>
-        </DialogClose>
         <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background/50 text-foreground md:flex-row md:rounded-lg">
           <aside className="min-h-0 w-full shrink-0 md:w-48">
             <ScrollArea
@@ -472,13 +465,21 @@ export function SettingsDialog() {
               viewportProps={{ tabIndex: undefined }}
             >
               <div className="flex h-full flex-col px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:p-4">
-                <DialogTitle
-                  ref={titleRef}
-                  tabIndex={-1}
-                  className="px-2 py-1.5 text-sm font-semibold tracking-tight outline-none"
-                >
-                  Settings
-                </DialogTitle>
+                <div className="flex items-center gap-1">
+                  <DialogClose
+                    render={<Button variant="ghost" size="icon-sm" />}
+                  >
+                    <ArrowLeftIcon />
+                    <span className="sr-only">Close settings</span>
+                  </DialogClose>
+                  <DialogTitle
+                    ref={titleRef}
+                    tabIndex={-1}
+                    className="py-1.5 text-sm font-semibold tracking-tight outline-none"
+                  >
+                    Settings
+                  </DialogTitle>
+                </div>
                 <div
                   aria-label="Settings sections"
                   aria-orientation="vertical"

@@ -4,10 +4,11 @@ import { CircleCheckIcon, LoaderCircleIcon } from "lucide-react";
 import { AvatarPicker } from "@/components/auth/avatar-picker";
 import { ChangePasswordForm } from "@/components/auth/change-password-form";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 
 export function AccountSettings() {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending: sessionPending } = authClient.useSession();
   const accounts = useQuery({
     queryKey: ["auth", "linked-accounts", session?.user.id],
     enabled: !!session?.user.id,
@@ -67,7 +68,11 @@ export function AccountSettings() {
           Profile
         </h3>
         <div className="mt-4 overflow-hidden rounded-lg border border-border/70 bg-card">
-          <AvatarPicker />
+          {sessionPending && !session ? (
+            <AvatarPickerSkeleton />
+          ) : (
+            <AvatarPicker />
+          )}
         </div>
       </div>
       <div className="mt-9">
@@ -89,13 +94,10 @@ export function AccountSettings() {
               aria-live="polite"
             >
               {accounts.isPending ? (
-                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <LoaderCircleIcon
-                    aria-hidden="true"
-                    className="size-4 motion-safe:animate-spin"
-                  />
-                  Checking connection…
-                </p>
+                <>
+                  <span className="sr-only">Loading sign-in methods</span>
+                  <Skeleton aria-hidden="true" className="h-9 w-36" />
+                </>
               ) : null}
               {linked === true ? (
                 <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
@@ -134,7 +136,11 @@ export function AccountSettings() {
             ) : null}
           </div>
         </div>
-        {hasPassword ? (
+        {accounts.isPending ? (
+          <div className="mt-4">
+            <PasswordCardSkeleton />
+          </div>
+        ) : hasPassword ? (
           <div className="mt-4">
             <ChangePasswordForm
               key={session?.user.id}
@@ -144,5 +150,55 @@ export function AccountSettings() {
         ) : null}
       </div>
     </section>
+  );
+}
+
+function AvatarPickerSkeleton() {
+  return (
+    <div role="status" aria-label="Loading profile">
+      <div className="flex items-center gap-3 bg-card px-4 py-4 sm:px-5">
+        <Skeleton className="size-14 shrink-0 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-14" />
+          <Skeleton className="h-4 w-52 max-w-full" />
+        </div>
+      </div>
+      <div className="rounded-t-lg border-t border-border/70 bg-background px-4 py-4 sm:px-5">
+        <div className="flex flex-wrap gap-3 p-0.5" aria-hidden="true">
+          {Array.from({ length: 15 }, (_, index) => (
+            <Skeleton key={index} className="size-9 shrink-0 rounded-full" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PasswordCardSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading password settings"
+      className="overflow-hidden rounded-lg border border-border/70 bg-card"
+    >
+      <div className="space-y-2 px-4 py-4 sm:px-5">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-4 w-64 max-w-full" />
+      </div>
+      <div
+        className="space-y-4 rounded-t-lg border-t border-border/70 bg-background px-4 py-4 sm:px-5"
+        aria-hidden="true"
+      >
+        {Array.from({ length: 3 }, (_, index) => (
+          <div key={index} className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ))}
+        <div className="flex justify-end">
+          <Skeleton className="h-9 w-36" />
+        </div>
+      </div>
+    </div>
   );
 }

@@ -104,6 +104,10 @@ export async function readClipboardAssetPayload(): Promise<ClipboardAssetPayload
   }
 
   const text = await readPreferredClipboardText(clipboardItem);
+  return classifyClipboardText(text);
+}
+
+export function classifyClipboardText(text: string): ClipboardAssetPayload {
   const trimmedText = text.trim();
   if (!trimmedText) {
     return { kind: "empty" };
@@ -117,19 +121,44 @@ export async function readClipboardAssetPayload(): Promise<ClipboardAssetPayload
     };
   }
 
-  if (/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(trimmedText)) {
-    const raw = trimmedText.slice(1).toLowerCase();
-    const expanded =
-      raw.length === 3 || raw.length === 4
-        ? [...raw].map((digit) => digit + digit).join("")
-        : raw;
-    return { kind: "color-hex", hex: `#${expanded}` };
-  }
+  const hex = parsePastedColor(trimmedText);
+  if (hex) return { kind: "color-hex", hex };
 
   return {
     kind: "text-note",
     content: text,
   };
+}
+
+/** Parse explicit CSS colors without interpreting ordinary words as colors. */
+export function parsePastedColor(value: string): string | undefined {
+  const text = value.trim().toLowerCase();
+  if (/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(text)) {
+    const raw = text.slice(1);
+    return `#${raw.length <= 4 ? [...raw].map((digit) => digit + digit).join("") : raw}`;
+  }
+
+  if (!/^(?:rgba?|hsla?)\([^()]+\)$/.test(text)) return undefined;
+  // The browser validates CSS syntax and converts RGB/HSL to sRGB. A canvas
+  // serializes opaque colors as hex and translucent colors as rgba().
+  if (typeof document === "undefined") return undefined;
+  const context = document.createElement("canvas").getContext("2d");
+  if (!context) return undefined;
+  context.fillStyle = "#010203";
+  context.fillStyle = text;
+  const first = context.fillStyle;
+  context.fillStyle = "#040506";
+  context.fillStyle = text;
+  if (first !== context.fillStyle) return undefined;
+  if (/^#[0-9a-f]{6}$/.test(first)) return first;
+  const rgba =
+    /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/.exec(first);
+  if (!rgba) return undefined;
+  const byte = (n: number) => Math.round(n).toString(16).padStart(2, "0");
+  return `#${rgba
+    .slice(1, 4)
+    .map((channel) => byte(Number(channel)))
+    .join("")}${byte(Number(rgba[4]) * 255)}`;
 }
 
 /** Reads a browser-dragged hyperlink without treating arbitrary dropped text as a URL. */

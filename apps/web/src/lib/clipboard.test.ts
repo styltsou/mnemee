@@ -1,6 +1,35 @@
 import { describe, expect, it } from "vitest";
 
-import { getDroppedHttpUrl, getPreferredClipboardText } from "./clipboard";
+import {
+  classifyClipboardText,
+  getDroppedHttpUrl,
+  getPreferredClipboardText,
+  parsePastedColor,
+} from "./clipboard";
+
+describe("clipboard text classification", () => {
+  it.each([
+    [" #AbC ", "#aabbcc"],
+    ["#abcd", "#aabbccdd"],
+    ["#12345678", "#12345678"],
+  ])("recognizes %s as a color", (input, hex) => {
+    expect(classifyClipboardText(input)).toEqual({ kind: "color-hex", hex });
+  });
+
+  it("keeps URLs and ordinary or invalid text in their original categories", () => {
+    expect(classifyClipboardText("https://example.com/#abc")).toEqual({
+      kind: "link-url",
+      url: "https://example.com/#abc",
+    });
+    for (const text of ["#12345", "#hello", "red", "color: #abc"]) {
+      expect(classifyClipboardText(text)).toEqual({
+        kind: "text-note",
+        content: text,
+      });
+    }
+    expect(parsePastedColor("#12zzzz")).toBeUndefined();
+  });
+});
 
 describe("getPreferredClipboardText", () => {
   it("prefers the Markdown clipboard representation", () => {

@@ -16,14 +16,18 @@ import {
   PEXELS_PHOTO_DRAG_TYPE,
   type PexelsPhotoDragData,
 } from "@/lib/pexels-dnd";
-import { getDroppedHttpUrl, getPreferredClipboardText } from "@/lib/clipboard";
+import {
+  classifyClipboardText,
+  getDroppedHttpUrl,
+  getPreferredClipboardText,
+} from "@/lib/clipboard";
 import { inferVideoMime } from "@/lib/video-url";
 import {
   getPexelsBrowserScope,
   useSessionStore,
   useTransientStore,
 } from "@/store";
-import { cn, parseHttpUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   getPexelsDropTopLeft,
   PexelsDragOverlay,
@@ -57,7 +61,7 @@ export function BoardUploadZone({
     return getBoardPastePlacement(boardKey, boardVisibleBounds[boardKey]);
   }, [boardKey]);
   const {
-    createTextNote,
+    addClipboardAsset,
     importPexelsPhotos,
     createLinkFromUrl,
     isPending,
@@ -221,18 +225,12 @@ export function BoardUploadZone({
       return;
     }
 
-    const text = getPreferredClipboardText(event.clipboardData);
-    const trimmedText = text.trim();
-    const url = parseHttpUrl(trimmedText);
-    if (url) {
+    const payload = classifyClipboardText(
+      getPreferredClipboardText(event.clipboardData),
+    );
+    if (payload.kind !== "empty") {
       event.preventDefault();
-      void createLinkFromUrl(url);
-      return;
-    }
-
-    if (trimmedText) {
-      event.preventDefault();
-      void createTextNote(text);
+      void addClipboardAsset(payload);
     }
   }
 

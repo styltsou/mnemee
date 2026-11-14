@@ -1,3 +1,4 @@
+import { reserveCanvasFrontIndex } from "@/services/collection/canvas-stacking.service";
 import { and, eq, isNull } from "drizzle-orm";
 import slugify from "slugify";
 
@@ -139,6 +140,12 @@ export class CollectionMutationService {
     );
 
     const folder = await db.transaction(async (tx) => {
+      const frontIndex = await reserveCanvasFrontIndex(
+        tx,
+        orgId,
+        collection.id,
+        parentTarget.parentFolderId,
+      );
       const [insertedFolder] = await tx
         .insert(folders)
         .values({
@@ -158,6 +165,7 @@ export class CollectionMutationService {
         organizationId: orgId,
         collectionId: collection.id,
         parentFolderId: parentTarget.parentFolderId,
+        frontIndex,
         nodeType: "folder",
         folderId: insertedFolder.id,
         positionX: data.position?.x,
@@ -168,7 +176,7 @@ export class CollectionMutationService {
         pathFolderNames: [...parentTarget.pathFolderNames, insertedFolder.name],
       });
 
-      return insertedFolder;
+      return { ...insertedFolder, frontIndex };
     });
 
     if (!folder) {
@@ -184,6 +192,7 @@ export class CollectionMutationService {
       previews: [],
       createdAt: folder.createdAt.toISOString(),
       position: data.position ?? null,
+      frontIndex: folder.frontIndex,
     };
   }
 
@@ -200,6 +209,12 @@ export class CollectionMutationService {
     );
 
     const note = await db.transaction(async (tx) => {
+      const frontIndex = await reserveCanvasFrontIndex(
+        tx,
+        orgId,
+        collection.id,
+        parentTarget.parentFolderId,
+      );
       const [insertedAsset] = await tx
         .insert(assets)
         .values({
@@ -230,6 +245,7 @@ export class CollectionMutationService {
         organizationId: orgId,
         collectionId: collection.id,
         parentFolderId: parentTarget.parentFolderId,
+        frontIndex,
         nodeType: "asset",
         assetId: insertedAsset.id,
         positionX: data.position?.x,
@@ -240,7 +256,7 @@ export class CollectionMutationService {
         pathFolderNames: parentTarget.pathFolderNames,
       });
 
-      return { ...insertedAsset, markdown };
+      return { ...insertedAsset, markdown, frontIndex };
     });
 
     if (!note) {
@@ -262,7 +278,7 @@ export class CollectionMutationService {
       createdAt: note.createdAt.toISOString(),
       updatedAt: note.updatedAt.toISOString(),
       position: data.position ?? null,
-      frontIndex: null,
+      frontIndex: note.frontIndex,
     };
   }
 
@@ -286,6 +302,12 @@ export class CollectionMutationService {
       : getColorName(hex!);
 
     const color = await db.transaction(async (tx) => {
+      const frontIndex = await reserveCanvasFrontIndex(
+        tx,
+        orgId,
+        collection.id,
+        parentTarget.parentFolderId,
+      );
       const [insertedAsset] = await tx
         .insert(assets)
         .values({
@@ -311,6 +333,7 @@ export class CollectionMutationService {
         organizationId: orgId,
         collectionId: collection.id,
         parentFolderId: parentTarget.parentFolderId,
+        frontIndex,
         nodeType: "asset",
         assetId: insertedAsset.id,
         positionX: data.position?.x,
@@ -321,7 +344,7 @@ export class CollectionMutationService {
         pathFolderNames: parentTarget.pathFolderNames,
       });
 
-      return insertedAsset;
+      return { ...insertedAsset, frontIndex };
     });
 
     if (!color) {
@@ -344,7 +367,7 @@ export class CollectionMutationService {
       createdAt: color.createdAt.toISOString(),
       updatedAt: color.updatedAt.toISOString(),
       position: data.position ?? null,
-      frontIndex: null,
+      frontIndex: color.frontIndex,
     };
   }
 

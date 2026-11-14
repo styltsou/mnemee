@@ -15,6 +15,10 @@ import { AppError, ErrorCode } from "@/lib/errors";
 import { parseCollectionNodeId } from "@/lib/collection-node-id";
 import { first } from "@/lib/query";
 import {
+  lockCanvasStack,
+  reserveCanvasFrontIndex,
+} from "./canvas-stacking.service";
+import {
   getCollectionBySlug,
   resolveTargetInCollection,
 } from "./collection-target-resolver";
@@ -64,6 +68,21 @@ export class CollectionAssetMoveService {
     }
 
     return db.transaction(async (tx) => {
+      const scope = first(
+        await tx
+          .select({ parentFolderId: collectionNodes.parentFolderId })
+          .from(collectionNodes)
+          .where(
+            and(
+              eq(collectionNodes.organizationId, orgId),
+              eq(collectionNodes.collectionId, collection.id),
+              eq(collectionNodes.folderId, target.entityId),
+            ),
+          )
+          .limit(1),
+      );
+      if (!scope) throw new AppError(ErrorCode.NOT_FOUND, "Folder not found");
+      await lockCanvasStack(tx, collection.id, scope.parentFolderId);
       const folderNode = first(
         await tx
           .select({
@@ -90,6 +109,9 @@ export class CollectionAssetMoveService {
       );
       if (!folderNode?.folderId) {
         throw new AppError(ErrorCode.NOT_FOUND, "Folder not found");
+      }
+      if (folderNode.parentFolderId !== scope.parentFolderId) {
+        throw new AppError(ErrorCode.CONFLICT, "The folder moved");
       }
 
       const directChildren = await tx
@@ -203,7 +225,12 @@ export class CollectionAssetMoveService {
             parentFolderId: folderNode.parentFolderId,
             positionX: child.positionX! + offset.x,
             positionY: child.positionY! + offset.y,
-            frontIndex: null,
+            frontIndex: await reserveCanvasFrontIndex(
+              tx,
+              orgId,
+              collection.id,
+              folderNode.parentFolderId,
+            ),
           })
           .where(eq(collectionNodes.id, child.id));
       }
@@ -290,6 +317,7 @@ export class CollectionAssetMoveService {
     }
 
     return db.transaction(async (tx) => {
+      await lockCanvasStack(tx, collection.id, target?.entityId ?? null);
       const movesByNodeId = new Map<string, MoveCollectionNodeParentResult>();
       const oldToNewNodeIds = new Map<number, number>();
       const targetFolder = target
@@ -950,6 +978,37 @@ export class CollectionAssetMoveService {
         }
       }
 
+      // Incoming items join the destination above all existing cards and text.
+      for (const nodeId of data.nodeIds) {
+        if (!movesByNodeId.get(nodeId)?.moved || nodeId.startsWith("arrow-"))
+          continue;
+        const frontIndex = await reserveCanvasFrontIndex(
+          tx,
+          orgId,
+          collection.id,
+          targetFolder.folderId,
+        );
+        if (nodeId.startsWith("text-")) {
+          await tx
+            .update(canvasObjects)
+            .set({ frontIndex })
+            .where(eq(canvasObjects.id, Number(nodeId.slice(5))));
+        } else {
+          const parsed = parseCollectionNodeId(nodeId);
+          await tx
+            .update(collectionNodes)
+            .set({ frontIndex })
+            .where(
+              and(
+                eq(collectionNodes.organizationId, orgId),
+                eq(collectionNodes.collectionId, collection.id),
+                parsed.nodeType === "folder"
+                  ? eq(collectionNodes.folderId, parsed.entityId)
+                  : eq(collectionNodes.assetId, parsed.entityId),
+              ),
+            );
+        }
+      }
       return {
         moves: [
           ...data.nodeIds.map((nodeId) => movesByNodeId.get(nodeId)!),

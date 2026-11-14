@@ -231,6 +231,7 @@ export type CreatedFolder = {
   previews: FolderChildPreview[];
   createdAt: string;
   position: BoardPosition | null;
+  frontIndex?: number | null;
 };
 
 export type CreateFolderResponse = {

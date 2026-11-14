@@ -1,3 +1,4 @@
+import { reserveCanvasFrontIndex } from "@/services/collection/canvas-stacking.service";
 import {
   and,
   count,
@@ -219,11 +220,19 @@ export class UrlUnfurlService {
         resourceId: resource.id,
         originalUrl: normalized.originalUrl,
       });
+      let frontIndex: number | null = null;
       if (target) {
+        frontIndex = await reserveCanvasFrontIndex(
+          tx,
+          orgId,
+          target.collection.id,
+          target.parentFolderId,
+        );
         await tx.insert(collectionNodes).values({
           organizationId: orgId,
           collectionId: target.collection.id,
           parentFolderId: target.parentFolderId,
+          frontIndex,
           nodeType: "asset",
           assetId: asset.id,
           positionX: input.position?.x,
@@ -282,13 +291,23 @@ export class UrlUnfurlService {
         attemptId = attempt?.id;
       }
 
-      return { assetId: asset.id, attemptId, generation: queuedGeneration };
+      return {
+        assetId: asset.id,
+        attemptId,
+        generation: queuedGeneration,
+        frontIndex,
+      };
     });
 
     if (result.attemptId) {
       await this.enqueueResolutionOrFail(result.attemptId, result.generation);
     }
-    return this.getLinkNode(orgId, result.assetId, input.position ?? null);
+    const node = await this.getLinkNode(
+      orgId,
+      result.assetId,
+      input.position ?? null,
+    );
+    return { ...node, frontIndex: result.frontIndex };
   }
 
   async refreshLink(

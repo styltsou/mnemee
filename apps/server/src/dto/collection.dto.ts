@@ -678,6 +678,7 @@ export const CreatedFolderSchema = z.object({
   previews: z.array(FolderChildPreviewSchema),
   createdAt: z.string(),
   position: BoardPositionSchema.nullable(),
+  frontIndex: z.number().int().min(0).max(100_000).nullable().optional(),
 });
 
 export type CreatedFolder = z.infer<typeof CreatedFolderSchema>;

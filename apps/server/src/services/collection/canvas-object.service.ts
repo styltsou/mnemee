@@ -1,3 +1,4 @@
+import { reserveCanvasFrontIndex } from "@/services/collection/canvas-stacking.service";
 import { and, eq, inArray, isNull, or } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -389,6 +390,12 @@ export class CanvasObjectService {
       data.parentFolderPath,
     );
     const row = await db.transaction(async (tx) => {
+      const frontIndex = await reserveCanvasFrontIndex(
+        tx,
+        orgId,
+        collection.id,
+        parent.parentFolderId,
+      );
       const [object] = await tx
         .insert(canvasObjects)
         .values({
@@ -396,6 +403,7 @@ export class CanvasObjectService {
           collectionId: collection.id,
           parentFolderId: parent.parentFolderId,
           objectType: "text",
+          frontIndex,
           createdByUserId: userId,
           updatedByUserId: userId,
         })
@@ -421,7 +429,7 @@ export class CanvasObjectService {
       font: data.font,
       size: data.size,
       color: data.color,
-      frontIndex: null,
+      frontIndex: row.frontIndex,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };

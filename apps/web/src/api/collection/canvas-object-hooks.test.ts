@@ -1,14 +1,18 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/lib/api";
 
 import type {
   CanvasObjectResponse,
   CollectionContentsResponse,
   UpdateCanvasArrowInput,
   UpdateCanvasTextInput,
+  UpdateCanvasItemFrontIndexesInput,
+  UpdateCanvasItemFrontIndexesResponse,
 } from "./types";
 import {
   createCanvasObjectUpdateQueue,
+  createCanvasFrontOrderQueue,
   reconcileCreatedArrowInContents,
   updateFrontIndexesInContents,
 } from "./canvas-object-hooks";
@@ -77,6 +81,126 @@ const contentsKey = [
   undefined,
 ] as const;
 
+function createFrontOrderQueue(
+  queryClient: QueryClient,
+  save: (
+    data: UpdateCanvasItemFrontIndexesInput,
+  ) => Promise<UpdateCanvasItemFrontIndexesResponse>,
+) {
+  return createCanvasFrontOrderQueue({
+    queryClient,
+    filter: {
+      predicate: (query) => query.queryKey[0] === "collectionContents",
+    },
+    save,
+  });
+}
+
+describe("canvas front order saves", () => {
+  it("serializes and coalesces promotions without letting old responses replace newer order", async () => {
+    const client = new QueryClient();
+    client.setQueryData(contentsKey, contents);
+    const first = deferred<UpdateCanvasItemFrontIndexesResponse>();
+    const last = deferred<UpdateCanvasItemFrontIndexesResponse>();
+    const save = vi
+      .fn()
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(last.promise);
+    const queue = createFrontOrderQueue(client, save);
+    const promote = (id: string, frontIndex: number) =>
+      queue.enqueue({
+        itemIds: [id],
+        expectedParentFolderNodeId: null,
+        optimisticItems: [{ id, frontIndex }],
+      });
+    const a = promote("note-1", 1);
+    const b = promote("text-2", 2);
+    const c = promote("note-1", 3);
+    expect(save).toHaveBeenCalledTimes(1);
+    first.resolve({ items: [{ id: "note-1", frontIndex: 1 }] });
+    await a;
+    expect(
+      client.getQueryData<CollectionContentsResponse>(contentsKey)?.nodes[0]
+        ?.frontIndex,
+    ).toBe(3);
+    expect(save.mock.calls[1]?.[0].itemIds).toEqual(["text-2", "note-1"]);
+    last.resolve({
+      items: [
+        { id: "text-2", frontIndex: 2 },
+        { id: "note-1", frontIndex: 3 },
+      ],
+    });
+    await Promise.all([b, c]);
+    expect(
+      client.getQueryData<CollectionContentsResponse>(contentsKey)?.nodes[0]
+        ?.frontIndex,
+    ).toBe(3);
+  });
+
+  it("keeps local order and subsequent canvas edits when a save fails", async () => {
+    const client = new QueryClient();
+    client.setQueryData(contentsKey, contents);
+    const request = deferred<UpdateCanvasItemFrontIndexesResponse>();
+    const save = vi.fn().mockReturnValue(request.promise);
+    const queue = createFrontOrderQueue(client, save);
+    const result = queue.enqueue({
+      itemIds: ["note-1"],
+      expectedParentFolderNodeId: null,
+      optimisticItems: [{ id: "note-1", frontIndex: 8 }],
+    });
+    client.setQueryData<CollectionContentsResponse>(contentsKey, (current) => ({
+      ...current!,
+      nodes: current!.nodes.map((node) => ({
+        ...node,
+        position: { x: 500, y: 600 },
+      })),
+      canvasObjects: [],
+    }));
+    request.reject(new ApiError(409, "Item moved"));
+    await expect(result).rejects.toThrow("Item moved");
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(
+      client.getQueryData<CollectionContentsResponse>(contentsKey),
+    ).toMatchObject({
+      nodes: [{ frontIndex: 8, position: { x: 500, y: 600 } }],
+      canvasObjects: [],
+    });
+  });
+
+  it("retries a transient failure once", async () => {
+    const client = new QueryClient();
+    client.setQueryData(contentsKey, contents);
+    const save = vi
+      .fn()
+      .mockRejectedValueOnce(new ApiError(503, "Unavailable"))
+      .mockResolvedValueOnce({ items: [{ id: "note-1", frontIndex: 5 }] });
+    await createFrontOrderQueue(client, save).enqueue({
+      itemIds: ["note-1"],
+      expectedParentFolderNodeId: null,
+      optimisticItems: [],
+    });
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(
+      client.getQueryData<CollectionContentsResponse>(contentsKey)?.nodes[0]
+        ?.frontIndex,
+    ).toBe(5);
+  });
+
+  it("saves selections larger than the API limit in ordered batches", async () => {
+    const ids = Array.from({ length: 205 }, (_, index) => `note-${index + 1}`);
+    const save = vi.fn().mockResolvedValue({ items: [] });
+    await createFrontOrderQueue(new QueryClient(), save).enqueue({
+      itemIds: ids,
+      expectedParentFolderNodeId: null,
+      optimisticItems: [],
+    });
+    expect(save.mock.calls.map(([data]) => data.itemIds.length)).toEqual([
+      100, 100, 5,
+    ]);
+    expect(save.mock.calls.flatMap(([data]) => data.itemIds)).toEqual(ids);
+  });
+});
+
 function textObject(update: UpdateCanvasTextInput = {}): CanvasObjectResponse {
   const object = contents.canvasObjects[0];
   if (!object || object.type !== "text") {
@@ -110,6 +234,23 @@ function createTextUpdateQueue(
     save,
   });
 }
+
+it("preserves a newer layer order when an earlier text edit completes", async () => {
+  const client = new QueryClient();
+  client.setQueryData(contentsKey, contents);
+  const request = deferred<CanvasObjectResponse>();
+  const queue = createTextUpdateQueue(client, () => request.promise);
+  const result = queue.enqueue("text-2", { color: "violet" });
+  client.setQueryData<CollectionContentsResponse>(contentsKey, (current) =>
+    updateFrontIndexesInContents(current, [{ id: "text-2", frontIndex: 20 }]),
+  );
+  request.resolve(textObject({ color: "violet" }));
+  await result;
+  expect(
+    client.getQueryData<CollectionContentsResponse>(contentsKey)
+      ?.canvasObjects[0],
+  ).toMatchObject({ color: "violet", frontIndex: 20 });
+});
 
 function arrowObject(
   update: UpdateCanvasArrowInput = {},

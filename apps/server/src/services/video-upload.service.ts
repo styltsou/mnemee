@@ -1,3 +1,4 @@
+import { reserveCanvasFrontIndex } from "@/services/collection/canvas-stacking.service";
 import { and, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -71,6 +72,12 @@ export class VideoUploadService {
           organizationId: orgId,
           collectionId: target.collection.id,
           parentFolderId: target.parentFolderId,
+          frontIndex: await reserveCanvasFrontIndex(
+            tx,
+            orgId,
+            target.collection.id,
+            target.parentFolderId,
+          ),
           nodeType: "asset",
           assetId: asset.id,
           positionX: data.position?.x ?? null,
@@ -167,6 +174,12 @@ export class VideoUploadService {
           organizationId: orgId,
           collectionId: target.collection.id,
           parentFolderId: target.parentFolderId,
+          frontIndex: await reserveCanvasFrontIndex(
+            tx,
+            orgId,
+            target.collection.id,
+            target.parentFolderId,
+          ),
           nodeType: "asset",
           assetId: asset.id,
           positionX: data.position?.x ?? null,

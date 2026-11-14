@@ -118,6 +118,7 @@ import {
   getCanvasRestingZIndex,
   getCanvasTextRestingZIndex,
   promoteCanvasFrontIndexes,
+  resolveCanvasInsertionFrontIndexes,
   updateExpandedNoteOrder,
 } from "./canvas-node-stacking";
 import {
@@ -1812,6 +1813,34 @@ function CanvasSurface({
     expandedNoteOrderRef.current = expandedNoteOrder;
 
     setFlowNodes((current) => {
+      const textObjects = canvasObjects.filter(
+        (object): object is CanvasTextObject => object.type === "text",
+      );
+      if (
+        draftText &&
+        !textObjects.some((object) => object.clientId === draftText.clientId)
+      ) {
+        textObjects.push(draftText);
+      }
+      const insertionFrontIndexes = resolveCanvasInsertionFrontIndexes(
+        current.map((node) =>
+          node.type === "asset"
+            ? {
+                id: node.id,
+                clientId: getNodeClientId(node.data.collectionNode),
+                frontIndex: node.data.collectionNode.frontIndex,
+              }
+            : node.data.object,
+        ),
+        [
+          ...nodes.map((node) => ({
+            id: node.id,
+            clientId: getNodeClientId(node),
+            frontIndex: node.frontIndex,
+          })),
+          ...textObjects,
+        ],
+      );
       const currentById = new Map(current.map((node) => [node.id, node]));
       const currentByClientId = new Map<string, CanvasFlowNode>();
       current.forEach((node) => {
@@ -1824,7 +1853,13 @@ function CanvasSurface({
         }
       });
 
-      const assetNodes = nodes.map((node, index) => {
+      const assetNodes = nodes.map((incomingNode, index) => {
+        const node = insertionFrontIndexes.has(incomingNode.id)
+          ? {
+              ...incomingNode,
+              frontIndex: insertionFrontIndexes.get(incomingNode.id)!,
+            }
+          : incomingNode;
         const identity = canvasCardIdentity(node);
         const currentNode = (currentById.get(node.id) ??
           currentByClientId.get(getNodeClientId(node) ?? "")) as
@@ -1862,25 +1897,22 @@ function CanvasSurface({
           currentNode,
         );
       });
-      const textObjects = canvasObjects.filter(
-        (object): object is CanvasTextObject => object.type === "text",
-      );
-      if (
-        draftText &&
-        !textObjects.some((object) => object.clientId === draftText.clientId)
-      ) {
-        textObjects.push(draftText);
-      }
-      const textNodes = textObjects.map((object) =>
-        makeTextFlowNode(
+      const textNodes = textObjects.map((incomingObject) => {
+        const object = insertionFrontIndexes.has(incomingObject.id)
+          ? {
+              ...incomingObject,
+              frontIndex: insertionFrontIndexes.get(incomingObject.id)!,
+            }
+          : incomingObject;
+        return makeTextFlowNode(
           object,
           makeTextNodeData(object),
           (currentById.get(object.id) ??
             currentByClientId.get(object.clientId ?? "")) as
             | CanvasTextFlowNode
             | undefined,
-        ),
-      );
+        );
+      });
       return [...assetNodes, ...textNodes];
     });
   }, [canvasObjects, draftText, makeNodeData, makeTextNodeData, nodes]);
@@ -2775,7 +2807,7 @@ function CanvasSurface({
             const dragNode = dragNodes.find(
               (candidate) => candidate.id === itemId,
             );
-            if (!dragNode || dragNode.id.startsWith("text-draft-")) {
+            if (!dragNode || !isPersistedCanvasItemId(itemId)) {
               return false;
             }
             return (

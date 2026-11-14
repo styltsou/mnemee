@@ -1004,6 +1004,7 @@ export function useCreateFolder(workspaceSlug: string, collectionSlug: string) {
                 previews: data.folder.previews,
                 createdAt: data.folder.createdAt,
                 position: data.folder.position,
+                frontIndex: data.folder.frontIndex,
               },
             ],
           };

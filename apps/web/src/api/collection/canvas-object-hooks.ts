@@ -6,7 +6,7 @@ import {
   type QueryClient,
   type QueryKey,
 } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { ApiError } from "@/lib/api";
 
 import {
   createCanvasArrow,
@@ -27,6 +27,7 @@ import type {
   UpdateCanvasArrowInput,
   UpdateCanvasTextInput,
   UpdateCanvasItemFrontIndexesInput,
+  UpdateCanvasItemFrontIndexesResponse,
 } from "./types";
 import { createLatestPatchQueue } from "./latest-patch-queue";
 
@@ -99,7 +100,9 @@ export function createCanvasObjectUpdateQueue<TPatch extends object>({
         (current) =>
           updateObjectInContents(current, objectId, (candidate) =>
             candidate.type === objectType && object.type === objectType
-              ? persisted
+              ? candidate.type === "text" && persisted.type === "text"
+                ? { ...persisted, frontIndex: candidate.frontIndex }
+                : persisted
               : candidate,
           ),
       );
@@ -119,6 +122,9 @@ export function createCanvasObjectUpdateQueue<TPatch extends object>({
                     ...confirmed,
                     id: candidate.id,
                     clientId: candidate.clientId ?? confirmed.clientId,
+                    ...(candidate.type === "text" && confirmed.type === "text"
+                      ? { frontIndex: candidate.frontIndex }
+                      : {}),
                   }
                 : candidate,
             ),
@@ -231,42 +237,105 @@ type UpdateCanvasItemFrontIndexesVariables =
     optimisticItems: CanvasItemFrontIndex[];
   };
 
+export function createCanvasFrontOrderQueue({
+  queryClient,
+  filter,
+  save,
+}: {
+  queryClient: QueryClient;
+  filter: ReturnType<typeof contentsFilter>;
+  save: (
+    data: UpdateCanvasItemFrontIndexesInput,
+  ) => Promise<UpdateCanvasItemFrontIndexesResponse>;
+}) {
+  const confirmed = new Map<string, number>();
+  const queue = createLatestPatchQueue<
+    UpdateCanvasItemFrontIndexesInput,
+    UpdateCanvasItemFrontIndexesResponse
+  >({
+    save: async (_key, data) => {
+      const items: CanvasItemFrontIndex[] = [];
+      // The endpoint accepts at most 100 items. Preserve group order across batches.
+      for (let offset = 0; offset < data.itemIds.length; offset += 100) {
+        const batch = {
+          ...data,
+          itemIds: data.itemIds.slice(offset, offset + 100),
+        };
+        let result: UpdateCanvasItemFrontIndexesResponse;
+        try {
+          result = await save(batch);
+        } catch (error) {
+          if (error instanceof ApiError && error.status < 500) throw error;
+          result = await save(batch);
+        }
+        items.push(...result.items);
+      }
+      return { items };
+    },
+    merge: (current, next) => {
+      const nextIds = new Set(next.itemIds);
+      return {
+        ...next,
+        itemIds: [
+          ...current.itemIds.filter((id) => !nextIds.has(id)),
+          ...next.itemIds,
+        ],
+      };
+    },
+    onSuccess: (_key, { items }, hasPending) => {
+      items.forEach(({ id, frontIndex }) => confirmed.set(id, frontIndex));
+      if (hasPending) return;
+      queryClient.setQueriesData<CollectionContentsResponse>(
+        filter,
+        (current) =>
+          updateFrontIndexesInContents(
+            current,
+            [...confirmed].map(([id, frontIndex]) => ({ id, frontIndex })),
+          ),
+      );
+      confirmed.clear();
+    },
+    onError: (_key, _error, hasPending) => {
+      // Layer order is best effort. Keep the local order and never roll back
+      // unrelated geometry, content, or additions using an old canvas snapshot.
+      if (!hasPending) confirmed.clear();
+    },
+  });
+  return {
+    enqueue({
+      optimisticItems,
+      folderPath: _folderPath,
+      ...data
+    }: UpdateCanvasItemFrontIndexesVariables) {
+      void queryClient.cancelQueries(filter);
+      queryClient.setQueriesData<CollectionContentsResponse>(
+        filter,
+        (current) => updateFrontIndexesInContents(current, optimisticItems),
+      );
+      return queue.enqueue("order", data);
+    },
+  };
+}
+
 export function useUpdateCanvasItemFrontIndexes(
   workspaceSlug: string,
   collectionSlug: string,
   folderPath?: string,
 ) {
   const queryClient = useQueryClient();
-  const filter = contentsFilter(workspaceSlug, collectionSlug, folderPath);
+  const queue = useMemo(
+    () =>
+      createCanvasFrontOrderQueue({
+        queryClient,
+        filter: contentsFilter(workspaceSlug, collectionSlug, folderPath),
+        save: (data) =>
+          updateCanvasItemFrontIndexes(workspaceSlug, collectionSlug, data),
+      }),
+    [queryClient, workspaceSlug, collectionSlug, folderPath],
+  );
   return useMutation({
-    mutationFn: ({
-      optimisticItems: _optimisticItems,
-      folderPath: _folderPath,
-      ...data
-    }: UpdateCanvasItemFrontIndexesVariables) =>
-      updateCanvasItemFrontIndexes(workspaceSlug, collectionSlug, data),
-    onMutate: async ({ optimisticItems }) => {
-      await queryClient.cancelQueries(filter);
-      const previous =
-        queryClient.getQueriesData<CollectionContentsResponse>(filter);
-      queryClient.setQueriesData<CollectionContentsResponse>(
-        filter,
-        (current) => updateFrontIndexesInContents(current, optimisticItems),
-      );
-      return { previous };
-    },
-    onError: (_error, _variables, context) => {
-      context?.previous.forEach(([key, value]: [QueryKey, unknown]) => {
-        queryClient.setQueryData(key, value);
-      });
-      toast.error("Unable to save the canvas layer order.");
-    },
-    onSuccess: ({ items }) => {
-      queryClient.setQueriesData<CollectionContentsResponse>(
-        filter,
-        (current) => updateFrontIndexesInContents(current, items),
-      );
-    },
+    mutationFn: (variables: UpdateCanvasItemFrontIndexesVariables) =>
+      queue.enqueue(variables),
   });
 }
 

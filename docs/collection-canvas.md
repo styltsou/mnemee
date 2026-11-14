@@ -211,6 +211,18 @@ server identity and then join the same per-arrow update queue.
 
 ## Backend Storage
 
+Cards (including videos) and freeform text share persisted front indexes per
+collection/folder. Creation, imports, and moves into a canvas reserve a layer
+above both kinds of existing items within the insertion transaction. Reservations
+and drag promotions use the same advisory transaction lock; at the index limit,
+the stack is compacted while retaining its relative order. Optimistic additions
+and text drafts also receive a local top layer until the persisted index arrives.
+
+Layer-order saves are serialized per canvas and coalesce waiting promotions in
+bottom-to-top order. Large selections are sent in ordered batches of 100, and
+transient failures receive one retry. A failure keeps the local order without a
+toast or whole-canvas rollback; a subsequent reload uses the persisted order.
+
 `collection_nodes.position_x` and `position_y` store authored coordinates as a
 nullable pair. The database permits signed values and enforces that either both
 coordinates are present or both are null.

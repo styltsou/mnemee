@@ -1,4 +1,4 @@
-import { and, asc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { assets, canvasObjects, collectionNodes } from "@/db/schema";
@@ -9,7 +9,10 @@ import type {
 import { parseCollectionNodeId } from "@/lib/collection-node-id";
 import { AppError, ErrorCode } from "@/lib/errors";
 import { first } from "@/lib/query";
-import { planCanvasFrontIndexUpdates } from "./canvas-stacking-order";
+import {
+  MAX_CANVAS_FRONT_INDEX,
+  planCanvasFrontIndexUpdates,
+} from "./canvas-stacking-order";
 import { getCollectionBySlug } from "./collection-target-resolver";
 
 type DatabaseTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -24,7 +27,7 @@ type ExistingStackTarget = StackTarget & { frontIndex: number };
 export class CanvasStackingService {
   async bringItemsToFront(
     orgId: string,
-    userId: string,
+    _userId: string,
     collectionSlug: string,
     data: UpdateCanvasItemFrontIndexesInput,
   ): Promise<{ items: CanvasItemFrontIndex[] }> {
@@ -34,9 +37,7 @@ export class CanvasStackingService {
       : null;
 
     return db.transaction(async (tx) => {
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(${collection.id}, ${parentFolderId ?? 0})`,
-      );
+      await lockCanvasStack(tx, collection.id, parentFolderId);
 
       if (parentFolderId !== null) {
         const parent = first(
@@ -99,13 +100,22 @@ export class CanvasStackingService {
           tx,
           targetsByExternalId.get(update.id)!,
           update.frontIndex,
-          userId,
         );
       }
 
       return { items: updates };
     });
   }
+}
+
+export async function lockCanvasStack(
+  tx: DatabaseTransaction,
+  collectionId: number,
+  parentFolderId: number | null,
+) {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(${collectionId}, ${parentFolderId ?? 0})`,
+  );
 }
 
 async function requireStackTarget(
@@ -115,7 +125,9 @@ async function requireStackTarget(
   parentFolderId: number | null,
   itemId: string,
 ): Promise<StackTarget> {
-  const match = /^(folder|image|note|link|color|text)-(\d+)$/.exec(itemId);
+  const match = /^(folder|image|video|note|link|color|text)-(\d+)$/.exec(
+    itemId,
+  );
   const entityId = match ? Number(match[2]) : NaN;
   if (!match || !Number.isSafeInteger(entityId)) {
     throw new AppError(ErrorCode.VALIDATION_ERROR, "Invalid canvas item id");
@@ -124,6 +136,7 @@ async function requireStackTarget(
   const itemType = match[1] as
     | "folder"
     | "image"
+    | "video"
     | "note"
     | "link"
     | "color"
@@ -286,7 +299,6 @@ async function updateFrontIndex(
   tx: DatabaseTransaction,
   target: StackTarget,
   frontIndex: number,
-  userId: string,
 ) {
   if (target.kind === "collection") {
     await tx
@@ -298,6 +310,60 @@ async function updateFrontIndex(
 
   await tx
     .update(canvasObjects)
-    .set({ frontIndex, updatedByUserId: userId, updatedAt: new Date() })
+    .set({ frontIndex })
     .where(eq(canvasObjects.id, target.id));
+}
+
+/** Reserve the top layer in the same transaction that inserts an item. */
+export async function reserveCanvasFrontIndex(
+  tx: DatabaseTransaction,
+  orgId: string,
+  collectionId: number,
+  parentFolderId: number | null,
+): Promise<number> {
+  await lockCanvasStack(tx, collectionId, parentFolderId);
+  const [nodes] = await tx
+    .select({ maximum: max(collectionNodes.frontIndex) })
+    .from(collectionNodes)
+    .where(
+      and(
+        eq(collectionNodes.organizationId, orgId),
+        eq(collectionNodes.collectionId, collectionId),
+        parentFolderId === null
+          ? isNull(collectionNodes.parentFolderId)
+          : eq(collectionNodes.parentFolderId, parentFolderId),
+      ),
+    );
+  const [texts] = await tx
+    .select({ maximum: max(canvasObjects.frontIndex) })
+    .from(canvasObjects)
+    .where(
+      and(
+        eq(canvasObjects.organizationId, orgId),
+        eq(canvasObjects.collectionId, collectionId),
+        eq(canvasObjects.objectType, "text"),
+        parentFolderId === null
+          ? isNull(canvasObjects.parentFolderId)
+          : eq(canvasObjects.parentFolderId, parentFolderId),
+      ),
+    );
+  const next = Math.max(nodes?.maximum ?? -1, texts?.maximum ?? -1) + 1;
+  if (next <= MAX_CANVAS_FRONT_INDEX) return next;
+
+  const existing = await getExistingStackTargets(
+    tx,
+    orgId,
+    collectionId,
+    parentFolderId,
+  );
+  if (existing.length > MAX_CANVAS_FRONT_INDEX) {
+    throw new AppError(
+      ErrorCode.CONFLICT,
+      "Canvas front-order capacity has been reached",
+    );
+  }
+  for (const [index, target] of existing.entries()) {
+    await updateFrontIndex(tx, target, index);
+  }
+  return existing.length;
 }

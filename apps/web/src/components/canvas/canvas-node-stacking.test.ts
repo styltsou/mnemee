@@ -11,6 +11,7 @@ import {
   getCanvasRestingZIndex,
   promoteCanvasFrontIndexes,
   renumberFrontIndexes,
+  resolveCanvasInsertionFrontIndexes,
   updateExpandedNoteOrder,
 } from "./canvas-node-stacking";
 
@@ -21,6 +22,34 @@ const note = (id: string, isExpanded = false) => ({
 });
 
 describe("canvas node stacking", () => {
+  it("puts new drafts above the highest existing or arriving persisted item", () => {
+    const result = resolveCanvasInsertionFrontIndexes(
+      [{ id: "note-1", frontIndex: 40 }, { id: "legacy" }],
+      [
+        { id: "legacy" },
+        { id: "note-2", frontIndex: 50 },
+        { id: "image-draft" },
+        { id: "text-draft" },
+      ],
+    );
+    expect(result.get("image-draft")).toBe(51);
+    expect(result.get("text-draft")).toBe(52);
+    expect(result.has("legacy")).toBe(false);
+  });
+
+  it("preserves draft order through identity handoff until server order arrives", () => {
+    const current = [{ id: "draft", clientId: "draft", frontIndex: 70 }];
+    expect(
+      resolveCanvasInsertionFrontIndexes(current, [
+        { id: "image-2", clientId: "draft" },
+      ]).get("image-2"),
+    ).toBe(70);
+    expect(
+      resolveCanvasInsertionFrontIndexes(current, [
+        { id: "image-2", clientId: "draft", frontIndex: 81 },
+      ]).get("image-2"),
+    ).toBe(81);
+  });
   it("places every expanded note above resting cards", () => {
     const nodes = [
       note("note-1", true),

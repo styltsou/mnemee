@@ -1,3 +1,4 @@
+import { reserveCanvasFrontIndex } from "@/services/collection/canvas-stacking.service";
 import { and, eq, sql } from "drizzle-orm";
 
 import { env } from "@/config";
@@ -172,6 +173,12 @@ export class ImageUploadService implements IImageUploadService {
           organizationId: orgId,
           collectionId: target.collection.id,
           parentFolderId: target.parentFolderId,
+          frontIndex: await reserveCanvasFrontIndex(
+            tx,
+            orgId,
+            target.collection.id,
+            target.parentFolderId,
+          ),
           nodeType: "asset",
           assetId: asset.id,
           positionX: data.position?.x ?? null,
@@ -364,6 +371,12 @@ export class ImageUploadService implements IImageUploadService {
           organizationId: orgId,
           collectionId: target.collection.id,
           parentFolderId: target.parentFolderId,
+          frontIndex: await reserveCanvasFrontIndex(
+            tx,
+            orgId,
+            target.collection.id,
+            target.parentFolderId,
+          ),
           nodeType: "asset",
           assetId: asset.id,
           positionX: data.position?.x ?? null,
@@ -567,9 +580,11 @@ export class ImageUploadService implements IImageUploadService {
           dominantColors: imageAssets.dominantColors,
           variantStatus: imageAssets.variantStatus,
           paletteStatus: imageAssets.paletteStatus,
+          frontIndex: collectionNodes.frontIndex,
         })
         .from(assets)
         .innerJoin(imageAssets, eq(imageAssets.assetId, assets.id))
+        .leftJoin(collectionNodes, eq(collectionNodes.assetId, assets.id))
         .where(eq(assets.id, assetId))
         .limit(1),
     );
@@ -609,7 +624,7 @@ export class ImageUploadService implements IImageUploadService {
       sizeBytes: preferred.sizeBytes,
       createdAt: row.createdAt.toISOString(),
       position: null,
-      frontIndex: null,
+      frontIndex: row.frontIndex,
     };
   }
 

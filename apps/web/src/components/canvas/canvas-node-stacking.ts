@@ -65,6 +65,37 @@ export function getCanvasTextRestingZIndex(frontIndex?: number | null): number {
     : getCanvasFrontZIndex(frontIndex);
 }
 
+type CanvasStackItem = {
+  id: string;
+  clientId?: string;
+  frontIndex?: number | null;
+};
+
+/** Keep drafts above the current stack until their persisted order arrives. */
+export function resolveCanvasInsertionFrontIndexes(
+  current: readonly CanvasStackItem[],
+  incoming: readonly CanvasStackItem[],
+): Map<string, number> {
+  const byIdentity = new Map<string, CanvasStackItem>();
+  let maximum = -1;
+  for (const item of current) {
+    byIdentity.set(item.id, item);
+    if (item.clientId) byIdentity.set(item.clientId, item);
+    maximum = Math.max(maximum, item.frontIndex ?? -1);
+  }
+  for (const item of incoming)
+    maximum = Math.max(maximum, item.frontIndex ?? -1);
+  const indexes = new Map<string, number>();
+  for (const item of incoming) {
+    const previous =
+      byIdentity.get(item.id) ?? byIdentity.get(item.clientId ?? "");
+    const frontIndex = item.frontIndex ?? previous?.frontIndex;
+    if (frontIndex != null) indexes.set(item.id, frontIndex);
+    else if (!previous) indexes.set(item.id, ++maximum);
+  }
+  return indexes;
+}
+
 export function renumberFrontIndexes(
   frontIndexes: ReadonlyMap<string, number>,
 ): { indexes: Map<string, number>; next: number } {

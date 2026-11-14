@@ -372,7 +372,7 @@ describe("CollectionService integration", () => {
         positionY: 200,
         pathFolderSlugs: [],
         depth: 0,
-        frontIndex: null,
+        frontIndex: expect.any(Number),
       },
     ]);
     expect(nestedPlacement).toEqual([
@@ -1867,9 +1867,9 @@ describe("CollectionService integration", () => {
       ),
     ).resolves.toEqual({
       items: [
-        { id: secondary.id, frontIndex: 0 },
-        { id: text.id, frontIndex: 1 },
-        { id: primary.id, frontIndex: 2 },
+        { id: secondary.id, frontIndex: 3 },
+        { id: text.id, frontIndex: 4 },
+        { id: primary.id, frontIndex: 5 },
       ],
     });
 
@@ -1879,10 +1879,10 @@ describe("CollectionService integration", () => {
     );
     expect(
       firstContents.nodes.find((node) => node.id === primary.id)?.frontIndex,
-    ).toBe(2);
+    ).toBe(5);
     expect(
       firstContents.canvasObjects.find((object) => object.id === text.id),
-    ).toMatchObject({ frontIndex: 1 });
+    ).toMatchObject({ frontIndex: 4 });
 
     await db
       .update(collectionNodes)
@@ -1917,6 +1917,101 @@ describe("CollectionService integration", () => {
       .from(canvasObjects)
       .where(eq(canvasObjects.id, Number(text.id.split("-")[1])));
     expect(persistedText?.frontIndex).toBe(2);
+  });
+
+  it("creates and moves incoming items above the persisted mixed stack", async () => {
+    const collection = await collectionService.createCollection(
+      fixture.organizationId,
+      fixture.userId,
+      { name: "Incoming layers" },
+    );
+    const note = await collectionService.createNote(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      { content: "Existing" },
+    );
+    await collectionService.bringCanvasItemsToFront(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      { itemIds: [note.id], expectedParentFolderNodeId: null },
+    );
+    const folder = await collectionService.createFolder(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      { name: "Destination" },
+    );
+    const text = await collectionService.createCanvasText(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      {
+        type: "text",
+        content: "Top",
+        position: { x: 0, y: 0 },
+        font: "inter",
+        size: "md",
+        color: "ink",
+      },
+    );
+    const additions = await Promise.all(
+      ["First", "Second"].map((content) =>
+        collectionService.createNote(
+          fixture.organizationId,
+          fixture.userId,
+          collection.slug,
+          { content },
+        ),
+      ),
+    );
+    expect(folder.frontIndex).toBeGreaterThan(1);
+    expect(text.frontIndex).toBeGreaterThan(folder.frontIndex!);
+    expect(new Set(additions.map((item) => item.frontIndex)).size).toBe(2);
+    for (const item of additions)
+      expect(item.frontIndex).toBeGreaterThan(text.frontIndex!);
+    const reloaded = await collectionService.getCollectionContents(
+      fixture.organizationId,
+      collection.slug,
+    );
+    for (const item of additions) {
+      expect(
+        reloaded.nodes.find((candidate) => candidate.id === item.id)
+          ?.frontIndex,
+      ).toBe(item.frontIndex);
+    }
+    const destinationText = await collectionService.createCanvasText(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      {
+        type: "text",
+        parentFolderPath: folder.slug,
+        content: "Destination",
+        position: { x: 0, y: 0 },
+        font: "inter",
+        size: "md",
+        color: "ink",
+      },
+    );
+    await collectionService.moveNodesToFolder(
+      fixture.organizationId,
+      collection.slug,
+      {
+        nodeIds: [note.id],
+        targetFolderNodeId: `folder-${folder.id}`,
+        sourceCollectionSlug: collection.slug,
+      },
+    );
+    const destination = await collectionService.getCollectionContents(
+      fixture.organizationId,
+      collection.slug,
+      folder.slug,
+    );
+    expect(
+      destination.nodes.find((item) => item.id === note.id)?.frontIndex,
+    ).toBeGreaterThan(destinationText.frontIndex!);
   });
 
   it("deletes a collection, its folders, and all descendant assets", async () => {

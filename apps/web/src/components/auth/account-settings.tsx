@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CircleCheckIcon, LoaderCircleIcon } from "lucide-react";
 import { AvatarPicker } from "@/components/auth/avatar-picker";
 import { ChangePasswordForm } from "@/components/auth/change-password-form";
+import { ActiveSessions } from "@/components/auth/active-sessions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
@@ -149,6 +150,7 @@ export function AccountSettings() {
           </div>
         ) : null}
       </div>
+      <ActiveSessions key={session?.user.id} />
     </section>
   );
 }

@@ -85,6 +85,40 @@ the session.
 - Google-only accounts do not see the form; they can create a password using the
   existing signed-out "Forgot password?" flow.
 
+### Active sessions in Settings
+
+- **Settings → Account → Sign out** has a current-session sign-out row above
+  the **Active sessions** card, which lists the user's unexpired Better Auth
+  sessions. This session appears first, followed by newer sign-ins. Its action
+  lives in the separate row rather than being repeated in the list.
+- Device type, browser major version, and operating system labels come from
+  the stored user agent. Android models appear only when actually provided;
+  reduced user agents use generic device labels. The
+  sign-in time is `createdAt`, not a last-activity timestamp. IP addresses are
+  shown when available. User-chosen device nicknames are not available from
+  browsers. Geographic locations need a server-side IP geolocation database
+  or provider and are not yet collected or displayed.
+- A remote row calls `revokeSession`; **Sign out other sessions** calls
+  `revokeOtherSessions` and preserves the current session. **Sign out
+  everywhere** calls `revokeSessions`, including the current session.
+- Every sign-out action requires confirmation. A single-session confirmation
+  identifies its device, browser, sign-in time, and IP when available; bulk
+  confirmations explain whether the current session is preserved.
+  The app attempts to clear its
+  media cookies before revocation, clears its auth cookies with `signOut`, and
+  reloads at `/login` to discard private query and route caches. If global
+  revocation succeeded, failure to clear local auth cookies does not keep the
+  user inside the app.
+- Better Auth 1.6 requires a fresh session to list sessions (one day by default).
+  `SESSION_NOT_FRESH` shows a sign-out/sign-in recovery action; it does not
+  disable the server's freshness check. Session tokens stay in memory only
+  while the section is mounted and are never rendered.
+- Password changes invalidate the session list because they revoke other
+  sessions. Remote revocation takes effect on the next authenticated request;
+  it does not erase already displayed data on another device. Existing signed
+  media URLs and CloudFront cookies on remote devices remain subject to their
+  own expiration.
+
 ### Codes (email OTP)
 
 Verification and reset use the Better Auth `emailOTP` plugin, not links. Codes are

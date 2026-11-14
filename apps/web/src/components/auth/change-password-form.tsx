@@ -1,11 +1,14 @@
 import { useRef, useState, type FormEvent } from "react";
 import { LoaderCircleIcon } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { PasswordField } from "@/components/auth/password-field";
 import { PasswordStrengthFeedback } from "@/components/auth/password-strength-feedback";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { activeSessionsQueryKey } from "@/lib/auth-sessions";
 
 export function ChangePasswordForm({ email }: { email: string }) {
+  const queryClient = useQueryClient();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordFocused, setNewPasswordFocused] = useState(false);
@@ -54,6 +57,10 @@ export function ChangePasswordForm({ email }: { email: string }) {
       setNewPassword("");
       setConfirmPassword("");
       setSuccess(true);
+      void queryClient.invalidateQueries({
+        queryKey: activeSessionsQueryKey(),
+        exact: false,
+      });
     } catch {
       setError("Unable to change your password. Please try again.");
     } finally {

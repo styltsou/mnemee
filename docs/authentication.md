@@ -73,6 +73,18 @@ the session.
 4. A wrong, expired or used-up code shows the server's message; "Resend code" sends
    a new one.
 
+### Change password in Settings
+
+- **Settings → Account → Sign-in → Password** is shown when the linked accounts
+  include a `credential` account, including accounts that also use Google.
+- The form requires the current password, a new password (8–128 characters), and
+  confirmation. It calls Better Auth's `changePassword` endpoint, which verifies
+  the current password on the server.
+- A successful change clears the form and signs out other sessions
+  (`revokeOtherSessions: true`), while keeping this device signed in.
+- Google-only accounts do not see the form; they can create a password using the
+  existing signed-out "Forgot password?" flow.
+
 ### Codes (email OTP)
 
 Verification and reset use the Better Auth `emailOTP` plugin, not links. Codes are

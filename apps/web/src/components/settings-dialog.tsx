@@ -10,6 +10,7 @@ import {
 import { useTheme } from "@/components/theme-provider";
 import { AccountSettings } from "@/components/auth/account-settings";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { BellIcon, PaletteIcon, UserRoundIcon, XIcon } from "lucide-react";
 import {
   Tooltip,
@@ -269,6 +270,9 @@ function AppearanceSection() {
       >
         Appearance
       </h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Choose how your workspace looks and feels.
+      </p>
       <div className="mt-9">
         <h3 className="text-[13px] font-medium text-muted-foreground">
           Visual style
@@ -448,93 +452,112 @@ export function SettingsDialog() {
         <DialogDescription className="sr-only">
           Manage your workspace appearance and account settings.
         </DialogDescription>
+        <DialogClose
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="absolute top-[max(1.125rem,env(safe-area-inset-top))] right-[max(1.125rem,env(safe-area-inset-right))] z-20 md:top-[1.125rem] md:right-[1.125rem]"
+            />
+          }
+        >
+          <XIcon />
+          <span className="sr-only">Close settings</span>
+        </DialogClose>
         <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background/50 text-foreground md:flex-row md:rounded-lg">
-          <aside className="w-full shrink-0 md:w-48">
-            <div className="flex h-full flex-col px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:p-4">
-              <DialogTitle
-                ref={titleRef}
-                tabIndex={-1}
-                className="px-2 py-1.5 text-sm font-semibold tracking-tight outline-none"
-              >
-                Settings
-              </DialogTitle>
-              <DialogClose
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="absolute top-[max(1.125rem,env(safe-area-inset-top))] right-[max(1.125rem,env(safe-area-inset-right))] z-20 md:top-[1.125rem] md:right-[1.125rem]"
-                  />
-                }
-              >
-                <XIcon />
-                <span className="sr-only">Close settings</span>
-              </DialogClose>
-              <div
-                aria-label="Settings sections"
-                aria-orientation="vertical"
-                className="mt-2 space-y-0.5"
-                role="tablist"
-              >
-                {SETTINGS_SECTIONS.map(
-                  ({ value, label, icon: Icon }, index) => (
-                    <button
-                      key={value}
-                      type="button"
-                      id={`settings-tab-${value}`}
-                      aria-controls="settings-panel"
-                      aria-selected={section === value}
-                      role="tab"
-                      tabIndex={section === value ? 0 : -1}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                        section === value
-                          ? "bg-foreground/[0.07] text-foreground hover:bg-foreground/[0.07]"
-                          : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
-                      )}
-                      onClick={() => setSection(value)}
-                      onKeyDown={(event) => {
-                        const next = nextOptionIndex(
-                          event.key,
-                          index,
-                          SETTINGS_SECTIONS.length,
-                          "vertical",
-                        );
-                        if (next === null) return;
-                        event.preventDefault();
-                        setSection(SETTINGS_SECTIONS[next].value);
-                        event.currentTarget.parentElement
-                          ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-                          [next]?.focus();
-                      }}
-                    >
-                      <Icon className="size-4 shrink-0" aria-hidden="true" />
-                      {label}
-                    </button>
-                  ),
-                )}
+          <aside className="min-h-0 w-full shrink-0 md:w-48">
+            <ScrollArea
+              className="h-full"
+              viewportClassName="overscroll-contain"
+              viewportProps={{ tabIndex: undefined }}
+            >
+              <div className="flex h-full flex-col px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:p-4">
+                <DialogTitle
+                  ref={titleRef}
+                  tabIndex={-1}
+                  className="px-2 py-1.5 text-sm font-semibold tracking-tight outline-none"
+                >
+                  Settings
+                </DialogTitle>
+                <div
+                  aria-label="Settings sections"
+                  aria-orientation="vertical"
+                  className="mt-2 space-y-0.5"
+                  role="tablist"
+                >
+                  {SETTINGS_SECTIONS.map(
+                    ({ value, label, icon: Icon }, index) => (
+                      <button
+                        key={value}
+                        type="button"
+                        id={`settings-tab-${value}`}
+                        aria-controls="settings-panel"
+                        aria-selected={section === value}
+                        role="tab"
+                        tabIndex={section === value ? 0 : -1}
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                          section === value
+                            ? "bg-foreground/[0.07] text-foreground hover:bg-foreground/[0.07]"
+                            : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
+                        )}
+                        onClick={() => setSection(value)}
+                        onKeyDown={(event) => {
+                          const next = nextOptionIndex(
+                            event.key,
+                            index,
+                            SETTINGS_SECTIONS.length,
+                            "vertical",
+                          );
+                          if (next === null) return;
+                          event.preventDefault();
+                          setSection(SETTINGS_SECTIONS[next].value);
+                          event.currentTarget.parentElement
+                            ?.querySelectorAll<HTMLButtonElement>(
+                              '[role="tab"]',
+                            )
+                            [next]?.focus();
+                        }}
+                      >
+                        <Icon className="size-4 shrink-0" aria-hidden="true" />
+                        {label}
+                      </button>
+                    ),
+                  )}
+                </div>
               </div>
-            </div>
+            </ScrollArea>
           </aside>
           <main
             id="settings-panel"
             aria-labelledby={`settings-tab-${section}`}
             role="tabpanel"
-            tabIndex={-1}
-            className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain rounded-t-lg border-t border-foreground/10 bg-background px-4 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-ring md:rounded-l-xl md:rounded-tr-none md:border-t-0 md:border-l md:px-7 md:py-5"
+            className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-t-lg border-t border-foreground/10 bg-background md:rounded-l-xl md:rounded-tr-none md:border-t-0 md:border-l"
           >
-            {section === "appearance" ? (
-              <AppearanceSection />
-            ) : section === "account" ? (
-              <AccountSettings />
-            ) : (
-              <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                {
-                  SETTINGS_SECTIONS.find((item) => item.value === section)
-                    ?.label
-                }
-              </h2>
-            )}
+            <ScrollArea
+              className="h-full rounded-[inherit]"
+              viewportClassName="overscroll-contain"
+              viewportProps={{ tabIndex: undefined }}
+              contentClassName="px-4 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-7 md:py-5"
+            >
+              {section === "appearance" ? (
+                <AppearanceSection />
+              ) : section === "account" ? (
+                <AccountSettings />
+              ) : (
+                <section>
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    {
+                      SETTINGS_SECTIONS.find((item) => item.value === section)
+                        ?.label
+                    }
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Manage how you hear about activity in your workspace.
+                  </p>
+                </section>
+              )}
+            </ScrollArea>
           </main>
         </div>
       </DialogContent>

@@ -100,7 +100,7 @@ export function PasswordStrength({
             ) : null}
           </AnimatePresence>
           <motion.div
-            className="flex gap-1"
+            className="relative grid grid-cols-5 gap-1"
             aria-hidden="true"
             style={{ transformOrigin: "top left" }}
             initial={reduceMotion ? false : { scaleX: 0.72 }}
@@ -108,24 +108,27 @@ export function PasswordStrength({
             transition={{ duration: reduceMotion ? 0 : 0.22, ease: easeOut }}
           >
             {[1, 2, 3, 4, 5].map((segment) => (
-              <span
-                key={segment}
-                className="relative h-1 flex-1 overflow-hidden rounded-full bg-border"
-              >
-                <motion.span
-                  className={`absolute inset-0 rounded-full transition-colors duration-150 motion-reduce:transition-none ${colors[score]}`}
-                  style={{ transformOrigin: "left center" }}
-                  initial={reduceMotion ? false : { scaleX: 0 }}
-                  animate={{
-                    scaleX: segment <= filledSegments ? 1 : 0,
-                  }}
-                  transition={{
-                    duration: reduceMotion ? 0 : 0.18,
-                    ease: easeOut,
-                  }}
-                />
-              </span>
+              <span key={segment} className="h-1 rounded-full bg-border" />
             ))}
+            {/* One reveal edge keeps the segments consecutive, even if the score changes mid-animation. */}
+            <motion.div
+              className="absolute inset-0 grid grid-cols-5 gap-1"
+              initial={reduceMotion ? false : { clipPath: "inset(0 100% 0 0)" }}
+              animate={{
+                clipPath: `inset(0 ${(5 - filledSegments) * 20}% 0 0)`,
+              }}
+              transition={{
+                duration: reduceMotion ? 0 : 0.22,
+                ease: easeOut,
+              }}
+            >
+              {[1, 2, 3, 4, 5].map((segment) => (
+                <span
+                  key={segment}
+                  className={`rounded-full transition-colors duration-150 motion-reduce:transition-none ${colors[score]}`}
+                />
+              ))}
+            </motion.div>
           </motion.div>
           <AnimatePresence>
             {expanded ? (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CircleCheckIcon, LoaderCircleIcon } from "lucide-react";
 import { AvatarPicker } from "@/components/auth/avatar-picker";
+import { ChangePasswordForm } from "@/components/auth/change-password-form";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 
@@ -18,10 +19,15 @@ export function AccountSettings() {
       });
       if (error)
         throw new Error(error.message ?? "Unable to load sign-in methods.");
-      return data?.some((account) => account.providerId === "google") ?? false;
+      return data ?? [];
     },
   });
-  const linked = accounts.data;
+  const linked = accounts.data?.some(
+    (account) => account.providerId === "google",
+  );
+  const hasPassword = accounts.data?.some(
+    (account) => account.providerId === "credential",
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(() =>
     new URLSearchParams(window.location.search).has("googleLinkError")
@@ -53,6 +59,9 @@ export function AccountSettings() {
   return (
     <section>
       <h2 className="text-xl font-semibold tracking-tight">Account</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Manage your profile and how you sign in.
+      </p>
       <div className="mt-9">
         <h3 className="text-[13px] font-medium text-muted-foreground">
           Profile
@@ -125,6 +134,14 @@ export function AccountSettings() {
             ) : null}
           </div>
         </div>
+        {hasPassword ? (
+          <div className="mt-4">
+            <ChangePasswordForm
+              key={session?.user.id}
+              email={session?.user.email ?? ""}
+            />
+          </div>
+        ) : null}
       </div>
     </section>
   );

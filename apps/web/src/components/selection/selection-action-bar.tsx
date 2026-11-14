@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDeleteShortcut } from "@/hooks/use-delete-shortcut";
 import {
   AlignCenterHorizontalIcon,
   AlignCenterVerticalIcon,
@@ -67,6 +68,7 @@ type SelectionActionBarProps = {
   onMakeRow?: (alignment: "start" | "center" | "end") => void;
   onMakeColumn?: (alignment: "start" | "center" | "end") => void;
   className?: string;
+  showActions?: boolean;
 };
 
 const BUTTON_GROUP_SURFACE_CLASS = cn(
@@ -88,8 +90,13 @@ export function SelectionActionBar({
   onMakeRow,
   onMakeColumn,
   className,
+  showActions = true,
 }: SelectionActionBarProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  useDeleteShortcut({
+    enabled: count > 0 && Boolean(onDelete) && !deleteDialogOpen,
+    onDelete: () => setDeleteDialogOpen(true),
+  });
   const reduceMotion = useReducedMotion();
   const restingState = { transform: "translateY(0px)" };
   const hiddenState = {
@@ -99,7 +106,7 @@ export function SelectionActionBar({
   return (
     <>
       <AnimatePresence>
-        {count >= 1 ? (
+        {count >= 1 && showActions ? (
           <motion.div
             key="selection-bar"
             initial={hiddenState}
@@ -173,13 +180,16 @@ export function SelectionActionBar({
                                 type="button"
                                 variant="ghost"
                                 aria-label="Delete selected"
+                                aria-keyshortcuts="Delete"
                                 onClick={() => setDeleteDialogOpen(true)}
                               />
                             }
                           >
                             <Trash2Icon />
                           </TooltipTrigger>
-                          <TooltipContent>Delete selected</TooltipContent>
+                          <TooltipContent>
+                            Delete selected <ShortcutKey>Del</ShortcutKey>
+                          </TooltipContent>
                         </Tooltip>
                       ) : (
                         <PlaceholderAction label="Delete">
@@ -287,11 +297,16 @@ export function SelectionActionBar({
         ) : null}
       </AnimatePresence>
       {onDelete ? (
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialog
+          open={deleteDialogOpen && count > 0}
+          onOpenChange={setDeleteDialogOpen}
+        >
           <AlertDialogContent size="sm">
             <AlertDialogBody>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete {count} items?</AlertDialogTitle>
+                <AlertDialogTitle>
+                  Delete {count} {count === 1 ? "item" : "items"}?
+                </AlertDialogTitle>
                 <AlertDialogDescription>
                   {surface !== "inbox"
                     ? "Selected items will be permanently deleted. Folders also delete their contents."

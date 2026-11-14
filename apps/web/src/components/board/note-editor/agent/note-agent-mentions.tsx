@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { handleDeleteEntryKey } from "@/lib/delete-shortcut";
 import { useQuery } from "@tanstack/react-query";
 import { XIcon } from "lucide-react";
 
@@ -152,6 +153,11 @@ export function NoteAgentMentionChips({
       <button
         type="button"
         aria-label={`Remove ${mentionLabel(item)}`}
+        aria-keyshortcuts="Delete"
+        data-delete-entry
+        onKeyDown={(event) =>
+          handleDeleteEntryKey(event, () => onRemove(item.assetId))
+        }
         className="-mr-0.5 rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => onRemove(item.assetId)}

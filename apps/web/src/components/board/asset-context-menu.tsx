@@ -55,6 +55,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { downloadAssetOriginal } from "@/lib/asset-download";
 import { clearDeletedNoteDrafts } from "@/lib/note-edit-draft";
 import { getPlatformAlt } from "@/lib/platform";
+import {
+  isDeleteShortcut,
+  isDeleteSurfaceBlocked,
+} from "@/lib/delete-shortcut";
+import { isPersistedSelectableAsset } from "@/lib/selection";
+import { useTransientStore } from "@/store";
 
 function PeekShortcut() {
   return (
@@ -517,6 +523,26 @@ export function AssetContextMenu({
         onOpenChange={handleContextMenuOpenChange}
       >
         <ContextMenuTrigger
+          onKeyDown={(event) => {
+            if (
+              !(event.target instanceof Node) ||
+              !event.currentTarget.contains(event.target) ||
+              !isDeleteShortcut(event.nativeEvent)
+            )
+              return;
+            if (
+              !workspaceSlug ||
+              !isPersistedSelectableAsset(asset) ||
+              isDeleteSurfaceBlocked(event.target, "board")
+            )
+              return;
+            // The board owns deletion when a selection is active.
+            if (useTransientStore.getState().selection.nodeIds.length > 0)
+              return;
+            event.preventDefault();
+            event.stopPropagation();
+            setDeleteDialogOpen(true);
+          }}
           render={(triggerProps, state) => (
             <div
               {...triggerProps}
@@ -553,7 +579,20 @@ export function AssetContextMenu({
             </div>
           )}
         />
-        <ContextMenuContent data-canvas-menu={canvasBoardKey}>
+        <ContextMenuContent
+          data-canvas-menu={canvasBoardKey}
+          onKeyDown={(event) => {
+            if (
+              !isDeleteShortcut(event.nativeEvent) ||
+              !isPersistedSelectableAsset(asset)
+            )
+              return;
+            event.preventDefault();
+            event.stopPropagation();
+            contextMenuActionsRef.current?.close();
+            setDeleteDialogOpen(true);
+          }}
+        >
           {asset.type === "folder" ? (
             <>
               {folderActions()}
@@ -666,6 +705,7 @@ export function AssetContextMenu({
             onClick={() => setDeleteDialogOpen(true)}
           >
             Delete
+            <ContextMenuShortcut>Del</ContextMenuShortcut>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -678,7 +718,7 @@ export function AssetContextMenu({
               </AlertDialogTitle>
               <AlertDialogDescription>
                 {asset.type === "folder"
-                  ? "This deletes the folder. Assets inside it will move back to Inbox."
+                  ? "This permanently deletes the folder and all its contents. This action cannot be undone."
                   : asset.type === "note"
                     ? "This permanently deletes the note and any unsaved changes. This action cannot be undone."
                     : "Are you sure you want to delete this asset? This action cannot be undone."}

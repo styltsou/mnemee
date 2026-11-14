@@ -556,6 +556,8 @@ export function NoteAgentPrompt({
       ) : null}
       {phase === "streaming" ? null : (
         <div
+          data-delete-entry-group
+          data-delete-focus-scope
           className={cn(
             "relative flex h-10 items-center gap-2 rounded-lg border border-input bg-transparent pr-1.5 pl-3 transition-colors duration-100 focus-within:border-foreground/20 dark:bg-input/30",
             phase === "review" && "mt-1.5",

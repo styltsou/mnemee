@@ -20,7 +20,7 @@ export function isSelectionShortcutBlocked(
   if (!(target instanceof Element)) return false;
   return Boolean(
     target.closest(
-      "input, textarea, select, [contenteditable='true'], [role='dialog'], [role='menu'], [data-selection-shortcut-block]",
+      "input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox'], [role='dialog'], [role='alertdialog'], [role='menu'], [data-selection-shortcut-block]",
     ),
   );
 }

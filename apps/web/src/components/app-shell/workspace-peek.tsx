@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AssetDeleteShortcut } from "@/components/board/asset-delete-shortcut";
 import {
   ArrowLeftRightIcon,
   DownloadIcon,
@@ -1384,6 +1385,14 @@ function WorkspacePeekPanel({
         <ResizeGrip ref={resizeGripRef} />
       </div>
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card">
+        <AssetDeleteShortcut
+          key={target.asset.id}
+          workspaceSlug={workspaceSlug}
+          asset={target.asset}
+          enabled={activeTarget?.asset.id === target.asset.id}
+          ownsFocus={isPeekAssetPaneActive}
+          onDeleted={closePeek}
+        />
         {target.type === "note" ? (
           <PeekNote
             key={target.asset.id}

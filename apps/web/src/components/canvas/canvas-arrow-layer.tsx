@@ -20,6 +20,10 @@ import {
 } from "@/lib/selection";
 import { cn } from "@/lib/utils";
 import {
+  isDeleteShortcut,
+  isDeleteSurfaceBlocked,
+} from "@/lib/delete-shortcut";
+import {
   arrowheadSketchJitter,
   arrowMarkerRefX,
   makeArrowPaths,
@@ -608,6 +612,13 @@ export function CanvasArrowLayer({
         return;
       }
       if (event.key === "Delete") {
+        if (
+          !isDeleteShortcut(event) ||
+          isDeleteSurfaceBlocked(event.target, "board")
+        )
+          return;
+        // A mixed selection belongs to the board's confirmation flow.
+        if (!pointEditing && selectedIds.size > 1) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         if (pointEditing) {

@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 import { XIcon } from "lucide-react";
+import { handleDeleteEntryKey } from "@/lib/delete-shortcut";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -297,6 +298,13 @@ export function ColorEditorDialog({
     setGradientAngle(color.gradient?.angle ?? DEFAULT_GRADIENT_ANGLE);
     setActiveStopId(stops[0]!.id);
     setOpenStopId(null);
+  }
+
+  function removeStop(id: string) {
+    if (isPending || gradientStops.length <= 2) return;
+    const remaining = gradientStops.filter((stop) => stop.id !== id);
+    setGradientStops(remaining);
+    if (activeStopId === id) setActiveStopId(remaining[0]!.id);
   }
 
   function updateStop(id: string, update: Partial<GradientStop>) {
@@ -665,6 +673,7 @@ export function ColorEditorDialog({
                     </div>
                     <div
                       ref={trackRef}
+                      data-delete-entry-group
                       className="relative order-2 mb-8 h-8 cursor-copy rounded-md border border-border"
                       style={{ background: gradientTrackCss }}
                       onPointerDown={addStop}
@@ -674,6 +683,15 @@ export function ColorEditorDialog({
                           <button
                             type="button"
                             aria-label={`Stop at ${stop.position}%`}
+                            aria-keyshortcuts="Delete"
+                            data-delete-entry
+                            onFocus={() => setActiveStopId(stop.id)}
+                            onKeyDown={(event) => {
+                              if (!isPending && gradientStops.length > 2)
+                                handleDeleteEntryKey(event, () =>
+                                  removeStop(stop.id),
+                                );
+                            }}
                             className={cn(
                               "absolute top-1/2 z-10 h-9 w-4 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize rounded-sm border-[3px] border-white shadow-[0_0_0_1px_rgb(0_0_0_/_0.45)]",
                               activeStopId === stop.id && "ring-2 ring-ring",
@@ -729,6 +747,7 @@ export function ColorEditorDialog({
                   <section
                     className="space-y-2 md:order-first"
                     aria-label="Gradient stops"
+                    data-delete-entry-group
                   >
                     <AnimatePresence initial={false} mode="popLayout">
                       {sortedStops.map((stop) => (
@@ -823,14 +842,14 @@ export function ColorEditorDialog({
                               size="icon-sm"
                               className="group/stop-remove cursor-pointer text-muted-foreground transition-colors duration-75 hover:!text-primary disabled:pointer-events-auto disabled:cursor-not-allowed"
                               disabled={gradientStops.length <= 2}
-                              onClick={() => {
-                                const remaining = gradientStops.filter(
-                                  (candidate) => candidate.id !== stop.id,
-                                );
-                                setGradientStops(remaining);
-                                if (activeStopId === stop.id)
-                                  setActiveStopId(remaining[0]!.id);
-                              }}
+                              onClick={() => removeStop(stop.id)}
+                              data-delete-entry
+                              aria-keyshortcuts="Delete"
+                              onKeyDown={(event) =>
+                                handleDeleteEntryKey(event, () =>
+                                  removeStop(stop.id),
+                                )
+                              }
                               aria-label="Remove stop"
                             >
                               <XIcon className="pointer-events-none text-muted-foreground transition-colors duration-75 group-hover/stop-remove:!text-primary" />

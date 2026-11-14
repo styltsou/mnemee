@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { useDragDropMonitor, useDraggable } from "@dnd-kit/react";
+import { handleDeleteEntryKey } from "@/lib/delete-shortcut";
 import {
   CheckIcon,
   ImagesIcon,
@@ -309,6 +310,7 @@ function SelectedPhotosDock({
   return (
     <div
       ref={trackRef}
+      data-delete-entry-group
       className="relative w-max max-w-full"
       onMouseEnter={() => setHoverEdge(null)}
       onMouseLeave={() => setHoverEdge(null)}
@@ -373,6 +375,11 @@ function SelectedPhotosDock({
                 />
                 <Button
                   aria-label={`Remove ${photo.alt ?? "selected photo"}`}
+                  aria-keyshortcuts="Delete"
+                  data-delete-entry
+                  onKeyDown={(event) =>
+                    handleDeleteEntryKey(event, () => onRemove(photo))
+                  }
                   className="absolute inset-0 m-auto size-8 bg-black/55 text-white opacity-0 shadow-sm ring-1 ring-white/20 backdrop-blur-md transition-opacity duration-150 ease-out group-hover/tb:opacity-100 hover:bg-black/70 focus-visible:opacity-100"
                   size="icon"
                   type="button"
@@ -652,6 +659,7 @@ export function PexelsBrowserPanel({
   return (
     <aside
       ref={panelRef}
+      data-delete-focus-scope
       aria-hidden={!open}
       className="group/panel text-sidebar-foreground"
       data-state={open ? "expanded" : "collapsed"}
@@ -670,6 +678,7 @@ export function PexelsBrowserPanel({
           <motion.aside
             key="pexels-browser"
             aria-label="Pexels browser"
+            data-delete-shortcut-local
             className={cn(
               GLASS_FRAME_CLASS,
               "fixed inset-y-[var(--app-shell-inset)] right-[var(--app-shell-inset)] z-10 flex h-[calc(100dvh-var(--app-shell-inset)-var(--app-shell-inset))] w-[min(var(--pexels-browser-width),calc(100vw-var(--app-shell-inset)-var(--app-shell-inset)))] flex-col overflow-visible rounded-xl text-foreground shadow-none md:w-(--pexels-browser-width)",

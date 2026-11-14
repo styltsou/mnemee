@@ -2952,32 +2952,32 @@ function CanvasSurface({
                 !isPersistedCanvasItemId(focusedInspectorTarget.object.id)
               }
             />
-          ) : (
-            <SelectionActionBar
-              count={selectedIds.length}
-              surface="canvas"
-              onClear={() => {
-                setCanvasObjectFocus(undefined);
-                clearSelection(boardKey);
-              }}
-              onMove={() => setMoveDialogOpen(true)}
-              moveDisabled={!canMoveSelection}
-              onDelete={handleBulkDelete}
-              onArrange={
-                layoutableSelectionCount >= 2 ? handleArrange : undefined
-              }
-              onCompact={
-                layoutableSelectionCount >= 2 ? handleCompact : undefined
-              }
-              onMakeRow={
-                layoutableSelectionCount >= 2 ? handleMakeRow : undefined
-              }
-              onMakeColumn={
-                layoutableSelectionCount >= 2 ? handleMakeColumn : undefined
-              }
-              layoutCount={layoutableSelectionCount}
-            />
-          )}
+          ) : null}
+          <SelectionActionBar
+            showActions={!focusedCanvasObjectId}
+            count={selectedIds.length}
+            surface="canvas"
+            onClear={() => {
+              setCanvasObjectFocus(undefined);
+              clearSelection(boardKey);
+            }}
+            onMove={() => setMoveDialogOpen(true)}
+            moveDisabled={!canMoveSelection}
+            onDelete={handleBulkDelete}
+            onArrange={
+              layoutableSelectionCount >= 2 ? handleArrange : undefined
+            }
+            onCompact={
+              layoutableSelectionCount >= 2 ? handleCompact : undefined
+            }
+            onMakeRow={
+              layoutableSelectionCount >= 2 ? handleMakeRow : undefined
+            }
+            onMakeColumn={
+              layoutableSelectionCount >= 2 ? handleMakeColumn : undefined
+            }
+            layoutCount={layoutableSelectionCount}
+          />
         </Panel>
       </ReactFlow>
 

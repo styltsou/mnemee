@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { Link } from "@tanstack/react-router";
@@ -26,7 +27,11 @@ import {
   formatVideoDuration,
   VIDEO_CARD_TIME_BADGE_CLASS,
 } from "../board/video-card-control-styles";
-import { useDeleteCollection } from "@/api/collection";
+import { DeleteCollectionDialog } from "./delete-collection-dialog";
+import {
+  isDeleteShortcut,
+  isDeleteTargetEditable,
+} from "@/lib/delete-shortcut";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,17 +50,6 @@ import {
 } from "@/components/ui/context-menu";
 import { CollectionPropertiesDialog } from "./collection-properties-dialog";
 import { RenameCollectionDialog } from "./rename-collection-dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogBody,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import type {
   DetailedCollection,
   FolderChildPreview,
@@ -87,7 +81,6 @@ export function CollectionCard({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const pointerExitTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dismissingMenuWithCardPress = useRef(false);
-  const deleteCollection = useDeleteCollection(workspaceSlug);
   const previews = collection.previews.slice(0, MAX_VISIBLE_PREVIEWS);
   const active = pointerOver || focused || actionsOpen || contextMenuOpen;
   const { containerRef, poses } = usePreviewStackLayout(
@@ -103,6 +96,18 @@ export function CollectionCard({
     { label: "Properties", onClick: () => setPropertiesDialogOpen(true) },
     { label: "Delete", onClick: () => setDeleteDialogOpen(true) },
   ];
+  function handleDeleteKey(event: ReactKeyboardEvent) {
+    if (
+      !isDeleteShortcut(event.nativeEvent) ||
+      isDeleteTargetEditable(event.target)
+    )
+      return;
+    event.preventDefault();
+    event.stopPropagation();
+    setActionsOpen(false);
+    setContextMenuOpen(false);
+    setDeleteDialogOpen(true);
+  }
   const destructiveClass =
     "text-red-600! hover:bg-red-500/20! focus:bg-red-500/20! data-highlighted:bg-red-500/20! dark:text-red-400! dark:hover:bg-red-500/30! dark:focus:bg-red-500/30! dark:data-highlighted:bg-red-500/30!";
 
@@ -140,6 +145,19 @@ export function CollectionCard({
     <>
       <ContextMenu open={contextMenuOpen} onOpenChange={setContextMenuOpen}>
         <ContextMenuTrigger
+          data-delete-shortcut-local
+          onKeyDown={(event) => {
+            if (
+              !(event.target instanceof Node) ||
+              !event.currentTarget.contains(event.target) ||
+              !isDeleteShortcut(event.nativeEvent) ||
+              isDeleteTargetEditable(event.target)
+            )
+              return;
+            event.preventDefault();
+            event.stopPropagation();
+            setDeleteDialogOpen(true);
+          }}
           render={
             <div className="relative flex w-full min-w-0 flex-col items-center gap-2.5 rounded-xl p-1.5 text-sidebar-foreground" />
           }
@@ -224,6 +242,7 @@ export function CollectionCard({
                 params={{ workspaceSlug, _splat: collection.slug }}
                 data-collection-link
                 data-collection-hover-target
+                aria-keyshortcuts="Delete"
                 data-active={active}
                 onPointerEnter={handleHoverTargetEnter}
                 onPointerLeave={handleHoverTargetLeave}
@@ -277,7 +296,12 @@ export function CollectionCard({
                 >
                   <MoreHorizontalIcon aria-hidden="true" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="bottom" className="w-40">
+                <DropdownMenuContent
+                  align="end"
+                  side="bottom"
+                  className="w-40"
+                  onKeyDown={handleDeleteKey}
+                >
                   {collectionActions.map((action, index) => (
                     <Fragment key={action.label}>
                       {index === 2 ? <DropdownMenuSeparator /> : null}
@@ -286,6 +310,11 @@ export function CollectionCard({
                         onClick={action.onClick}
                       >
                         {action.label}
+                        {index === 2 ? (
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            Del
+                          </span>
+                        ) : null}
                       </DropdownMenuItem>
                     </Fragment>
                   ))}
@@ -294,7 +323,7 @@ export function CollectionCard({
             </motion.div>
           </div>
         </ContextMenuTrigger>
-        <ContextMenuContent className="w-40">
+        <ContextMenuContent className="w-40" onKeyDown={handleDeleteKey}>
           {collectionActions.map((action, index) => (
             <Fragment key={action.label}>
               {index === 2 ? <ContextMenuSeparator /> : null}
@@ -303,6 +332,11 @@ export function CollectionCard({
                 onClick={action.onClick}
               >
                 {action.label}
+                {index === 2 ? (
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    Del
+                  </span>
+                ) : null}
               </ContextMenuItem>
             </Fragment>
           ))}
@@ -319,32 +353,12 @@ export function CollectionCard({
         onOpenChange={setPropertiesDialogOpen}
         collection={collection}
       />
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent size="sm">
-          <AlertDialogBody>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete collection</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete{" "}
-                <strong>{collection.name}</strong>? This action cannot be
-                undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={deleteCollection.isPending}
-              onClick={() => {
-                setDeleteDialogOpen(false);
-                deleteCollection.mutate(collection.slug);
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteCollectionDialog
+        workspaceSlug={workspaceSlug}
+        collection={collection}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+      />
     </>
   );
 }

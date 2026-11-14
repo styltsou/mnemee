@@ -113,6 +113,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   ];
 
   const navCollections = collections.map((collection) => ({
+    slug: collection.slug,
     name: collection.name,
     count: collection.assetCount,
     isActive: activeCollectionSlug === collection.slug,
@@ -136,6 +137,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navMain} />
       </div>
       <NavProjects
+        workspaceSlug={workspaceSlug}
         collections={navCollections}
         isLoading={isWorkspaceLoading}
       />

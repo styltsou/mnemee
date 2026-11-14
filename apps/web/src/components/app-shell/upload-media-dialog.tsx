@@ -15,6 +15,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { handleDeleteEntryKey } from "@/lib/delete-shortcut";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -664,7 +665,10 @@ export function UploadMediaDialog({
   }, [selectedFiles.length, shouldScrollPreviews]);
 
   const previewGrid = (
-    <div className="grid grid-cols-3 gap-3 p-0.5 sm:grid-cols-4">
+    <div
+      data-delete-entry-group
+      className="grid grid-cols-3 gap-3 p-0.5 sm:grid-cols-4"
+    >
       {selectedFiles.map((file, index) => (
         <div
           key={`${file.name}-${file.lastModified}-${index}`}
@@ -696,6 +700,11 @@ export function UploadMediaDialog({
           </span>
           <Button
             aria-label={`Remove ${file.name}`}
+            aria-keyshortcuts="Delete"
+            data-delete-entry
+            onKeyDown={(event) =>
+              handleDeleteEntryKey(event, () => removeFile(index))
+            }
             className="absolute top-1.5 right-1.5 bg-background/70 text-foreground shadow-sm ring-1 ring-foreground/10 backdrop-blur-md transition-colors duration-[50ms] hover:bg-background"
             disabled={isInteractionDisabled}
             size="icon-xs"
@@ -831,7 +840,10 @@ export function UploadMediaDialog({
               ) : mode === "remote" ? (
                 <div className="space-y-1.5">
                   <div className="rounded-md border border-input bg-muted p-1.5 shadow-[0_1px_1px_rgb(0_0_0_/_0.02)] ring-1 ring-foreground/[0.025] backdrop-blur-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
-                    <div className="grid grid-cols-2 items-start gap-1.5">
+                    <div
+                      data-delete-entry-group
+                      className="grid grid-cols-2 items-start gap-1.5"
+                    >
                       {remoteUrls.map((url) => (
                         <span
                           key={url}
@@ -851,6 +863,13 @@ export function UploadMediaDialog({
                           </span>
                           <Button
                             aria-label={`Remove ${url}`}
+                            aria-keyshortcuts="Delete"
+                            data-delete-entry
+                            onKeyDown={(event) =>
+                              handleDeleteEntryKey(event, () =>
+                                removeRemoteUrl(url),
+                              )
+                            }
                             className="ml-auto shrink-0 text-muted-foreground transition-colors duration-75"
                             disabled={isInteractionDisabled}
                             size="icon-xs"

@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type RefObject,
 } from "react";
 import { LocateFixedIcon, PanelRightIcon, XIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
@@ -51,6 +52,7 @@ import type { AssetLocation } from "@/api/collection";
 import { YouTubeDescription } from "./youtube-description";
 import { ChannelAvatar } from "@/components/board/cards/link-asset-card";
 import { createYouTubePlayerSeekController } from "./youtube-player-seek";
+import { createVideoVisibilityPlayback } from "./video-visibility-playback";
 import { matchesKeybinding, PEEK_ASSET_SHORTCUT } from "@/lib/keybindings";
 import { isPeekAssetPaneActive } from "@/lib/asset-pane-focus";
 import { cn } from "@/lib/utils";
@@ -60,6 +62,9 @@ type VideoLinkAsset = LinkAsset & { video: NonNullable<LinkAsset["video"]> };
 
 type YouTubeIframePlayer = {
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+  getPlayerState: () => number;
+  pauseVideo: () => void;
+  playVideo: () => void;
   destroy: () => void;
 };
 
@@ -69,6 +74,7 @@ type YouTubeIframeApi = {
     options: {
       events: {
         onReady: (event: { target: YouTubeIframePlayer }) => void;
+        onStateChange: (event: { data: number }) => void;
         onError: () => void;
       };
     },
@@ -225,6 +231,7 @@ export function YouTubeVideoViewer({
   const [activeAsset, setActiveAsset] = useState<VideoLinkAsset>();
   const pendingPeekAssetIdRef = useRef<string | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
+  const playerFocusRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (isVideoLinkAsset(asset)) setActiveAsset(asset);
@@ -334,7 +341,7 @@ export function YouTubeVideoViewer({
         fast
       >
         <DrawerContent
-          initialFocus={false}
+          initialFocus={playerFocusRef}
           className="gap-0 overflow-hidden border-border/70 bg-background p-0 text-foreground shadow-2xl"
           style={
             {
@@ -368,6 +375,7 @@ export function YouTubeVideoViewer({
               notesOpen={notesOpen}
               onCloseNotes={() => setNotesOpen(false)}
               viewer
+              playerFocusRef={playerFocusRef}
             />
           ) : (
             <VideoViewerLoading />
@@ -397,7 +405,7 @@ export function YouTubeVideoViewer({
     >
       <DialogContent
         ref={fullscreenPanelRef}
-        initialFocus={false}
+        initialFocus={playerFocusRef}
         data-workspace-asset-modal={assetModalId}
         data-canvas-shared-entry={sharedEntry || undefined}
         showCloseButton={false}
@@ -509,6 +517,7 @@ export function YouTubeVideoViewer({
               notesOpen={notesOpen}
               onCloseNotes={() => setNotesOpen(false)}
               viewer
+              playerFocusRef={playerFocusRef}
             />
           ) : (
             <VideoViewerLoading workspace={workspace} viewer />
@@ -778,6 +787,7 @@ export function YouTubeVideoContent({
   viewer = false,
   notesOpen = false,
   onCloseNotes,
+  playerFocusRef,
 }: {
   asset: VideoLinkAsset;
   open: boolean;
@@ -790,10 +800,20 @@ export function YouTubeVideoContent({
   viewer?: boolean;
   notesOpen?: boolean;
   onCloseNotes?: () => void;
+  playerFocusRef?: RefObject<HTMLIFrameElement | null>;
 }) {
   const reduceMotion = useReducedMotion();
   const [playerLoaded, setPlayerLoaded] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    if (!viewer || !open) return;
+    const focusPlayer = () => {
+      if (!document.hidden) iframeRef.current?.focus({ preventScroll: true });
+    };
+    focusPlayer();
+    document.addEventListener("visibilitychange", focusPlayer);
+    return () => document.removeEventListener("visibilitychange", focusPlayer);
+  }, [open, viewer]);
   const playerRef = useRef<YouTubeIframePlayer | null>(null);
   const seekControllerRef = useRef<ReturnType<
     typeof createYouTubePlayerSeekController
@@ -822,6 +842,9 @@ export function YouTubeVideoContent({
     }
 
     let cancelled = false;
+    let visibilityPlayback:
+      | ReturnType<typeof createVideoVisibilityPlayback>
+      | undefined;
     seekControllerRef.current?.beginLoading();
     void loadYouTubeIframeApi()
       .then((api) => {
@@ -832,8 +855,23 @@ export function YouTubeVideoContent({
               if (cancelled) return;
               playerRef.current = event.target;
               seekControllerRef.current?.setReady(event.target);
+              const readyPlayer = event.target;
+              visibilityPlayback = createVideoVisibilityPlayback({
+                isPlaying: () => readyPlayer.getPlayerState() === 1,
+                pause: () => readyPlayer.pauseVideo(),
+                play: () => readyPlayer.playVideo(),
+              });
+            },
+            onStateChange: (event) => {
+              if (cancelled) return;
+              if (event.data === 1) {
+                visibilityPlayback?.pauseWhenHidden();
+              } else if (event.data === 0 || event.data === -1) {
+                visibilityPlayback?.cancelResume();
+              }
             },
             onError: () => {
+              visibilityPlayback?.cancelResume();
               seekControllerRef.current?.setUnavailable();
             },
           },
@@ -847,6 +885,7 @@ export function YouTubeVideoContent({
 
     return () => {
       cancelled = true;
+      visibilityPlayback?.dispose();
       seekControllerRef.current?.setUnavailable();
       playerRef.current?.destroy();
       playerRef.current = null;
@@ -892,12 +931,15 @@ export function YouTubeVideoContent({
 
       {open ? (
         <iframe
-          ref={iframeRef}
+          ref={(node) => {
+            iframeRef.current = node;
+            if (playerFocusRef) playerFocusRef.current = node;
+          }}
           src={embedUrl}
           title={asset.title}
           loading="eager"
           referrerPolicy="strict-origin-when-cross-origin"
-          allow="encrypted-media; picture-in-picture; web-share"
+          allow="autoplay; encrypted-media; picture-in-picture; web-share"
           allowFullScreen
           onLoad={() => setPlayerLoaded(true)}
           className={cn(

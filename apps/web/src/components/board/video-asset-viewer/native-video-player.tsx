@@ -16,6 +16,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
+  type RefObject,
   useCallback,
   useEffect,
   useRef,
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { VideoAsset } from "@/types/asset";
+import { createVideoVisibilityPlayback } from "./video-visibility-playback";
 
 const CONTROL_HIDE_DELAY_MS = 1_800;
 const BUFFERING_SPINNER_DELAY_MS = 180;
@@ -129,6 +131,7 @@ export function NativeVideoPlayer({
   initialTime,
   continuePlaying = false,
   fit = "contain",
+  focusRef,
 }: {
   src: string;
   poster?: string;
@@ -137,6 +140,7 @@ export function NativeVideoPlayer({
   initialTime?: number;
   continuePlaying?: boolean;
   fit?: "contain" | "cover";
+  focusRef?: RefObject<HTMLDivElement | null>;
 }) {
   const [initialPlayerPreferences] = useState(readVideoPlayerPreferences);
   const reduceMotion = useReducedMotion();
@@ -146,6 +150,9 @@ export function NativeVideoPlayer({
   const hideTimerRef = useRef<number | undefined>(undefined);
   const waitingTimerRef = useRef<number | undefined>(undefined);
   const handoffAppliedRef = useRef(false);
+  const visibilityPlaybackRef = useRef<ReturnType<
+    typeof createVideoVisibilityPlayback
+  > | null>(null);
   const [playing, setPlaying] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -165,6 +172,41 @@ export function NativeVideoPlayer({
     initialPlayerPreferences.showRemainingTime,
   );
   const [hover, setHover] = useState<{ seconds: number; percent: number }>();
+
+  useEffect(() => {
+    const focusPlayer = () => {
+      if (!document.hidden) playerRef.current?.focus({ preventScroll: true });
+    };
+    focusPlayer();
+    document.addEventListener("visibilitychange", focusPlayer);
+    return () => document.removeEventListener("visibilitychange", focusPlayer);
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const visibilityPlayback = createVideoVisibilityPlayback({
+      isPlaying: () => !video.paused && !video.ended,
+      pause: () => video.pause(),
+      play: () => {
+        // A browser may refuse resuming; leave the normal play controls available.
+        void video.play().catch(() => undefined);
+      },
+    });
+    visibilityPlaybackRef.current = visibilityPlayback;
+    video.addEventListener("play", visibilityPlayback.pauseWhenHidden);
+    video.addEventListener("ended", visibilityPlayback.cancelResume);
+    video.addEventListener("error", visibilityPlayback.cancelResume);
+    video.addEventListener("emptied", visibilityPlayback.cancelResume);
+    return () => {
+      visibilityPlayback.dispose();
+      visibilityPlaybackRef.current = null;
+      video.removeEventListener("play", visibilityPlayback.pauseWhenHidden);
+      video.removeEventListener("ended", visibilityPlayback.cancelResume);
+      video.removeEventListener("error", visibilityPlayback.cancelResume);
+      video.removeEventListener("emptied", visibilityPlayback.cancelResume);
+    };
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -255,6 +297,7 @@ export function NativeVideoPlayer({
   const togglePlayback = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
+    visibilityPlaybackRef.current?.cancelResume();
     if (video.paused || video.ended) void play();
     else video.pause();
   }, [play]);
@@ -398,8 +441,11 @@ export function NativeVideoPlayer({
     // Keyboard-shortcut surface for the player (handleKeyDown); user media has no caption tracks.
     // oxlint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
-      ref={playerRef}
-      className="group/player absolute inset-0 overflow-hidden bg-black outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+      ref={(node) => {
+        playerRef.current = node;
+        if (focusRef) focusRef.current = node;
+      }}
+      className="group/player absolute inset-0 overflow-hidden bg-black outline-none"
       // Keyboard-shortcut surface for the player (handleKeyDown); user media has no caption tracks.
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
@@ -488,7 +534,7 @@ export function NativeVideoPlayer({
       {!failed ? (
         <button
           type="button"
-          className="absolute inset-0 z-10 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-inset"
+          className="absolute inset-0 z-10 cursor-pointer outline-none"
           aria-label={
             ended ? "Replay video" : playing ? "Pause video" : "Play video"
           }

@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "motion/react";
@@ -101,6 +102,7 @@ export function VideoAssetViewer({
   );
   const [activeAsset, setActiveAsset] = useState<VideoAsset>();
   const [notesOpen, setNotesOpen] = useState(false);
+  const playerFocusRef = useRef<HTMLDivElement>(null);
   const [initialPlaybackTime] = useState(() => {
     const playbackAssetId = assetModalId ?? asset?.id;
     return playbackAssetId
@@ -168,7 +170,7 @@ export function VideoAssetViewer({
         fast
       >
         <DrawerContent
-          initialFocus={false}
+          initialFocus={playerFocusRef}
           className="gap-0 overflow-hidden border-border/70 bg-background p-0 text-foreground shadow-2xl"
           style={
             {
@@ -200,6 +202,7 @@ export function VideoAssetViewer({
               initialPlaybackTime={initialPlaybackTime}
               notesOpen={notesOpen}
               onCloseNotes={() => setNotesOpen(false)}
+              playerFocusRef={playerFocusRef}
             />
           ) : (
             <NativeVideoLoading />
@@ -228,7 +231,7 @@ export function VideoAssetViewer({
     >
       <DialogContent
         ref={fullscreenPanelRef}
-        initialFocus={false}
+        initialFocus={playerFocusRef}
         data-workspace-asset-modal={assetModalId}
         data-canvas-shared-entry={sharedEntry || undefined}
         showCloseButton={false}
@@ -331,6 +334,7 @@ export function VideoAssetViewer({
               notesOpen={notesOpen}
               onCloseNotes={() => setNotesOpen(false)}
               viewer
+              playerFocusRef={playerFocusRef}
             />
           ) : (
             <NativeVideoLoading workspace={expanded} viewer />
@@ -537,6 +541,7 @@ function NativeVideoContent({
   notesOpen,
   onCloseNotes,
   viewer = false,
+  playerFocusRef,
 }: {
   asset: VideoAsset;
   open: boolean;
@@ -548,6 +553,7 @@ function NativeVideoContent({
   notesOpen: boolean;
   onCloseNotes: () => void;
   viewer?: boolean;
+  playerFocusRef?: RefObject<HTMLDivElement | null>;
 }) {
   const reduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
@@ -724,6 +730,7 @@ function NativeVideoContent({
           initialTime={initialPlaybackTime}
           continuePlaying={initialPlaybackTime !== undefined}
           fit={viewer && !workspace ? "cover" : "contain"}
+          focusRef={playerFocusRef}
         />
       ) : asset.processingStatus === "failed" ? (
         <div className="px-6 text-center text-sm text-white/70">

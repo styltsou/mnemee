@@ -274,7 +274,7 @@ async function readBody(input: RequestInfo | URL, init?: RequestInit) {
   }
 }
 
-const realFetch = window.fetch.bind(window);
+const realFetch = globalThis.fetch.bind(globalThis);
 
 /** Answers auth API calls from the mock; anything else goes to the real fetch. */
 export const mockFetch: typeof fetch = async (input, init) => {

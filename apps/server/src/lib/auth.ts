@@ -37,8 +37,8 @@ async function discardUnverifiedLocalCredentials(userId: string) {
   await db.delete(schema.session).where(eq(schema.session.userId, userId));
 }
 
-/** `gradient:<id>` today; `upload:<key>` joins it when avatar uploads ship. */
-const AVATAR_PATTERN = /^gradient:[a-z0-9-]{1,32}$/;
+const AVATAR_PATTERN =
+  /^(?:gradient:[a-z0-9-]{1,32}|upload:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})$/i;
 
 let _auth: ReturnType<typeof createAuth> | undefined;
 

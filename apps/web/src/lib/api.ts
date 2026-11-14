@@ -107,6 +107,19 @@ export async function apiPost<T>(
   });
 }
 
+export async function apiPostFile<T>(
+  path: string,
+  file: File,
+  signal?: AbortSignal,
+): Promise<T> {
+  return request<T>(path, {
+    method: "POST",
+    body: file,
+    headers: { "Content-Type": file.type },
+    signal,
+  });
+}
+
 export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   return request<T>(path, {
     method: "PATCH",

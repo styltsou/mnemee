@@ -43,7 +43,7 @@ export function useOptimisticAvatar() {
   useEffect(() => {
     if (data?.user) {
       reconcileAvatar(data.user.id, data.user.avatar ?? "");
-    } else if (!isPending && choice.userId !== null && !choice.saving) {
+    } else if (!isPending && current.userId !== null && !current.saving) {
       setChoice({ userId: null, avatar: null, error: null, saving: false });
     }
   }, [data, isPending, current]);

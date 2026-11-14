@@ -16,6 +16,7 @@ import videoUploadRoutes from "./video-upload.routes";
 import videoPipelineRoutes from "./video-pipeline.routes";
 import mediaResolutionRoutes from "./media-resolution.routes";
 import gradientNamingPipelineRoutes from "./gradient-naming-pipeline.routes";
+import profileAvatarRoutes from "./profile-avatar.routes";
 
 export const apiRoutes = factory
   .createApp()
@@ -34,4 +35,5 @@ export const apiRoutes = factory
   .route("/", imagePipelineRoutes)
   .route("/", urlUnfurlRoutes)
   .route("/", resourcePipelineRoutes)
-  .route("/", gradientNamingPipelineRoutes);
+  .route("/", gradientNamingPipelineRoutes)
+  .route("/", profileAvatarRoutes);

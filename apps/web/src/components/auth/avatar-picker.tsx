@@ -1,4 +1,6 @@
 import { UserAvatar } from "@/components/user-avatar";
+import { useEffect, useRef, useState } from "react";
+import { LoaderCircleIcon, PlusIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +15,7 @@ import {
 } from "@/lib/avatar";
 import { authClient } from "@/lib/auth-client";
 import { chooseAvatar, useOptimisticAvatar } from "@/lib/optimistic-avatar";
+import { uploadProfilePhoto } from "@/lib/profile-avatar";
 import { cn } from "@/lib/utils";
 
 const TILE_CLASS =
@@ -40,23 +43,78 @@ const PICKER_GRADIENTS = [
 /**
  * Lets the user pick their avatar. A choice is stored on `user.avatar` and
  * beats the Google picture; picking "Google photo" clears it so the avatar
- * follows the provider again. Uploads will join this grid as another tile.
+ * follows the provider again.
  */
 export function AvatarPicker() {
   const { data } = authClient.useSession();
   const user = data?.user;
   const choice = useOptimisticAvatar();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const selectionVersion = useRef(0);
+  const uploadController = useRef<AbortController | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const activeUserId = user?.id;
+    const cancelPendingUpload = () => {
+      if (!activeUserId) return;
+      selectionVersion.current++;
+      uploadController.current?.abort();
+    };
+    return cancelPendingUpload;
+  }, [user?.id]);
 
   if (!user) return null;
+  const userId = user.id;
+  const persistedAvatar = user.avatar ?? "";
 
-  const resolved = resolveAvatar(
+  const activeAvatar =
     choice.userId === user.id && choice.avatar !== null
-      ? { ...user, avatar: choice.avatar }
-      : user,
-  );
-  const googleSelected = resolved.kind === "image";
+      ? choice.avatar
+      : user.avatar;
+  const resolved = resolveAvatar({ ...user, avatar: activeAvatar });
+  const googleSelected =
+    resolved.kind === "image" && resolved.src === user.image;
   const selectedGradientId =
     resolved.kind === "gradient" ? resolved.gradient.id : null;
+  const uploadedAvatar =
+    activeAvatar?.startsWith("upload:") && resolved.kind === "image"
+      ? resolved.src
+      : null;
+
+  function selectAvatar(avatar: string) {
+    selectionVersion.current++;
+    setUploadError(null);
+    chooseAvatar(userId, avatar, persistedAvatar);
+  }
+
+  async function uploadPhoto(file: File) {
+    const version = ++selectionVersion.current;
+    setUploadError(null);
+    setUploading(true);
+    const controller = new AbortController();
+    uploadController.current = controller;
+    try {
+      const avatar = await uploadProfilePhoto(file, controller.signal);
+      if (version === selectionVersion.current) {
+        chooseAvatar(userId, avatar, persistedAvatar);
+      }
+    } catch (error) {
+      if (version === selectionVersion.current) {
+        setUploadError(
+          error instanceof Error
+            ? error.message
+            : "Could not upload this photo.",
+        );
+      }
+    } finally {
+      if (uploadController.current === controller) {
+        uploadController.current = null;
+        setUploading(false);
+      }
+    }
+  }
 
   return (
     <div>
@@ -70,8 +128,8 @@ export function AvatarPicker() {
           <h4 className="text-sm font-medium">Avatar</h4>
           <p className="text-sm text-muted-foreground">
             {user.image
-              ? "Use your Google photo or pick a gradient."
-              : "Pick a gradient."}
+              ? "Use your Google photo, upload one, or pick a gradient."
+              : "Upload a photo or pick a gradient."}
           </p>
         </div>
       </div>
@@ -80,6 +138,7 @@ export function AvatarPicker() {
           aria-label="Avatar"
           className="flex flex-wrap gap-3 p-0.5"
           role="radiogroup"
+          tabIndex={-1}
           onKeyDown={(event) => {
             if (event.altKey || event.ctrlKey || event.metaKey) return;
             const radios = Array.from(
@@ -126,7 +185,7 @@ export function AvatarPicker() {
                       googleSelected &&
                         "ring-2 ring-foreground ring-offset-2 ring-offset-background",
                     )}
-                    onClick={() => chooseAvatar(user.id, "", user.avatar ?? "")}
+                    onClick={() => selectAvatar("")}
                     role="radio"
                     type="button"
                   />
@@ -159,11 +218,7 @@ export function AvatarPicker() {
                           "ring-2 ring-foreground ring-offset-2 ring-offset-background",
                       )}
                       onClick={() =>
-                        chooseAvatar(
-                          user.id,
-                          gradientAvatarValue(gradient.id),
-                          user.avatar ?? "",
-                        )
+                        selectAvatar(gradientAvatarValue(gradient.id))
                       }
                       role="radio"
                       style={avatarGradientStyle(gradient)}
@@ -175,7 +230,76 @@ export function AvatarPicker() {
               </Tooltip>
             );
           })}
+          {uploadedAvatar ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    aria-checked="true"
+                    aria-label="Your photo"
+                    className={cn(
+                      TILE_CLASS,
+                      "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+                    )}
+                    role="radio"
+                    tabIndex={0}
+                    type="button"
+                  />
+                }
+              >
+                <img
+                  alt=""
+                  className="size-full object-cover"
+                  src={uploadedAvatar}
+                />
+              </TooltipTrigger>
+              <TooltipContent>Your photo</TooltipContent>
+            </Tooltip>
+          ) : null}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  aria-label={
+                    uploading
+                      ? "Uploading profile photo"
+                      : "Upload a profile photo"
+                  }
+                  className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-muted p-0 text-muted-foreground hover:bg-foreground/20 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  disabled={uploading}
+                  onClick={() => inputRef.current?.click()}
+                  type="button"
+                />
+              }
+            >
+              {uploading ? (
+                <LoaderCircleIcon
+                  aria-hidden="true"
+                  className="size-4 motion-safe:animate-spin"
+                />
+              ) : (
+                <PlusIcon aria-hidden="true" className="size-4" />
+              )}
+            </TooltipTrigger>
+            <TooltipContent>Upload a profile photo</TooltipContent>
+          </Tooltip>
         </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) void uploadPhoto(file);
+          }}
+        />
+        {uploadError ? (
+          <p className="mt-3 text-sm text-destructive" role="alert">
+            {uploadError}
+          </p>
+        ) : null}
         {choice.userId === user.id && choice.error ? (
           <p className="text-sm text-destructive" role="alert">
             {choice.error}

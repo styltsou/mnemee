@@ -1,9 +1,9 @@
 import type { CSSProperties } from "react";
+import { apiUrl } from "@/lib/api";
 
 /**
  * Avatar sources, in the order they win:
- *   1. the user's explicit choice (`user.avatar`): `gradient:<id>` today,
- *      `upload:<key>` once avatar uploads ship
+ *   1. the user's explicit choice (`user.avatar`): `gradient:<id>` or `upload:<id>`
  *   2. the identity provider's picture (`user.image`, Google)
  *   3. a gradient derived from the user id, so nobody gets a blank circle
  *
@@ -105,11 +105,19 @@ export const AVATAR_GRADIENTS: readonly AvatarGradient[] = [
 ];
 
 const GRADIENT_PREFIX = "gradient:";
+const UPLOAD_PREFIX = "upload:";
+const UPLOAD_ID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 // Keep automatically assigned avatars stable when adding selectable colors.
 const DEFAULT_AVATAR_GRADIENT_COUNT = 12;
 
 export function gradientAvatarValue(id: string) {
   return `${GRADIENT_PREFIX}${id}`;
+}
+
+export function uploadedAvatarUrl(userId: string, avatarId: string) {
+  return apiUrl(
+    `/api/v1/profile/avatar/${encodeURIComponent(userId)}/${avatarId}`,
+  );
 }
 
 function findGradient(id: string) {
@@ -139,6 +147,16 @@ export function resolveAvatar(user: AvatarUser): ResolvedAvatar {
     const gradient = findGradient(choice.slice(GRADIENT_PREFIX.length));
     // An unknown id (a gradient removed later) falls through to the default.
     if (gradient) return { kind: "gradient", gradient, explicit: true };
+  }
+  if (choice?.startsWith(UPLOAD_PREFIX)) {
+    const avatarId = choice.slice(UPLOAD_PREFIX.length);
+    if (UPLOAD_ID_PATTERN.test(avatarId)) {
+      return {
+        kind: "image",
+        src: uploadedAvatarUrl(user.id, avatarId),
+        fallback,
+      };
+    }
   }
   if (user.image) return { kind: "image", src: user.image, fallback };
   return { kind: "gradient", gradient: fallback, explicit: false };

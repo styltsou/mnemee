@@ -28,13 +28,13 @@ workspace → onboarding, or one workspace), and the network delay.
 
 ## Triggering the unhappy paths
 
-| Input | Result |
-| --- | --- |
-| password `wrong` on sign in | invalid email or password |
-| email containing `unverified` on sign in | sent to the verify-email view |
-| email containing `taken` on sign up | user already exists |
-| code `000000` | invalid code |
-| code `999999` | valid, but expires at the final reset step |
+| Input                                    | Result                                     |
+| ---------------------------------------- | ------------------------------------------ |
+| password `wrong` on sign in              | invalid email or password                  |
+| email containing `unverified` on sign in | sent to the verify-email view              |
+| email containing `taken` on sign up      | user already exists                        |
+| code `000000`                            | invalid code                               |
+| code `999999`                            | valid, but expires at the final reset step |
 
 ## Files
 

@@ -22,6 +22,20 @@ describe("resolveAvatar", () => {
     });
   });
 
+  it("uses an uploaded photo over the Google picture", () => {
+    const avatar = resolveAvatar({
+      id: "u1",
+      image: google,
+      avatar: "upload:08bb7f3d-4567-498a-bf54-e0f4a9a921c4",
+    });
+    expect(avatar).toMatchObject({
+      kind: "image",
+      src: expect.stringContaining(
+        "/api/v1/profile/avatar/u1/08bb7f3d-4567-498a-bf54-e0f4a9a921c4",
+      ),
+    });
+  });
+
   it("falls back to a stable gradient for users with no picture", () => {
     const first = resolveAvatar({ id: "u1" });
     const second = resolveAvatar({ id: "u1" });

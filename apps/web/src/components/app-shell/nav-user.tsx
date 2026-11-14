@@ -172,9 +172,7 @@ export function NavUser({
             >
               {isSigningOut ? (
                 <LoaderCircleIcon className="animate-spin" />
-              ) : (
-                <LogOutIcon />
-              )}
+              ) : null}
               <span>{isSigningOut ? "Signing out" : "Sign out"}</span>
             </AlertDialogAction>
           </AlertDialogFooter>

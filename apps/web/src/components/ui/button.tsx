@@ -19,7 +19,7 @@ const buttonVariants = cva(
         destructive:
           "border-transparent bg-destructive/10 text-destructive hover:bg-destructive/20 active:bg-destructive/25 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:active:bg-destructive/35 dark:focus-visible:ring-destructive/40",
         "destructive-primary":
-          "border-[color-mix(in_oklch,var(--destructive)_84%,black)] bg-linear-to-b from-[color-mix(in_oklch,var(--destructive)_90%,white)] to-[color-mix(in_oklch,var(--destructive)_94%,black)] font-semibold text-primary-foreground shadow-[inset_0_1px_0_rgb(255_255_255_/_0.12),0_1px_2px_rgb(0_0_0_/_0.12)] hover:from-[color-mix(in_oklch,var(--destructive)_84%,white)] hover:to-[color-mix(in_oklch,var(--destructive)_98%,black)] active:not-disabled:shadow-[inset_0_1px_1px_rgb(0_0_0_/_0.12)] dark:shadow-[inset_0_1px_0_rgb(255_255_255_/_0.10),0_1px_2px_rgb(0_0_0_/_0.20)] dark:active:not-disabled:shadow-[inset_0_1px_1px_rgb(0_0_0_/_0.20)]",
+          "border-(--destructive-primary-edge) bg-linear-to-b from-(--destructive-primary-top) to-(--destructive-primary-bottom) font-semibold text-(--destructive-primary-foreground) shadow-[inset_0_1px_0_rgb(255_255_255_/_0.12),0_1px_2px_rgb(0_0_0_/_0.12)] hover:from-(--destructive-primary-hover-top) hover:to-(--destructive-primary-hover-bottom) active:not-disabled:shadow-[inset_0_1px_1px_rgb(0_0_0_/_0.12)] dark:shadow-[inset_0_1px_0_rgb(255_255_255_/_0.10),0_1px_2px_rgb(0_0_0_/_0.20)] dark:active:not-disabled:shadow-[inset_0_1px_1px_rgb(0_0_0_/_0.20)]",
         link: "border-transparent text-primary underline-offset-4 hover:underline",
       },
       size: {

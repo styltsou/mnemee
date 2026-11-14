@@ -181,7 +181,7 @@ export function ActiveSessions() {
                       confirmSignOut(
                         { type: "session", token: session.token },
                         session.id,
-                        `${device.name} — ${device.label}, signed in ${new Date(session.createdAt).toLocaleString()}${session.ipAddress ? `, IP address ${session.ipAddress}` : ""}`,
+                        `${device.name} (${device.label})`,
                       )
                     }
                   />
@@ -305,27 +305,25 @@ function getSignOutConfirmation(
       return {
         title: "Sign out everywhere?",
         description:
-          "You’ll be signed out of all your sessions, including this browser. You’ll need to sign in again to use Mnemee.",
+          "You’ll be signed out on every device, including this one.",
         buttonText: "Sign out everywhere",
       };
     case "others":
       return {
         title: "Sign out other sessions?",
-        description:
-          "All your other sessions will be signed out. You’ll stay signed in to this session.",
+        description: "Other devices will need to sign in again.",
         buttonText: "Sign out other sessions",
       };
     case "session":
       return {
         title: "Sign out of this session?",
-        description: `${sessionDescription}. You’ll need to sign in again to use Mnemee in that session. You’ll stay signed in here.`,
+        description: `${sessionDescription} will be signed out.`,
         buttonText: "Sign out session",
       };
     case "current":
       return {
         title: "Sign out of this browser?",
-        description:
-          "You’ll be signed out of Mnemee in this browser. You can sign in again to continue.",
+        description: "You’ll need to sign in again on this browser.",
         buttonText: "Sign out",
       };
   }

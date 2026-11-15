@@ -34,14 +34,14 @@ import {
 } from "@/store";
 import { makeBoardKey } from "@/components/canvas/canvas-key";
 import { CollectionViewMenu } from "@/components/collections/collection-view-menu";
-import { GridSelectionActions } from "@/components/collections/grid-selection-actions";
+import { HeaderSelectionActions } from "@/components/selection/header-selection-actions";
 import { HeaderSelectionRecess } from "./header-selection-recess";
 import { GridDensityControl } from "@/components/asset-grid/grid-density-control";
 import { useCommittedPathname } from "./use-committed-pathname";
 import { mergeWorkspaceOverlaySearch } from "@/lib/workspace-overlay-search";
 import type { WorkspaceRouteSearch } from "@/routes/$workspaceSlug/route";
 import { getBreadcrumbLayout } from "./breadcrumb-layout";
-import { selectionIdsForScope } from "@/lib/selection";
+import { makeInboxKey, selectionIdsForScope } from "@/lib/selection";
 import { cn } from "@/lib/utils";
 import "./header-selection-reveal.css";
 
@@ -309,11 +309,22 @@ export function AppHeader() {
     folderPath || undefined,
   );
   const selection = useTransientStore((state) => state.selection);
-  const selectedIds = selectionIdsForScope(selection, boardKey);
-  const hasGridSelection =
-    isBoardView && boardView === "grid" && selectedIds.length > 0;
+  const isInboxView = collectionsSegment === "inbox";
+  const isGridBoard = isBoardView && boardView === "grid";
+  const selectionScope = isInboxView ? makeInboxKey(workspaceSlug) : boardKey;
+  const selectedIds = selectionIdsForScope(selection, selectionScope);
+  const hasHeaderSelection =
+    selectedIds.length > 0 && (isGridBoard || isInboxView);
+  const replaceSelection = useTransientStore((state) => state.replaceSelection);
+  const pruneMovedFromSelection = (movedIds: readonly string[]) => {
+    const movedIdSet = new Set(movedIds);
+    replaceSelection(
+      selectionScope,
+      selectedIds.filter((id) => !movedIdSet.has(id)),
+    );
+  };
   const [retainSelectionSpace, setRetainSelectionSpace] = useState(false);
-  const selectionSpaceVisible = hasGridSelection || retainSelectionSpace;
+  const selectionSpaceVisible = hasHeaderSelection || retainSelectionSpace;
 
   return (
     <header className="sticky top-0 z-20 flex h-12 min-w-0 shrink-0 items-center bg-sidebar transition-[height] duration-(--sidebar-duration) ease-(--sidebar-ease) group-has-[[data-slot=sidebar][data-state=collapsed]]/sidebar-wrapper:h-12 motion-reduce:transition-none md:h-14">
@@ -331,23 +342,27 @@ export function AppHeader() {
           initial={false}
           onExitComplete={() => setRetainSelectionSpace(false)}
         >
-          {hasGridSelection ? (
+          {hasHeaderSelection ? (
             <HeaderSelectionRecess
-              key={boardKey}
+              key={selectionScope}
               onRevealStart={() => setRetainSelectionSpace(true)}
             >
-              <GridSelectionActions
+              <HeaderSelectionActions
+                scopeKey={selectionScope}
+                surface={isInboxView ? "inbox" : "grid"}
                 selectedIds={selectedIds}
-                boardKey={boardKey}
                 workspaceSlug={workspaceSlug}
-                collectionSlug={collectionSlug}
-                folderPath={folderPath || undefined}
+                collectionSlug={isInboxView ? undefined : collectionSlug}
+                folderPath={isInboxView ? undefined : folderPath || undefined}
+                onMoved={isInboxView ? pruneMovedFromSelection : undefined}
               />
             </HeaderSelectionRecess>
           ) : null}
         </AnimatePresence>
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {collectionsSegment === "inbox" ? <GridDensityControl /> : null}
+          {collectionsSegment === "inbox" ? (
+            <GridDensityControl compact={selectionSpaceVisible} />
+          ) : null}
           {isCollectionsView ? (
             <CreateCollectionDialog workspaceSlug={workspaceSlug}>
               <Button

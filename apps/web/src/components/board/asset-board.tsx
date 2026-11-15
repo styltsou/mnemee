@@ -12,16 +12,14 @@ import {
   selectionMarqueeClassName,
   useMarqueeSelection,
 } from "./use-marquee-selection";
-import { SelectionActionBar } from "@/components/selection/selection-action-bar";
 import {
   isPersistedSelectableAsset,
   isSelectionShortcut,
   isSelectionShortcutBlocked,
+  makeInboxKey,
   selectionIdsForScope,
 } from "@/lib/selection";
 import { useTransientStore } from "@/store";
-import { useBulkDelete } from "@/api/collection";
-import { MoveToDialog } from "@/components/move-to-dialog";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect";
 
 type CollectionDeleteContext = {
@@ -79,7 +77,7 @@ export function AssetBoard({
   onSelectAll?: () => Promise<string[]>;
 }) {
   const scopeKey = inboxContext
-    ? `inbox:${inboxContext.workspaceSlug}`
+    ? makeInboxKey(inboxContext.workspaceSlug)
     : undefined;
   const selection = useTransientStore((state) => state.selection);
   const activateSelectionScope = useTransientStore(
@@ -95,7 +93,6 @@ export function AssetBoard({
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadMoreInFlightRef = useRef(false);
   const [contentWidth, setContentWidth] = useState(0);
-  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const eligibleIds = useMemo(
     () =>
       new Set(
@@ -251,18 +248,6 @@ export function AssetBoard({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [clearSelection, eligibleIds, onSelectAll, replaceSelection, scopeKey]);
 
-  const bulkDelete = useBulkDelete(inboxContext?.workspaceSlug ?? "");
-  const handleBulkDelete = useCallback(() => {
-    bulkDelete.mutate(
-      { nodeIds: selectedIds },
-      {
-        onSuccess: () => {
-          if (scopeKey) clearSelection(scopeKey);
-        },
-      },
-    );
-  }, [bulkDelete, clearSelection, scopeKey, selectedIds]);
-
   return (
     // Pointer-gesture surface (marquee selection and click capture).
     // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
@@ -288,17 +273,6 @@ export function AssetBoard({
           clearSelection(scopeKey);
       }}
     >
-      {scopeKey ? (
-        <div className="pointer-events-auto absolute top-2 left-1/2 z-20 -translate-x-1/2">
-          <SelectionActionBar
-            count={selectedIds.length}
-            surface="inbox"
-            onClear={() => clearSelection(scopeKey)}
-            onMove={() => setMoveDialogOpen(true)}
-            onDelete={handleBulkDelete}
-          />
-        </div>
-      ) : null}
       {assets.length === 0 ? (
         <MasonryEmptyState title={emptyTitle} description={emptyDescription}>
           {emptyStateChildren}
@@ -340,24 +314,6 @@ export function AssetBoard({
             top: marquee.marquee.top,
             width: marquee.marquee.right - marquee.marquee.left,
             height: marquee.marquee.bottom - marquee.marquee.top,
-          }}
-        />
-      ) : null}
-      {inboxContext ? (
-        <MoveToDialog
-          open={moveDialogOpen && selectedIds.length > 0}
-          onOpenChange={setMoveDialogOpen}
-          source={{
-            workspaceSlug: inboxContext.workspaceSlug,
-            nodeIds: selectedIds,
-          }}
-          onMoved={(movedIds) => {
-            if (!scopeKey) return;
-            const movedIdSet = new Set(movedIds);
-            replaceSelection(
-              scopeKey,
-              selectedIds.filter((id) => !movedIdSet.has(id)),
-            );
           }}
         />
       ) : null}

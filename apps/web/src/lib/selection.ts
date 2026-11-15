@@ -52,3 +52,7 @@ export function selectionIdsForScope(
 ): string[] {
   return selection.scopeKey === scopeKey ? selection.nodeIds : [];
 }
+
+export function makeInboxKey(workspaceSlug: string): string {
+  return `inbox:${workspaceSlug}`;
+}

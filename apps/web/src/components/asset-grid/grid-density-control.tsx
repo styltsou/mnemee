@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GLASS_FRAME_CLASS } from "@/lib/glass";
 import { cn } from "@/lib/utils";
 
-export function GridDensityControl() {
+export function GridDensityControl({ compact = false }: { compact?: boolean }) {
   const { density, setDensity } = useGridDensity();
 
   return (
@@ -16,7 +16,7 @@ export function GridDensityControl() {
       onValueChange={(value) => setDensity(value as GridDensity)}
       variant="segment-contrast"
       size="sm"
-      className="pointer-events-auto h-fit"
+      className={cn("pointer-events-auto h-fit", compact && "hidden sm:block")}
     >
       <TabsList
         data-grid-control

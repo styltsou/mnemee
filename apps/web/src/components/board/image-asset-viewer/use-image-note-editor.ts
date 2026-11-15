@@ -129,6 +129,10 @@ export function useImageNoteEditor({
             onSavedRef.current?.({
               ...currentAsset,
               ...updatedImage,
+              title:
+                updatedImage.title === undefined
+                  ? currentAsset.title
+                  : (updatedImage.title ?? undefined),
               note: updatedImage.note,
             });
           }

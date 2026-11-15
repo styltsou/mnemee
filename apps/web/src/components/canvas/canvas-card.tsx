@@ -145,6 +145,7 @@ export const CanvasCard = memo(function CanvasCard({
       !pendingDropPreview &&
       asset.type === "image" ? (
         <ImageAssetCard
+          canvas
           asset={asset}
           onOpen={isPending ? undefined : () => data.onOpenImage(node)}
           isContextMenuOpen={isContextMenuOpen}
@@ -153,6 +154,7 @@ export const CanvasCard = memo(function CanvasCard({
       ) : null}
       {node.type === "video" && asset.type === "video" ? (
         <VideoAssetCard
+          canvas
           asset={asset}
           onOpen={isPending ? undefined : () => data.onOpenVideo(asset)}
           isContextMenuOpen={isContextMenuOpen}

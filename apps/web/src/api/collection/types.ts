@@ -523,12 +523,14 @@ export type ColorNamingActionInput = {
 export type UpdateColorResponse = { color: UpdatedColor };
 
 export type UpdateImageInput = {
-  note: string | null;
+  note?: string | null;
+  title?: string | null;
 };
 
 export type UpdatedImage = {
   id: string;
   type: "image";
+  title?: string | null;
   note: string | null;
   isFavorite: boolean;
   updatedAt: string;

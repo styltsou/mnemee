@@ -16,6 +16,7 @@ import {
   UpdateNodePositionsSchema,
   UpdateNoteSchema,
   UpdateImageSchema,
+  UpdateVideoSchema,
   UpdateLinkSchema,
   MoveCollectionNodesParentSchema,
   UpdateCanvasTextSchema,
@@ -372,6 +373,16 @@ describe("canvas object DTOs", () => {
 });
 
 describe("image note DTOs", () => {
+  it("accepts name-only edits without injecting a note change", () => {
+    for (const schema of [UpdateImageSchema, UpdateVideoSchema]) {
+      expect(schema.parse({ title: "  Coast study  " })).toEqual({
+        title: "Coast study",
+      });
+      expect(schema.parse({ title: null })).toEqual({ title: null });
+      expect(schema.safeParse({}).success).toBe(false);
+      expect(schema.safeParse({ title: "x".repeat(256) }).success).toBe(false);
+    }
+  });
   it("accepts bounded text and clearing an image note", () => {
     expect(
       UpdateImageSchema.parse({ note: "Reference for the hero image" }),

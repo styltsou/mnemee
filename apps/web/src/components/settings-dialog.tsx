@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { useTheme } from "@/components/theme-provider";
 import { AccountSettings } from "@/components/auth/account-settings";
+import { AssetNameSettings } from "@/components/asset-name-settings";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -390,6 +391,7 @@ function AppearanceSection() {
           </div>
         </div>
       </div>
+      <AssetNameSettings />
     </section>
   );
 }

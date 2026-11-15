@@ -1989,6 +1989,7 @@ function applyUpdatedImageToContents(
         ? {
             ...node,
             note: image.note,
+            ...(image.title !== undefined ? { title: image.title } : {}),
             isFavorite: image.isFavorite,
             updatedAt: image.updatedAt,
           }
@@ -2007,7 +2008,11 @@ function applyImageDraftToContents(
     ...current,
     nodes: current.nodes.map((node) =>
       node.type === "image" && node.id === draft.assetId
-        ? { ...node, note: draft.note }
+        ? {
+            ...node,
+            ...(draft.note !== undefined ? { note: draft.note } : {}),
+            ...(draft.title !== undefined ? { title: draft.title } : {}),
+          }
         : node,
     ),
   };

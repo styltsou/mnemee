@@ -979,7 +979,12 @@ export class AssetService implements IAssetService {
     const updated = await db.transaction(async (tx) => {
       const [asset] = await tx
         .update(assets)
-        .set({ updatedByUserId: userId })
+        .set({
+          updatedByUserId: userId,
+          ...(data.title !== undefined
+            ? { title: data.title?.trim() || null }
+            : {}),
+        })
         .where(
           and(
             eq(assets.id, target.entityId),
@@ -989,6 +994,7 @@ export class AssetService implements IAssetService {
         )
         .returning({
           id: assets.id,
+          title: assets.title,
           isFavorite: assets.isFavorite,
           updatedAt: assets.updatedAt,
         });
@@ -999,7 +1005,7 @@ export class AssetService implements IAssetService {
 
       const [image] = await tx
         .update(imageAssets)
-        .set({ note })
+        .set({ note: data.note === undefined ? imageAssets.note : note })
         .where(eq(imageAssets.assetId, asset.id))
         .returning({ note: imageAssets.note });
 
@@ -1013,6 +1019,7 @@ export class AssetService implements IAssetService {
     return {
       id: `image-${updated.id}`,
       type: "image",
+      title: updated.title,
       note: updated.note,
       isFavorite: updated.isFavorite,
       updatedAt: updated.updatedAt.toISOString(),
@@ -1032,7 +1039,12 @@ export class AssetService implements IAssetService {
     const updated = await db.transaction(async (tx) => {
       const [asset] = await tx
         .update(assets)
-        .set({ updatedByUserId: userId })
+        .set({
+          updatedByUserId: userId,
+          ...(data.title !== undefined
+            ? { title: data.title?.trim() || null }
+            : {}),
+        })
         .where(
           and(
             eq(assets.id, target.entityId),
@@ -1042,19 +1054,23 @@ export class AssetService implements IAssetService {
         )
         .returning({
           id: assets.id,
+          title: assets.title,
           isFavorite: assets.isFavorite,
           updatedAt: assets.updatedAt,
         });
       if (!asset) throw new AppError(ErrorCode.NOT_FOUND, "Video not found");
-      await tx
+      const [video] = await tx
         .update(videoAssets)
-        .set({ note })
-        .where(eq(videoAssets.assetId, asset.id));
-      return { ...asset, note };
+        .set({ note: data.note === undefined ? videoAssets.note : note })
+        .where(eq(videoAssets.assetId, asset.id))
+        .returning({ note: videoAssets.note });
+      if (!video) throw new AppError(ErrorCode.NOT_FOUND, "Video not found");
+      return { ...asset, note: video.note };
     });
     return {
       id: `video-${updated.id}`,
       type: "video",
+      title: updated.title,
       note: updated.note,
       isFavorite: updated.isFavorite,
       updatedAt: updated.updatedAt.toISOString(),

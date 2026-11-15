@@ -380,27 +380,33 @@ export const ColorNamingActionSchema = z.object({
 });
 export type ColorNamingActionInput = z.infer<typeof ColorNamingActionSchema>;
 
-export const UpdateImageSchema = z.object({
-  note: z.string().max(10_000).nullable(),
-});
+export const UpdateImageSchema = z
+  .object({
+    note: z.string().max(10_000).nullable().optional(),
+    title: z.string().trim().max(255).nullable().optional(),
+  })
+  .refine(
+    (data) => data.note !== undefined || data.title !== undefined,
+    "Provide a name or note",
+  );
 
 export type UpdateImageInput = z.infer<typeof UpdateImageSchema>;
 
 export type UpdatedImage = {
   id: string;
   type: "image";
+  title: string | null;
   note: string | null;
   isFavorite: boolean;
   updatedAt: string;
 };
 
-export const UpdateVideoSchema = z.object({
-  note: z.string().max(10_000).nullable(),
-});
+export const UpdateVideoSchema = UpdateImageSchema;
 export type UpdateVideoInput = z.infer<typeof UpdateVideoSchema>;
 export type UpdatedVideo = {
   id: string;
   type: "video";
+  title: string | null;
   note: string | null;
   isFavorite: boolean;
   updatedAt: string;

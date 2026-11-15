@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { apiPatch } from "@/lib/api";
+import { MediaAssetTitle } from "../media-asset-title";
 import { downloadAssetOriginal } from "@/lib/asset-download";
 import { cn } from "@/lib/utils";
 import { consumeVideoPlaybackPosition } from "@/lib/video-playback-position";
@@ -185,6 +186,7 @@ export function VideoAssetViewer({
             {accessibleDescription}
           </DrawerDescription>
           <NativeVideoToolbar
+            workspaceSlug={workspaceSlug}
             asset={displayedAsset}
             loading={loading}
             onClose={onDismissAll ?? onClose}
@@ -286,6 +288,7 @@ export function VideoAssetViewer({
           {accessibleDescription}
         </DialogDescription>
         <NativeVideoToolbar
+          workspaceSlug={workspaceSlug}
           asset={displayedAsset}
           loading={loading}
           onClose={onDismissAll ?? onClose}
@@ -346,6 +349,7 @@ export function VideoAssetViewer({
 }
 
 function NativeVideoToolbar({
+  workspaceSlug,
   asset,
   loading,
   onClose,
@@ -360,6 +364,7 @@ function NativeVideoToolbar({
   fullscreenMorphDuration,
   onToggleExpanded,
 }: {
+  workspaceSlug: string;
   asset?: VideoAsset;
   loading: boolean;
   onClose: () => void;
@@ -429,9 +434,13 @@ function NativeVideoToolbar({
         </ToolbarButton>
       ) : null}
       {asset ? (
-        <span className="max-w-[min(32rem,calc(100vw-12rem))] min-w-0 truncate px-1 text-sm font-medium text-foreground">
-          {asset.title?.trim() || "Untitled video"}
-        </span>
+        <div className="max-w-[min(32rem,calc(100vw-12rem))] min-w-0 text-sm font-medium text-foreground">
+          <MediaAssetTitle
+            key={asset.id}
+            asset={asset}
+            workspaceSlug={workspaceSlug}
+          />
+        </div>
       ) : (
         <Skeleton
           className="mx-1 h-4 w-32 shrink-0 rounded-sm"

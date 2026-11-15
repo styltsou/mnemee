@@ -50,6 +50,8 @@ import {
 import Cropper, { type Area, type MediaSize, type Size } from "react-easy-crop";
 import "react-easy-crop/react-easy-crop.css";
 import { ImageColorPalette, ImageMetadataDetails } from "./image-metadata";
+import { MediaAssetTitle } from "../media-asset-title";
+import { getMediaAssetName } from "@/lib/asset-name-preferences";
 import { CropToolbar } from "./crop-toolbar";
 import { getImageNavigation } from "./image-navigation";
 import { apiPost } from "@/lib/api";
@@ -1042,6 +1044,7 @@ function ImageViewerModeButton({
 
 function ImageViewerModalHeaderControls({
   title,
+  titleEditor,
   onClose,
   onExpand,
   onPeek,
@@ -1050,6 +1053,7 @@ function ImageViewerModalHeaderControls({
   titleLoading,
 }: {
   title: string;
+  titleEditor?: React.ReactNode;
   onClose: () => void;
   onExpand: () => void;
   onPeek?: () => void;
@@ -1131,9 +1135,9 @@ function ImageViewerModalHeaderControls({
           aria-hidden="true"
         />
       ) : (
-        <span className="max-w-[min(32rem,calc(100vw-14rem))] min-w-0 truncate px-1 text-sm font-medium text-foreground">
-          {title}
-        </span>
+        <div className="max-w-[min(32rem,calc(100vw-14rem))] min-w-0 text-sm font-medium text-foreground">
+          {titleEditor ?? title}
+        </div>
       )}
     </div>
   );
@@ -1279,7 +1283,17 @@ export function ImageAssetViewer({
     applicableEditedAsset ??
     selectedAsset ??
     (loading ? undefined : retainedAssetRef.current);
-  const title = asset?.title || asset?.sourceLabel || "Image preview";
+  const title = asset ? getMediaAssetName(asset) : "Image preview";
+  const titleEditor = asset ? (
+    <MediaAssetTitle
+      key={asset.id}
+      asset={asset}
+      workspaceSlug={workspaceSlug}
+      onSaved={(title) =>
+        setEditedAsset({ ...asset, title: title ?? undefined })
+      }
+    />
+  ) : undefined;
   const {
     currentIndex: currentAssetIndex,
     previousAsset,
@@ -2255,15 +2269,16 @@ export function ImageAssetViewer({
                       aria-hidden="true"
                     />
                   ) : (
-                    <span className="min-w-0 truncate text-sm font-medium text-foreground">
-                      {title}
-                    </span>
+                    <div className="min-w-0 text-sm font-medium text-foreground">
+                      {titleEditor}
+                    </div>
                   )}
                 </div>
               </div>
             ) : (
               <ImageViewerModalHeaderControls
                 title={title}
+                titleEditor={titleEditor}
                 onClose={handleClose}
                 onExpand={toggleExpanded}
                 loading={loading || !asset}

@@ -142,7 +142,7 @@ export class ImageUploadService implements IImageUploadService {
         .values({
           organizationId: orgId,
           type: "image",
-          title: data.title ?? data.fileName,
+          title: data.title?.trim() || data.fileName,
           createdByUserId: userId,
           updatedByUserId: userId,
           ...(target ? {} : { lastAddedToInboxAt: new Date() }),
@@ -337,7 +337,7 @@ export class ImageUploadService implements IImageUploadService {
         .values({
           organizationId: orgId,
           type: "image",
-          title: data.title ?? fileName,
+          title: data.title?.trim() || fileName,
           createdByUserId: userId,
           updatedByUserId: userId,
           ...(target ? {} : { lastAddedToInboxAt: new Date() }),

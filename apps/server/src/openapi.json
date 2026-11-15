@@ -1567,8 +1567,8 @@
       "patch": {
         "operationId": "updateImage",
         "tags": ["Assets"],
-        "summary": "Update image notes",
-        "description": "Replaces the plain-text note stored in the image asset metadata.",
+        "summary": "Update image name or notes",
+        "description": "Updates the shared asset title and/or image note. Omitted fields are preserved.",
         "parameters": [
           { "$ref": "#/components/parameters/WorkspaceSlug" },
           {
@@ -2152,7 +2152,7 @@
       "patch": {
         "operationId": "updateVideoNote",
         "tags": ["Assets"],
-        "summary": "Replace a video note",
+        "summary": "Update video name or notes",
         "parameters": [
           { "$ref": "#/components/parameters/WorkspaceSlug" },
           {
@@ -3013,8 +3013,9 @@
       },
       "UpdateImageRequest": {
         "type": "object",
-        "required": ["note"],
+        "anyOf": [{ "required": ["title"] }, { "required": ["note"] }],
         "properties": {
+          "title": { "type": "string", "nullable": true, "maxLength": 255 },
           "note": {
             "type": "string",
             "nullable": true,
@@ -3025,8 +3026,9 @@
       },
       "UpdateVideoRequest": {
         "type": "object",
-        "required": ["note"],
+        "anyOf": [{ "required": ["title"] }, { "required": ["note"] }],
         "properties": {
+          "title": { "type": ["string", "null"], "maxLength": 255 },
           "note": { "type": ["string", "null"], "maxLength": 10000 }
         }
       },
@@ -3760,8 +3762,9 @@
       },
       "UpdatedImage": {
         "type": "object",
-        "required": ["id", "type", "note", "isFavorite", "updatedAt"],
+        "required": ["id", "type", "title", "note", "isFavorite", "updatedAt"],
         "properties": {
+          "title": { "type": "string", "nullable": true },
           "id": { "type": "string", "pattern": "^image-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
           "type": { "type": "string", "enum": ["image"] },
           "note": { "type": "string", "nullable": true },
@@ -3784,8 +3787,9 @@
       },
       "UpdatedVideo": {
         "type": "object",
-        "required": ["id", "type", "note", "isFavorite", "updatedAt"],
+        "required": ["id", "type", "title", "note", "isFavorite", "updatedAt"],
         "properties": {
+          "title": { "type": ["string", "null"] },
           "id": { "type": "string", "pattern": "^video-\\d+$" },
           "type": { "const": "video" },
           "note": { "type": ["string", "null"] },

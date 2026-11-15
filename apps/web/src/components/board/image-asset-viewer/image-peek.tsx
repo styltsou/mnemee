@@ -23,6 +23,7 @@ import type { ImageAsset } from "@/types/asset";
 
 import { ImageColorPalette, ImageMetadataDetails } from "./image-metadata";
 import { useImageNoteEditor } from "./use-image-note-editor";
+import { MediaAssetTitle } from "../media-asset-title";
 
 const MIN_HERO_HEIGHT = 304;
 
@@ -194,11 +195,18 @@ export function ImagePeek({
           <div className="min-w-0 flex-1 space-y-5 px-5 py-5">
             <div>
               <span className="text-xs font-medium text-muted-foreground">
-                Title
+                Name
               </span>
-              <p className="mt-1 text-sm font-medium wrap-break-word text-foreground">
-                {asset.title ?? "Untitled image"}
-              </p>
+              <div className="mt-1 -ml-2 min-w-0 text-sm font-medium text-foreground">
+                <MediaAssetTitle
+                  key={asset.id}
+                  asset={asset}
+                  workspaceSlug={workspaceSlug}
+                  onSaved={(title) =>
+                    onAssetChange({ ...asset, title: title ?? undefined })
+                  }
+                />
+              </div>
             </div>
 
             {asset.sourceUrl ? (

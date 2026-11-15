@@ -143,6 +143,100 @@ describe("asset modal morph source", () => {
 });
 
 describe("asset modal morph", () => {
+  it.each(["open", "close"] as const)(
+    "uses only transforms and opacity for the image %s morph",
+    async (direction) => {
+      const animate = () => ({ finished: Promise.resolve(), cancel: vi.fn() });
+      const thumbnail = {
+        complete: true,
+        currentSrc: "/thumbnail.webp",
+        naturalWidth: 400,
+      };
+      const cardHero = {
+        dataset: { assetCardHero: "image" },
+        getBoundingClientRect: () => ({
+          left: 32,
+          top: 42,
+          width: 196,
+          height: 98,
+        }),
+        querySelectorAll: () => [thumbnail],
+      };
+      const modalHero = {
+        getBoundingClientRect: () => ({
+          left: 100,
+          top: 140,
+          width: 600,
+          height: 300,
+        }),
+        animate: vi.fn(animate),
+      };
+      const modal = {
+        dataset: {},
+        style: {},
+        getBoundingClientRect: () => ({
+          left: 80,
+          top: 100,
+          width: 900,
+          height: 600,
+        }),
+        querySelector: () => modalHero,
+        animate: vi.fn(animate),
+      } as unknown as HTMLElement;
+      const card = {
+        style: { visibility: direction === "open" ? "" : "hidden" },
+        getBoundingClientRect: () => ({
+          left: 30,
+          top: 40,
+          width: 200,
+          height: 100,
+        }),
+        querySelector: (selector: string) =>
+          selector === "[data-asset-card-hero]" ? cardHero : null,
+      } as unknown as HTMLElement;
+      const preview = {
+        dataset: {},
+        style: {},
+        setAttribute: vi.fn(),
+        remove: vi.fn(),
+        animate: vi.fn(animate),
+      };
+      const createElement = vi.fn(() => preview);
+      vi.stubGlobal("document", {
+        querySelector: () => null,
+        body: { append: vi.fn() },
+        createElement,
+      });
+      vi.stubGlobal("getComputedStyle", () => ({
+        opacity: "1",
+        borderRadius: "8px",
+      }));
+
+      const morph = startAssetModalMorph(direction, card, modal, "");
+      expect(morph).toBeDefined();
+      expect(card.style.visibility).toBe("hidden");
+      expect(createElement).toHaveBeenCalledExactlyOnceWith("img");
+      expect(preview).toMatchObject({ src: thumbnail.currentSrc });
+      const panelFrames = vi.mocked(modal.animate).mock
+        .calls[0][0] as Keyframe[];
+      const panelProperties = new Set(
+        panelFrames.flatMap((frame) => Object.keys(frame)),
+      );
+      expect(panelProperties).toEqual(
+        new Set(["transform", "opacity", "offset"]),
+      );
+      expect(preview.animate).toHaveBeenCalledWith(
+        expect.arrayContaining([{ transform: "none" }]),
+        expect.objectContaining({ fill: "both" }),
+      );
+
+      await morph?.finished;
+      expect(preview.remove).toHaveBeenCalledOnce();
+      expect(modal.dataset.assetImageMorphing).toBeUndefined();
+      expect(card.style.visibility).toBe(direction === "open" ? "hidden" : "");
+    },
+  );
+
   it("moves the modal from the card and keeps the source hidden after opening", async () => {
     const panelAnimation = { finished: Promise.resolve(), cancel: vi.fn() };
     const previewAnimation = { finished: Promise.resolve(), cancel: vi.fn() };

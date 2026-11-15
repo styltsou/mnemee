@@ -112,6 +112,14 @@ function InboxPage() {
     () => data?.nodes.map(collectionNodeToAsset) ?? EMPTY_ASSETS,
     [data?.nodes],
   );
+  const nodesById = useMemo(
+    () => new Map(data?.nodes.map((node) => [node.id, node])),
+    [data?.nodes],
+  );
+  const imageSiblings = useMemo(
+    () => data?.nodes.filter((node) => node.type === "image"),
+    [data?.nodes],
+  );
   const hasResolvedColorSearch =
     selectedColorHexes.length > 0 && colorSearch.data !== undefined;
   const displayAssets = useMemo(
@@ -154,21 +162,17 @@ function InboxPage() {
   );
   const handleOpenAsset = useCallback(
     (assetId: string) => {
-      const node = data?.nodes.find((candidate) => candidate.id === assetId);
+      const node = nodesById.get(assetId);
       openAsset(assetId, {
+        origin: "grid",
         initialData:
           node && node.type !== "folder"
             ? { asset: node, location: { type: "inbox" } }
             : undefined,
-        imageSiblings: data?.nodes.filter(
-          (
-            candidate,
-          ): candidate is Extract<typeof candidate, { type: "image" }> =>
-            candidate.type === "image",
-        ),
+        imageSiblings: node?.type === "image" ? imageSiblings : undefined,
       });
     },
-    [data?.nodes, openAsset],
+    [imageSiblings, nodesById, openAsset],
   );
   const handleOpenNode = useCallback(
     (node: { id: string }) => handleOpenAsset(node.id),

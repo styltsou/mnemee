@@ -1,4 +1,5 @@
 import { restoreStyleWithoutTransition } from "@/lib/restore-style-without-transition";
+import { startImageAssetModalMorph } from "./image-asset-modal-morph";
 
 const OPEN_DURATION = 250;
 const CLOSE_DURATION = 150;
@@ -129,6 +130,34 @@ export function startAssetModalMorph(
   const modalHero = modal.querySelector<HTMLElement>("[data-asset-modal-hero]");
   const cardHeroRect = cardHero?.getBoundingClientRect();
   const modalHeroRect = modalHero?.getBoundingClientRect();
+  if (
+    cardHero?.dataset.assetCardHero === "image" &&
+    cardHeroRect?.width &&
+    cardHeroRect.height &&
+    modalHero &&
+    modalHeroRect?.width &&
+    modalHeroRect.height
+  ) {
+    const morph = startImageAssetModalMorph({
+      direction,
+      card,
+      cardHero,
+      cardHeroRect,
+      surfaceRect,
+      modal,
+      modalHero,
+      modalHeroRect,
+      modalRect,
+      backdrop,
+      restoredCardVisibility,
+      timing: {
+        duration: direction === "open" ? OPEN_DURATION : CLOSE_DURATION,
+        easing: MORPH_EASING,
+        fill: "both",
+      },
+    });
+    if (morph) return morph;
+  }
   const morphHero = Boolean(
     cardHero &&
     modalHero &&

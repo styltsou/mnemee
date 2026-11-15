@@ -555,6 +555,7 @@ function ProgressiveViewerImage({
   pickMode,
   onPick,
   loadSamplingCanvas,
+  allowOriginal,
   animateLayout = false,
   layoutDependency,
   layoutTransition,
@@ -567,12 +568,14 @@ function ProgressiveViewerImage({
   pickMode?: boolean;
   onPick?: (hex: string) => void;
   loadSamplingCanvas?: () => Promise<HTMLCanvasElement | null>;
+  allowOriginal: boolean;
   animateLayout?: boolean;
   layoutDependency?: string;
   layoutTransition?: Transition;
 }) {
   const maxViewerImageHeight = MAX_VIEWER_IMAGE_WIDTH / aspectRatio;
   const [shouldLoadOriginal, setShouldLoadOriginal] = useState(false);
+  const [isPreviewReady, setIsPreviewReady] = useState(false);
   const [isOriginalReady, setIsOriginalReady] = useState(false);
   const [hover, setHover] = useState<{
     x: number;
@@ -603,11 +606,12 @@ function ProgressiveViewerImage({
   pickModeRef.current = pickMode;
 
   useEffect(() => {
-    if (!hasSeparateOriginal) return;
+    if (!hasSeparateOriginal || !isPreviewReady || !allowOriginal) return;
 
-    const frame = requestAnimationFrame(() => setShouldLoadOriginal(true));
-    return () => cancelAnimationFrame(frame);
-  }, [hasSeparateOriginal]);
+    // Give the thumbnail a paint and cancel the upgrade when paging quickly.
+    const timer = window.setTimeout(() => setShouldLoadOriginal(true), 150);
+    return () => window.clearTimeout(timer);
+  }, [allowOriginal, hasSeparateOriginal, isPreviewReady]);
 
   const handleOriginalLoad = useCallback(
     (event: SyntheticEvent<HTMLImageElement>) => {
@@ -829,6 +833,9 @@ function ProgressiveViewerImage({
         alt={alt}
         draggable={false}
         loading="eager"
+        decoding="async"
+        onLoad={() => setIsPreviewReady(true)}
+        onError={() => setIsPreviewReady(true)}
         className="size-full rounded-[inherit] object-cover"
       />
       {hasSeparateOriginal && shouldLoadOriginal && originalUrl ? (
@@ -838,6 +845,8 @@ function ProgressiveViewerImage({
           aria-hidden="true"
           draggable={false}
           loading="eager"
+          decoding="async"
+          fetchPriority="low"
           onLoad={handleOriginalLoad}
           className={cn(
             "absolute inset-0 size-full rounded-[inherit] object-cover transition-opacity duration-150 motion-reduce:transition-none",
@@ -1279,15 +1288,18 @@ export function ImageAssetViewer({
   const hasImageNavigation = currentAssetIndex >= 0 && assets.length > 1;
 
   useEffect(() => {
+    if (!open || sharedMorphing) return;
     const adjacentUrls = [previousAsset?.url, nextAsset?.url].filter(
       (url): url is string => Boolean(url),
     );
     for (const url of adjacentUrls) {
       const image = new Image();
       image.decoding = "async";
+      image.fetchPriority = "low";
       image.src = url;
+      void image.decode().catch(() => undefined);
     }
-  }, [nextAsset?.url, previousAsset?.url]);
+  }, [nextAsset?.url, open, previousAsset?.url, sharedMorphing]);
 
   const originalAspect = asset
     ? (asset.originalWidth ?? asset.width) /
@@ -1441,7 +1453,9 @@ export function ImageAssetViewer({
 
   const handleAssetChange = useCallback(
     (nextAsset: ImageAsset, nextView: "modal" | "full") => {
-      void flushImageNote().then(() => onAssetChange?.(nextAsset, nextView));
+      // Edits already have a local draft and the save queue survives the swap.
+      void flushImageNote();
+      onAssetChange?.(nextAsset, nextView);
     },
     [flushImageNote, onAssetChange],
   );
@@ -2295,8 +2309,9 @@ export function ImageAssetViewer({
                   aria-hidden="true"
                 >
                   <img
-                    src={displayUrl}
+                    src={blurPlaceholder ?? displayUrl}
                     alt=""
+                    decoding="async"
                     className="absolute top-1/2 left-1/2 h-1/2 w-1/2 -translate-x-1/2 -translate-y-1/2 scale-[2.2] transform-gpu object-cover blur-2xl saturate-150 [@media(prefers-reduced-transparency:reduce)]:hidden"
                   />
                   <div className="absolute inset-0 bg-neutral-950/45" />
@@ -2411,6 +2426,7 @@ export function ImageAssetViewer({
                       pickMode={isEyeDropping}
                       onPick={handlePickColorResult}
                       loadSamplingCanvas={loadSamplingCanvas}
+                      allowOriginal={open && !sharedMorphing}
                       animateLayout={Boolean(assetModalId) && !sharedMorphing}
                       layoutDependency={presentation}
                       layoutTransition={fullscreenLayoutTransition}

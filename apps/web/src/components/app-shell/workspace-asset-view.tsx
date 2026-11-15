@@ -19,7 +19,6 @@ import {
   inboxContentsQueryOptions,
   type AssetLocation,
   type CollectionImageNode,
-  type CollectionNode,
 } from "@/api/collection";
 import { fetchPeekableAsset } from "@/api/collection/fetchers";
 import type { PeekableAssetResponse } from "@/api/collection/types";
@@ -160,6 +159,15 @@ export function WorkspaceAssetViewProvider({
   const activeMorphRef = useRef<ReturnType<typeof startAssetModalMorph> | null>(
     null,
   );
+  const pendingSharedEntryRef = useRef<{
+    assetId: string;
+    card: HTMLElement;
+  } | null>(null);
+  const pendingOpenRef = useRef<{
+    presentation: AssetPresentation;
+    sourceCard?: HTMLElement;
+  } | null>(null);
+  const openingSequenceRef = useRef(0);
   const hiddenSourceCardRef = useRef<{
     assetId: string;
     card: HTMLElement;
@@ -194,6 +202,58 @@ export function WorkspaceAssetViewProvider({
       releaseHiddenSourceCard();
     }
   }, [presentation?.assetId, releaseHiddenSourceCard]);
+
+  useLayoutEffect(() => {
+    const entry = pendingSharedEntryRef.current;
+    if (!entry || entry.assetId !== sharedEntryAssetId) return;
+
+    const { assetId, card } = entry;
+    const resetSharedEntry = () => {
+      pendingSharedEntryRef.current = null;
+      setSharedEntryAssetId(undefined);
+      setMorphingAssetId(undefined);
+    };
+    const startEntry = () => {
+      if (pendingSharedEntryRef.current !== entry) return true;
+      const modal = findAssetModal(assetId);
+      if (!modal && card.isConnected) return false;
+
+      const visibility = card.style.visibility;
+      const morph =
+        modal && card.isConnected
+          ? startAssetModalMorph("open", card, modal)
+          : undefined;
+      if (!morph) {
+        resetSharedEntry();
+        return true;
+      }
+
+      pendingSharedEntryRef.current = null;
+      activeMorphRef.current = morph;
+      hiddenSourceCardRef.current = { assetId, card, visibility };
+      void morph.finished.then(() => {
+        if (activeMorphRef.current !== morph) return;
+        activeMorphRef.current = null;
+        setMorphingAssetId(undefined);
+      });
+      return true;
+    };
+
+    if (startEntry()) return;
+    // A dialog portal can mount one commit after its controller.
+    const observer = new MutationObserver(() => {
+      if (startEntry()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    const timeout = window.setTimeout(() => {
+      observer.disconnect();
+      if (pendingSharedEntryRef.current === entry) resetSharedEntry();
+    }, 100);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timeout);
+    };
+  }, [sharedEntryAssetId]);
 
   useLayoutEffect(() => {
     const current = presentation;
@@ -231,9 +291,22 @@ export function WorkspaceAssetViewProvider({
     return () => observer.disconnect();
   }, [presentation, search.view, sharedEntryAssetId]);
 
+  const showAssetPresentation = useCallback(
+    (next: AssetPresentation, sourceCard?: HTMLElement) => {
+      pendingSharedEntryRef.current = sourceCard
+        ? { assetId: next.assetId, card: sourceCard }
+        : null;
+      setSharedEntryAssetId(sourceCard ? next.assetId : undefined);
+      setMorphingAssetId(sourceCard ? next.assetId : undefined);
+      setPresentation(next);
+    },
+    [],
+  );
+
   const openAssetImpl = useCallback(
     async (nextAssetId: string, options?: OpenAssetOptions) => {
       if (!parseWorkspaceAssetId(nextAssetId)) return Promise.resolve(false);
+      const sequence = ++openingSequenceRef.current;
       const currentPresentation = presentationRef.current;
       if (
         assetId === nextAssetId &&
@@ -269,13 +342,17 @@ export function WorkspaceAssetViewProvider({
       if (peekTarget?.type === "image" && peekTarget.asset.id === nextAssetId) {
         await flushPeekImage();
       }
-      if (assetId && !(await prepareMainNoteLeave())) return false;
+      if (
+        (currentPresentation?.assetId ?? assetId)?.startsWith("note-") &&
+        !(await prepareMainNoteLeave())
+      )
+        return false;
+      if (openingSequenceRef.current !== sequence) return false;
       pendingCloseNavigationRef.current = undefined;
       closingTransitionRef.current = false;
       activeMorphRef.current?.cancel();
       activeMorphRef.current = null;
       releaseHiddenSourceCard();
-      setMorphingAssetId(undefined);
       const queryKey = workspaceAssetQueryKey(workspaceSlug, nextAssetId);
       if (options?.initialData && !queryClient.getQueryData(queryKey)) {
         queryClient.setQueryData<PeekableAssetResponse>(
@@ -285,7 +362,7 @@ export function WorkspaceAssetViewProvider({
       }
       const nextPresentation = openAssetPresentation(
         nextAssetId,
-        assetId,
+        nextAssetId,
         options?.imageSiblings,
         options?.presentation,
       );
@@ -301,43 +378,13 @@ export function WorkspaceAssetViewProvider({
         canMorphAssetModal()
           ? findVisibleAssetCard(nextAssetId, options.origin)
           : undefined;
-      if (sourceCard) {
-        const sourceVisibility = sourceCard.style.visibility;
-        flushSync(() => {
-          setSharedEntryAssetId(nextAssetId);
-          setMorphingAssetId(nextAssetId);
-          setPresentation(nextPresentation);
-        });
-        const modal = findAssetModal(nextAssetId);
-        const morph = modal
-          ? startAssetModalMorph("open", sourceCard, modal)
-          : undefined;
-        if (morph) {
-          activeMorphRef.current = morph;
-          hiddenSourceCardRef.current = {
-            assetId: nextAssetId,
-            card: sourceCard,
-            visibility: sourceVisibility,
-          };
-          void morph.finished.then(() => {
-            if (activeMorphRef.current !== morph) return;
-            activeMorphRef.current = null;
-            setMorphingAssetId((current) =>
-              current === nextAssetId ? undefined : current,
-            );
-          });
-        } else {
-          setSharedEntryAssetId(undefined);
-          setMorphingAssetId((current) =>
-            current === nextAssetId ? undefined : current,
-          );
-        }
+      // Let history accept the change before mounting or swapping the viewer.
+      // This keeps its rendering and layout work out of the URL update.
+      if (assetId === nextAssetId) {
+        showAssetPresentation(nextPresentation, sourceCard);
+      } else {
+        pendingOpenRef.current = { presentation: nextPresentation, sourceCard };
       }
-      if (!sourceCard) {
-        setSharedEntryAssetId(undefined);
-        setPresentation(nextPresentation);
-      }
-      recordRecentWorkspaceAsset(workspaceSlug, nextAssetId);
       return navigateOverlay(
         workspaceAssetPath(boardPathname, nextAssetId),
         openMainAssetSearchPatch({
@@ -348,8 +395,16 @@ export function WorkspaceAssetViewProvider({
         }),
         options?.replace,
       )
-        .then(() => true)
+        .then(() => {
+          if (openingSequenceRef.current === sequence) {
+            recordRecentWorkspaceAsset(workspaceSlug, nextAssetId);
+          }
+          return true;
+        })
         .catch(() => {
+          if (openingSequenceRef.current !== sequence) return false;
+          pendingOpenRef.current = null;
+          pendingSharedEntryRef.current = null;
           activeMorphRef.current?.cancel();
           activeMorphRef.current = null;
           releaseHiddenSourceCard();
@@ -374,6 +429,7 @@ export function WorkspaceAssetViewProvider({
       releaseHiddenSourceCard,
       search.peek,
       search.view,
+      showAssetPresentation,
       workspaceSlug,
     ],
   );
@@ -603,6 +659,12 @@ export function WorkspaceAssetViewProvider({
   ]);
 
   useEffect(() => {
+    const pending = pendingOpenRef.current;
+    if (pending && pending.presentation.assetId === assetId) {
+      pendingOpenRef.current = null;
+      showAssetPresentation(pending.presentation, pending.sourceCard);
+      return;
+    }
     setPresentation((current) => {
       const synced = syncAssetPresentationToUrl(current, assetId);
       return synced && assetId
@@ -612,7 +674,7 @@ export function WorkspaceAssetViewProvider({
           }
         : synced;
     });
-  }, [assetId, search.view]);
+  }, [assetId, search.view, showAssetPresentation]);
 
   const value = useMemo(() => ({ openAsset }), [openAsset]);
 
@@ -764,7 +826,10 @@ function WorkspaceAssetViewController({
 
   const inboxSiblingQuery = useQuery({
     ...inboxContentsQueryOptions(workspaceSlug),
-    enabled: asset?.type === "image" && location?.type === "inbox",
+    enabled:
+      asset?.type === "image" &&
+      location?.type === "inbox" &&
+      morphingAssetId !== assetId,
   });
   const collectionSiblingQuery = useQuery({
     ...collectionContentsQueryOptions(
@@ -772,22 +837,25 @@ function WorkspaceAssetViewController({
       location?.type === "collection" ? location.collectionSlug : "",
       location?.type === "collection" ? location.folderPath : undefined,
     ),
-    enabled: asset?.type === "image" && location?.type === "collection",
+    enabled:
+      asset?.type === "image" &&
+      location?.type === "collection" &&
+      morphingAssetId !== assetId,
   });
   const queriedSiblingNodes =
     location?.type === "collection"
       ? collectionSiblingQuery.data?.nodes
       : inboxSiblingQuery.data?.nodes;
-  const siblingNodes = queriedSiblingNodes ?? presentation?.imageSiblings;
   const siblingImageNodes = useMemo(
     () =>
-      (siblingNodes ?? []).filter(
-        (
-          node: CollectionNode,
-        ): node is Extract<CollectionNode, { type: "image" }> =>
-          node.type === "image",
-      ),
-    [siblingNodes],
+      queriedSiblingNodes?.filter((node) => node.type === "image") ??
+      presentation?.imageSiblings ??
+      [],
+    [presentation?.imageSiblings, queriedSiblingNodes],
+  );
+  const siblingImagesById = useMemo(
+    () => new Map(siblingImageNodes.map((node) => [node.id, node])),
+    [siblingImageNodes],
   );
   const siblingImages = useMemo(
     () =>
@@ -893,16 +961,12 @@ function WorkspaceAssetViewController({
           onShowInBoard={showAction}
           onDismissAll={closeAllAssets}
           onAssetChange={(image, view) => {
-            const node = siblingImageNodes.find(
-              (candidate) => candidate.id === image.id,
-            );
+            const node = siblingImagesById.get(image.id);
             openAsset(image.id, {
               replace: true,
               presentation: view === "full" ? "fullscreen" : undefined,
               initialData:
-                node?.type === "image" && location
-                  ? { asset: node, location }
-                  : undefined,
+                node && location ? { asset: node, location } : undefined,
               imageSiblings: siblingImageNodes,
             });
           }}

@@ -91,15 +91,14 @@ export function useImageNoteEditor({
 
   const persist = useCallback(
     (assetId: string, draft: string) => {
-      const savedNote = savedRef.current.get(assetId) ?? null;
-      const nextNote = draft.trim() ? draft : null;
-      if (nextNote === savedNote) {
-        clearImageNoteDraft(workspaceSlug, assetId);
+      if (requestRef.current) {
+        queueRef.current.set(assetId, draft);
         return;
       }
 
-      if (requestRef.current) {
-        queueRef.current.set(assetId, draft);
+      const nextNote = draft.trim() ? draft : null;
+      if ((nextNote ?? "") === savedRef.current.get(assetId)) {
+        clearImageNoteDraft(workspaceSlug, assetId);
         return;
       }
 
@@ -110,17 +109,19 @@ export function useImageNoteEditor({
 
           if (assetIdRef.current === assetId) {
             if (draftRef.current === draft) {
+              queueRef.current.delete(assetId);
               draftRef.current = updatedNote;
               setNote(updatedNote);
               clearImageNoteDraft(workspaceSlug, assetId);
             } else {
               queueRef.current.set(assetId, draftRef.current);
             }
-          } else if (queueRef.current.get(assetId) === draft) {
-            queueRef.current.delete(assetId);
-            clearImageNoteDraft(workspaceSlug, assetId);
           } else {
-            clearImageNoteDraft(workspaceSlug, assetId);
+            const queued = queueRef.current.get(assetId);
+            if (queued === draft) queueRef.current.delete(assetId);
+            if (queued === undefined || queued === draft) {
+              clearImageNoteDraft(workspaceSlug, assetId);
+            }
           }
 
           const currentAsset = assetRef.current;
@@ -133,7 +134,9 @@ export function useImageNoteEditor({
           }
         })
         .catch((error: unknown) => {
-          saveImageNoteDraft(workspaceSlug, assetId, draft);
+          if (readImageNoteDraft(workspaceSlug, assetId, false) === undefined) {
+            saveImageNoteDraft(workspaceSlug, assetId, draft);
+          }
           toast.error(
             error instanceof Error
               ? error.message

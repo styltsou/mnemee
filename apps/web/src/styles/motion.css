@@ -5,6 +5,15 @@
   opacity: 1 !important;
 }
 
+[data-asset-image-morphing] {
+  animation: none !important;
+  transition: none !important;
+  scale: 1 !important;
+  transform-origin: top left;
+  pointer-events: none;
+  backdrop-filter: none;
+}
+
 .workspace-asset-view-backdrop {
   transition-duration: 250ms;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);

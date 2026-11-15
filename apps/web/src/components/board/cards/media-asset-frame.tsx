@@ -91,8 +91,10 @@ export function MediaAssetFrame({
           <span
             title={name}
             className={cn(
-              "max-w-full min-w-0 truncate text-xs font-medium",
-              outside ? "text-sidebar-foreground/80" : MEDIA_CARD_PILL_CLASS,
+              "max-w-full min-w-0 truncate font-medium",
+              outside
+                ? "text-sm text-sidebar-foreground/80"
+                : MEDIA_CARD_PILL_CLASS,
             )}
           >
             {name}

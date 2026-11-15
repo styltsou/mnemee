@@ -7,6 +7,7 @@ import { getCanvasDropFanOffset } from "./canvas-drop-stack";
 
 export const BOARD_CARD_WIDTH = 280;
 export const BOARD_ITEM_GAP = 32;
+const SELECTION_LAYOUT_GAP = 40;
 
 export type CanvasLayoutNode = (CollectionNode | CanvasTextObject) & {
   layoutWidth?: number;
@@ -419,8 +420,8 @@ export function arrangeNodesInGrid(
     rowHeights[row] = Math.max(rowHeights[row]!, getNodeHeight(node));
   }
 
-  const columnLefts = getTrackOffsets(columnWidths);
-  const rowTops = getTrackOffsets(rowHeights);
+  const columnLefts = getTrackOffsets(columnWidths, SELECTION_LAYOUT_GAP);
+  const rowTops = getTrackOffsets(rowHeights, SELECTION_LAYOUT_GAP);
 
   for (let index = 0; index < count; index += 1) {
     const column = index % columns;
@@ -490,7 +491,7 @@ export function makeNodesInRow(
         ),
       ),
     };
-    left += getNodeWidth(node) + BOARD_ITEM_GAP;
+    left += getNodeWidth(node) + SELECTION_LAYOUT_GAP;
   }
 
   return result;
@@ -526,7 +527,7 @@ export function makeNodesInColumn(
       ),
       y: Math.round(top),
     };
-    top += getNodeHeight(node) + BOARD_ITEM_GAP;
+    top += getNodeHeight(node) + SELECTION_LAYOUT_GAP;
   }
 
   return result;
@@ -615,18 +616,20 @@ function getMasonryLayout(
       columnBottoms,
     );
     positions[originalIndex] = {
-      x: Math.round(bounds.left + column * (columnWidth + BOARD_ITEM_GAP)),
+      x: Math.round(
+        bounds.left + column * (columnWidth + SELECTION_LAYOUT_GAP),
+      ),
       y: Math.round(columnBottoms[column]!),
     };
-    columnBottoms[column] += getNodeHeight(node) + BOARD_ITEM_GAP;
+    columnBottoms[column] += getNodeHeight(node) + SELECTION_LAYOUT_GAP;
   }
 
   return {
     positions,
-    width: columns * columnWidth + (columns - 1) * BOARD_ITEM_GAP,
+    width: columns * columnWidth + (columns - 1) * SELECTION_LAYOUT_GAP,
     height: Math.max(
       1,
-      Math.max(...columnBottoms) - bounds.top - BOARD_ITEM_GAP,
+      Math.max(...columnBottoms) - bounds.top - SELECTION_LAYOUT_GAP,
     ),
     columns,
   };
@@ -666,13 +669,13 @@ function getClosestPosition(position: number, positions: number[]): number {
   return closest;
 }
 
-function getTrackOffsets(trackSizes: number[]): number[] {
+function getTrackOffsets(trackSizes: number[], gap = BOARD_ITEM_GAP): number[] {
   const offsets: number[] = [];
   let offset = 0;
 
   for (const size of trackSizes) {
     offsets.push(offset);
-    offset += size + BOARD_ITEM_GAP;
+    offset += size + gap;
   }
 
   return offsets;

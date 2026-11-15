@@ -1,10 +1,10 @@
-import { Switch } from "@/components/ui/switch";
 import { motion, useReducedMotion } from "motion/react";
 import {
-  CANVAS_PATTERN_STYLES,
   useCanvasPattern,
   type CanvasPattern,
 } from "@/components/canvas/canvas-pattern";
+import { CanvasPatternPreview } from "@/components/canvas/canvas-pattern-preview";
+import { Switch } from "@/components/ui/switch";
 import {
   ASSET_NAME_POSITIONS,
   useAssetNamePreferences,
@@ -29,58 +29,13 @@ function PositionPreview({
           ? 29
           : 68;
   const gradientId = `asset-name-preview-${position}`;
-  const patternStyle =
-    pattern === "none" ? null : CANVAS_PATTERN_STYLES[pattern];
   return (
     <span
       aria-hidden="true"
-      className="relative block w-full overflow-hidden rounded-sm bg-card"
+      className="relative block w-full overflow-hidden rounded-[3px] bg-card"
     >
-      {patternStyle ? (
-        <svg className="absolute inset-0 size-full" aria-hidden="true">
-          <defs>
-            <pattern
-              id={`${gradientId}-pattern`}
-              width={patternStyle.gap}
-              height={patternStyle.gap}
-              patternUnits="userSpaceOnUse"
-              patternTransform={`translate(-${1 + (pattern === "cross" ? (patternStyle.size ?? 6) : patternStyle.gap) / 2},-${1 + (pattern === "cross" ? (patternStyle.size ?? 6) : patternStyle.gap) / 2})`}
-            >
-              {pattern === "dots" ? (
-                <circle
-                  cx="0.5"
-                  cy="0.5"
-                  r={(patternStyle.size ?? 1) / 2}
-                  fill="var(--foreground)"
-                  fillOpacity={patternStyle.opacity}
-                />
-              ) : pattern === "lines" ? (
-                <path
-                  d={`M${patternStyle.gap / 2} 0V${patternStyle.gap} M0 ${patternStyle.gap / 2}H${patternStyle.gap}`}
-                  fill="none"
-                  stroke="var(--foreground)"
-                  strokeOpacity={patternStyle.opacity}
-                  strokeWidth={patternStyle.lineWidth}
-                />
-              ) : (
-                <path
-                  d={`M0 ${(patternStyle.size ?? 5) / 2}h${patternStyle.size ?? 5} M${(patternStyle.size ?? 5) / 2} 0v${patternStyle.size ?? 5}`}
-                  fill="none"
-                  stroke="var(--foreground)"
-                  strokeOpacity={patternStyle.opacity}
-                  strokeWidth={patternStyle.lineWidth}
-                />
-              )}
-            </pattern>
-          </defs>
-          <rect
-            width="100%"
-            height="100%"
-            fill={`url(#${gradientId}-pattern)`}
-          />
-        </svg>
-      ) : null}
-      <svg viewBox="0 0 128 96" className="block w-full">
+      <CanvasPatternPreview pattern={pattern} className="absolute inset-0" />
+      <svg viewBox="0 0 128 96" className="relative block w-full">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
             <stop stopColor="#bdc8bd" />
@@ -234,7 +189,7 @@ export function AssetNameSettings() {
               >
                 <span
                   className={cn(
-                    "block overflow-hidden rounded-md border bg-card p-1.5",
+                    "block overflow-hidden rounded-md border bg-background p-0.5",
                     position === option.value
                       ? "border-foreground ring-1 ring-foreground"
                       : "border-border hover:border-foreground/50",

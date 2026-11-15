@@ -10,6 +10,7 @@ import {
 import { useTheme } from "@/components/theme-provider";
 import { AccountSettings } from "@/components/auth/account-settings";
 import { AssetNameSettings } from "@/components/asset-name-settings";
+import { CanvasPatternPreview } from "@/components/canvas/canvas-pattern-preview";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -28,9 +29,7 @@ import { SETTINGS_REQUEST_EVENT, closeSettings } from "@/lib/settings-dialog";
 import { useWorkspaceOverlayNavigation } from "@/components/app-shell/use-workspace-overlay-navigation";
 import {
   CANVAS_PATTERNS,
-  CANVAS_PATTERN_PREVIEWS,
   useCanvasPattern,
-  type CanvasPattern,
 } from "@/components/canvas/canvas-pattern";
 
 const THEMES = [
@@ -67,111 +66,55 @@ function nextOptionIndex(
 }
 
 function ThemePreviewScene({ dark }: { dark: boolean }) {
-  const background = dark ? "#171717" : "#ffffff";
-  const sidebar = dark ? "#242424" : "#f9f9f9";
-  const card = dark ? "#292929" : "#ffffff";
-  const border = dark ? "#3d3d3d" : "#e7e7e7";
-  const foreground = dark ? "#f4f4f4" : "#252525";
-  const muted = dark ? "#858585" : "#a3a3a3";
+  const shell = dark ? "#0a0a0a" : "#fff";
+  const board = dark ? "#171717" : "#fafafa";
+  const surface = dark ? "#242424" : "#fff";
+  const active = dark ? "#262626" : "#eee";
+  const border = dark ? "#353535" : "#e0e0e0";
+  const foreground = dark ? "#d4d4d4" : "#404040";
+  const muted = "#888";
 
   return (
     <>
-      <rect width="240" height="140" fill={background} />
-      <rect width="240" height="20" fill={sidebar} />
-      <path d="M0 20H240M58 20V140" stroke={border} />
-      <rect x="0" y="20" width="58" height="120" fill={sidebar} />
-      <path d="M58 20V140" stroke={border} />
-      <circle cx="12" cy="10" r="2" fill={muted} />
-      <circle cx="19" cy="10" r="2" fill={muted} opacity=".6" />
-      <circle cx="26" cy="10" r="2" fill={muted} opacity=".35" />
-      <text
-        x="68"
-        y="13"
-        fill={foreground}
-        fontSize="7"
-        fontWeight="600"
-        fontFamily="Inter, sans-serif"
-      >
-        mnemee
-      </text>
+      <rect width="60" height="42" fill={shell} />
+      <rect x="3" y="3" width="4" height="4" rx="1" fill={foreground} />
+      <rect x="9" y="4.5" width="5" height="1" rx="0.5" fill={muted} />
+      <rect x="2" y="12" width="13" height="5" rx="1.25" fill={active} />
+      <g fill="none" strokeLinecap="round">
+        <path d="M5 14.5h7M19 4.5h8" stroke={foreground} />
+        <path d="M5 21.5h6M5 27.5h8M51 4.5h4" stroke={muted} />
+      </g>
       <rect
-        x="8"
-        y="33"
-        width="42"
-        height="10"
-        rx="2"
-        fill={dark ? "#383838" : "#eaeaea"}
-      />
-      <rect
-        x="13"
-        y="37"
-        width="22"
-        height="2"
-        rx="1"
-        fill={foreground}
-        opacity=".7"
-      />
-      <rect x="13" y="53" width="27" height="2" rx="1" fill={muted} />
-      <rect x="13" y="65" width="19" height="2" rx="1" fill={muted} />
-      <rect x="13" y="77" width="24" height="2" rx="1" fill={muted} />
-      <text
-        x="76"
-        y="45"
-        fill={foreground}
-        fontSize="13"
-        fontWeight="600"
-        fontFamily="Inter, sans-serif"
-      >
-        Ideas
-      </text>
-      <rect
-        x="76"
-        y="58"
-        width="69"
-        height="62"
-        rx="4"
-        fill={card}
+        x="17.5"
+        y="9.5"
+        width="40"
+        height="30"
+        rx="3"
+        fill={board}
         stroke={border}
       />
       <rect
-        x="85"
-        y="68"
-        width="35"
-        height="3"
+        x="22.5"
+        y="14.5"
+        width="16"
+        height="15"
         rx="1.5"
-        fill={foreground}
-        opacity=".8"
-      />
-      <rect x="85" y="78" width="48" height="2" rx="1" fill={muted} />
-      <rect x="85" y="85" width="39" height="2" rx="1" fill={muted} />
-      <rect
-        x="85"
-        y="101"
-        width="22"
-        height="10"
-        rx="2"
-        fill={dark ? "#454545" : "#eeeeee"}
-      />
-      <rect
-        x="153"
-        y="70"
-        width="68"
-        height="51"
-        rx="4"
-        fill={card}
+        fill={surface}
         stroke={border}
       />
+      <path d="M26 19.5h8" stroke={foreground} strokeLinecap="round" />
+      <path d="M26 23.5h9M26 26.5h6" stroke={muted} strokeLinecap="round" />
       <rect
-        x="162"
-        y="79"
-        width="26"
-        height="3"
+        x="42.5"
+        y="18.5"
+        width="10"
+        height="11"
         rx="1.5"
-        fill={foreground}
-        opacity=".8"
+        fill={active}
+        stroke={border}
       />
-      <rect x="162" y="90" width="47" height="2" rx="1" fill={muted} />
-      <rect x="162" y="97" width="35" height="2" rx="1" fill={muted} />
+      <path d="M44 26l2.5-3 2 2 1-1 1.5 2z" fill={muted} />
+      <rect x="32" y="34" width="11" height="3" rx="1.5" fill={active} />
     </>
   );
 }
@@ -181,79 +124,21 @@ function ThemePreview({ theme }: { theme: ThemeValue }) {
     <svg
       aria-hidden="true"
       className="block size-full rounded-[3px]"
-      viewBox="0 0 240 140"
-      preserveAspectRatio="xMidYMid slice"
+      viewBox="0 0 60 42"
+      preserveAspectRatio="none"
     >
       <ThemePreviewScene dark={theme === "dark"} />
       {theme === "system" && (
         <>
           <defs>
             <clipPath id="settings-system-preview-dark">
-              <rect x="120" width="120" height="140" />
+              <rect x="30" width="30" height="42" />
             </clipPath>
           </defs>
           <g clipPath="url(#settings-system-preview-dark)">
             <ThemePreviewScene dark />
           </g>
-          <path d="M120 0V140" stroke="#a3a3a3" strokeOpacity=".55" />
-        </>
-      )}
-    </svg>
-  );
-}
-
-function CanvasPatternPreview({ pattern }: { pattern: CanvasPattern }) {
-  const style = pattern === "none" ? null : CANVAS_PATTERN_PREVIEWS[pattern];
-  const patternId = `settings-canvas-${pattern}`;
-  const gap = style?.gap ?? 1;
-  const radius = style?.radius ?? 1;
-  const size = style?.size ?? 1;
-  const lineWidth = style?.lineWidth ?? 1;
-
-  return (
-    <svg
-      aria-hidden="true"
-      className="block size-full rounded-[3px] text-foreground"
-    >
-      <rect width="100%" height="100%" fill="var(--card)" />
-      {style && (
-        <>
-          <defs>
-            <pattern
-              id={patternId}
-              width={gap}
-              height={gap}
-              patternUnits="userSpaceOnUse"
-              patternTransform={`translate(-${1 + (pattern === "cross" ? size : gap) / 2},-${1 + (pattern === "cross" ? size : gap) / 2})`}
-            >
-              {pattern === "dots" ? (
-                <circle
-                  cx={radius}
-                  cy={radius}
-                  r={radius}
-                  fill="currentColor"
-                  opacity={style.opacity}
-                />
-              ) : pattern === "lines" ? (
-                <path
-                  d={`M${gap / 2} 0V${gap}M0 ${gap / 2}H${gap}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={lineWidth}
-                  opacity={style.opacity}
-                />
-              ) : (
-                <path
-                  d={`M${size / 2} 0v${size}M0 ${size / 2}h${size}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={lineWidth}
-                  opacity={style.opacity}
-                />
-              )}
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill={`url(#${patternId})`} />
+          <path d="M30 0v42" stroke="#8a8a8a" strokeOpacity=".45" />
         </>
       )}
     </svg>
@@ -380,7 +265,7 @@ function AppearanceSection() {
                     />
                   }
                 >
-                  <CanvasPatternPreview pattern={value} />
+                  <CanvasPatternPreview pattern={value} kind="thumbnail" />
                 </TooltipTrigger>
                 <TooltipContent side="top">{label}</TooltipContent>
               </Tooltip>

@@ -64,9 +64,9 @@ export const CANVAS_PATTERN_PREVIEWS: Record<
   Exclude<CanvasPattern, "none">,
   CanvasPatternPreviewStyle
 > = {
-  dots: { gap: 14, radius: 1.1, lineWidth: 1, opacity: 0.35 },
-  lines: { gap: 14, lineWidth: 1, opacity: 0.2 },
-  cross: { gap: 18, size: 5, lineWidth: 1, opacity: 0.24 },
+  dots: { gap: 12, radius: 1, lineWidth: 1, opacity: 0.45 },
+  lines: { gap: 12, lineWidth: 0.8, opacity: 0.3 },
+  cross: { gap: 14, size: 5, lineWidth: 1, opacity: 0.4 },
 };
 
 function isCanvasPattern(value: string | null): value is CanvasPattern {

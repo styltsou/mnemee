@@ -1,13 +1,24 @@
 import { Switch } from "@/components/ui/switch";
 import { motion, useReducedMotion } from "motion/react";
 import {
+  CANVAS_PATTERN_STYLES,
+  useCanvasPattern,
+  type CanvasPattern,
+} from "@/components/canvas/canvas-pattern";
+import {
   ASSET_NAME_POSITIONS,
   useAssetNamePreferences,
   type AssetNamePosition,
 } from "@/lib/asset-name-preferences";
 import { cn } from "@/lib/utils";
 
-function PositionPreview({ position }: { position: AssetNamePosition }) {
+function PositionPreview({
+  position,
+  pattern,
+}: {
+  position: AssetNamePosition;
+  pattern: CanvasPattern;
+}) {
   const inside = position.startsWith("inside");
   const labelY =
     position === "above"
@@ -15,14 +26,60 @@ function PositionPreview({ position }: { position: AssetNamePosition }) {
       : position === "below"
         ? 89
         : position === "inside-top"
-          ? 27
-          : 70;
+          ? 29
+          : 68;
   const gradientId = `asset-name-preview-${position}`;
+  const patternStyle =
+    pattern === "none" ? null : CANVAS_PATTERN_STYLES[pattern];
   return (
     <span
       aria-hidden="true"
-      className="relative block w-full overflow-hidden rounded-sm"
+      className="relative block w-full overflow-hidden rounded-sm bg-card"
     >
+      {patternStyle ? (
+        <svg className="absolute inset-0 size-full" aria-hidden="true">
+          <defs>
+            <pattern
+              id={`${gradientId}-pattern`}
+              width={patternStyle.gap}
+              height={patternStyle.gap}
+              patternUnits="userSpaceOnUse"
+              patternTransform={`translate(-${1 + (pattern === "cross" ? (patternStyle.size ?? 6) : patternStyle.gap) / 2},-${1 + (pattern === "cross" ? (patternStyle.size ?? 6) : patternStyle.gap) / 2})`}
+            >
+              {pattern === "dots" ? (
+                <circle
+                  cx="0.5"
+                  cy="0.5"
+                  r={(patternStyle.size ?? 1) / 2}
+                  fill="var(--foreground)"
+                  fillOpacity={patternStyle.opacity}
+                />
+              ) : pattern === "lines" ? (
+                <path
+                  d={`M${patternStyle.gap / 2} 0V${patternStyle.gap} M0 ${patternStyle.gap / 2}H${patternStyle.gap}`}
+                  fill="none"
+                  stroke="var(--foreground)"
+                  strokeOpacity={patternStyle.opacity}
+                  strokeWidth={patternStyle.lineWidth}
+                />
+              ) : (
+                <path
+                  d={`M0 ${(patternStyle.size ?? 5) / 2}h${patternStyle.size ?? 5} M${(patternStyle.size ?? 5) / 2} 0v${patternStyle.size ?? 5}`}
+                  fill="none"
+                  stroke="var(--foreground)"
+                  strokeOpacity={patternStyle.opacity}
+                  strokeWidth={patternStyle.lineWidth}
+                />
+              )}
+            </pattern>
+          </defs>
+          <rect
+            width="100%"
+            height="100%"
+            fill={`url(#${gradientId}-pattern)`}
+          />
+        </svg>
+      ) : null}
       <svg viewBox="0 0 128 96" className="block w-full">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -34,7 +91,6 @@ function PositionPreview({ position }: { position: AssetNamePosition }) {
             <rect x="14" y="18" width="100" height="61" rx="4" />
           </clipPath>
         </defs>
-        <rect width="128" height="96" fill="var(--background)" />
         <g clipPath={`url(#${gradientId}-clip)`}>
           <rect
             x="14"
@@ -91,10 +147,11 @@ function PositionPreview({ position }: { position: AssetNamePosition }) {
 
 export function AssetNameSettings() {
   const { alwaysVisible, position, setPreferences } = useAssetNamePreferences();
+  const { pattern } = useCanvasPattern();
   const reduceMotion = useReducedMotion();
   return (
-    <div className="mt-3 rounded-xl border border-border/70 bg-background p-1">
-      <div className="rounded-lg border border-border/70 bg-card px-4 py-4 sm:px-5">
+    <div className="mt-3 overflow-hidden rounded-lg border border-border/70 bg-card">
+      <div className="px-4 py-4 sm:px-5">
         <div className="flex items-center justify-between gap-5">
           <div>
             <label
@@ -135,17 +192,11 @@ export function AssetNameSettings() {
         aria-hidden={!alwaysVisible}
         inert={!alwaysVisible}
       >
-        <div className="px-3 pt-4 pb-3 sm:px-4">
-          <p
-            id="asset-name-position-label"
-            className="text-xs font-medium text-muted-foreground"
-          >
-            Position
-          </p>
+        <div className="rounded-t-lg border-t border-border/70 bg-background px-4 py-4 sm:px-5">
           <div
             role="radiogroup"
-            aria-labelledby="asset-name-position-label"
-            className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4"
+            aria-label="Asset name position"
+            className="grid grid-cols-2 gap-3 sm:grid-cols-4"
           >
             {ASSET_NAME_POSITIONS.map((option, index) => (
               <button
@@ -183,13 +234,13 @@ export function AssetNameSettings() {
               >
                 <span
                   className={cn(
-                    "block overflow-hidden rounded-md border bg-background p-0.5",
+                    "block overflow-hidden rounded-md border bg-card p-1.5",
                     position === option.value
                       ? "border-foreground ring-1 ring-foreground"
                       : "border-border hover:border-foreground/50",
                   )}
                 >
-                  <PositionPreview position={option.value} />
+                  <PositionPreview position={option.value} pattern={pattern} />
                 </span>
                 <span className="mt-2 block text-center">{option.label}</span>
               </button>

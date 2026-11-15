@@ -214,10 +214,8 @@ function CanvasPatternPreview({ pattern }: { pattern: CanvasPattern }) {
     <svg
       aria-hidden="true"
       className="block size-full rounded-[3px] text-foreground"
-      viewBox="0 0 64 48"
-      preserveAspectRatio="xMidYMid slice"
     >
-      <rect width="64" height="48" fill="var(--background)" />
+      <rect width="100%" height="100%" fill="var(--card)" />
       {style && (
         <>
           <defs>
@@ -226,11 +224,12 @@ function CanvasPatternPreview({ pattern }: { pattern: CanvasPattern }) {
               width={gap}
               height={gap}
               patternUnits="userSpaceOnUse"
+              patternTransform={`translate(-${1 + (pattern === "cross" ? size : gap) / 2},-${1 + (pattern === "cross" ? size : gap) / 2})`}
             >
               {pattern === "dots" ? (
                 <circle
-                  cx={gap / 2}
-                  cy={gap / 2}
+                  cx={radius}
+                  cy={radius}
                   r={radius}
                   fill="currentColor"
                   opacity={style.opacity}
@@ -245,9 +244,7 @@ function CanvasPatternPreview({ pattern }: { pattern: CanvasPattern }) {
                 />
               ) : (
                 <path
-                  d={`M${gap / 2} ${(gap - size) / 2}v${size}M${
-                    (gap - size) / 2
-                  } ${gap / 2}h${size}`}
+                  d={`M${size / 2} 0v${size}M0 ${size / 2}h${size}`}
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={lineWidth}
@@ -256,36 +253,9 @@ function CanvasPatternPreview({ pattern }: { pattern: CanvasPattern }) {
               )}
             </pattern>
           </defs>
-          <rect width="64" height="48" fill={`url(#${patternId})`} />
+          <rect width="100%" height="100%" fill={`url(#${patternId})`} />
         </>
       )}
-      <rect
-        x="21"
-        y="13"
-        width="24"
-        height="20"
-        rx="2"
-        fill="var(--card)"
-        stroke="var(--border)"
-        strokeWidth=".75"
-      />
-      <clipPath id={`${patternId}-image`}>
-        <rect x="23" y="15" width="20" height="13" rx="1" />
-      </clipPath>
-      <g clipPath={`url(#${patternId}-image)`}>
-        <rect x="23" y="15" width="20" height="13" fill="#bcc7bb" />
-        <circle cx="38" cy="18" r="1.6" fill="#ead3b2" />
-        <path d="M23 27l6-7 5 5 3-3 6 6H23z" fill="#667f77" />
-      </g>
-      <rect
-        x="25"
-        y="30"
-        width="11"
-        height="1"
-        rx=".5"
-        fill="var(--foreground)"
-        opacity=".4"
-      />
     </svg>
   );
 }

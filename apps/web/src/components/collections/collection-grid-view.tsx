@@ -40,6 +40,7 @@ import {
 } from "@/components/asset-grid/grid-density";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect";
+import { useGridOverflowPadding } from "@/hooks/use-grid-overflow-padding";
 import { collectionNodeToAsset } from "@/lib/asset-transform";
 import { sortCollectionNodesByMostRecent } from "@/lib/collection-node-order";
 import {
@@ -141,6 +142,14 @@ const CollectionGridContent = memo(function CollectionGridContent({
 }: CollectionGridViewProps & { density: GridDensity }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
+  const { ref: overflowRef, overflowing } = useGridOverflowPadding();
+  const setSurfaceRef = useCallback(
+    (surface: HTMLDivElement | null) => {
+      surfaceRef.current = surface;
+      overflowRef(surface);
+    },
+    [overflowRef],
+  );
   const contentRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [contentWidth, setContentWidth] = useState(0);
@@ -423,8 +432,11 @@ const CollectionGridContent = memo(function CollectionGridContent({
         {/* Pointer-gesture surface (marquee selection and click capture). */}
         {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
-          ref={surfaceRef}
-          className="relative min-h-full w-full p-5 pb-20"
+          ref={setSurfaceRef}
+          className={cn(
+            "relative min-h-full w-full p-5",
+            overflowing ? "pb-20" : "pb-0",
+          )}
           onPointerDownCapture={(event) => {
             if (focusRequestId !== undefined) onDismissFocusedNode?.();
             marquee.onPointerDownCapture(event);

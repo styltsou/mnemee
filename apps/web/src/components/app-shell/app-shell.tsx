@@ -104,8 +104,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     isBoardView || isInbox
                       ? "min-h-0 overflow-hidden rounded-xl bg-card"
                       : cn(
-                          "gap-4 rounded-xl bg-card p-3 shadow-sm",
-                          isScrollablePage && "min-h-0 overflow-hidden pb-0",
+                          "gap-4 rounded-xl bg-card shadow-sm",
+                          isScrollablePage && "min-h-0 overflow-hidden",
+                          !isScrollablePage && "p-3",
                         ),
                   )}
                 >
@@ -114,22 +115,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       className={
                         isInbox
                           ? "h-full min-h-0 w-full min-w-0 flex-1 rounded-[inherit]"
-                          : "-mr-3 min-h-0 min-w-0 flex-1"
+                          : "min-h-0 min-w-0 flex-1 rounded-[inherit]"
                       }
                       contentClassName={
                         isInbox
                           ? "flex min-h-full flex-col"
-                          : "flex min-h-full flex-col pr-3"
+                          : "flex min-h-full flex-col px-3 py-1.5"
                       }
-                      viewportClassName={
-                        isInbox
-                          ? "[scrollbar-width:none] outline-none focus-visible:outline-none [&::-webkit-scrollbar]:hidden"
-                          : undefined
-                      }
+                      viewportClassName="[scrollbar-width:none] outline-none focus-visible:outline-none [&::-webkit-scrollbar]:hidden"
                       verticalScrollbarClassName="w-[5px] p-0"
-                      verticalScrollbarStyle={
-                        isInbox ? { top: 5, bottom: 5, right: 3 } : { right: 3 }
-                      }
+                      verticalScrollbarStyle={{ top: 5, bottom: 5, right: 3 }}
                     >
                       {children}
                     </ScrollArea>

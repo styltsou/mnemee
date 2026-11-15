@@ -35,6 +35,7 @@ import {
 } from "@/components/app-shell/workspace-peek";
 import { useWorkspaceAssetView } from "@/components/app-shell/workspace-asset-view";
 import { isPersistedSelectableAsset } from "@/lib/selection";
+import { useGridOverflowPadding } from "@/hooks/use-grid-overflow-padding";
 
 const EMPTY_ASSETS: Asset[] = [];
 const EMPTY_ASSET_TYPES: typeof DEFAULT_FILTER_BAR_STATE.selectedAssetTypes =
@@ -59,6 +60,7 @@ function InboxLayout() {
 }
 
 function InboxPage() {
+  const { ref: gridSurfaceRef, overflowing } = useGridOverflowPadding();
   const { workspaceSlug } = Route.useParams();
   const filterScope = `inbox:${workspaceSlug}`;
   const { showRequest, consumeShowRequest } = useWorkspacePeek();
@@ -233,7 +235,8 @@ function InboxPage() {
         target="inbox"
       >
         <div
-          className="relative min-h-0 px-5 pt-5 pb-20"
+          ref={gridSurfaceRef}
+          className={`relative min-h-0 px-5 pt-5 ${overflowing ? "pb-20" : "pb-0"}`}
           aria-busy={isLayoutPending}
         >
           <StableAssetBoard

@@ -15,6 +15,8 @@ import { ImageSkeleton } from "@/components/ui/image-skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect";
+import { useGridOverflowPadding } from "@/hooks/use-grid-overflow-padding";
+import { cn } from "@/lib/utils";
 
 export const ASSET_SKELETONS = [
   { type: "image", aspectRatio: 4 / 3 },
@@ -31,6 +33,7 @@ export const ASSET_SKELETONS = [
   { type: "note", variant: 0 },
 ] as const;
 export function GridViewLoading() {
+  const { ref: surfaceRef, overflowing } = useGridOverflowPadding();
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentWidth, setContentWidth] = useState(0);
   const { density } = useGridDensity();
@@ -54,7 +57,11 @@ export function GridViewLoading() {
       verticalScrollbarStyle={{ top: 5, bottom: 5, right: 3 }}
     >
       <div
-        className="relative min-h-full w-full p-5 pb-20"
+        ref={surfaceRef}
+        className={cn(
+          "relative min-h-full w-full p-5",
+          overflowing ? "pb-20" : "pb-0",
+        )}
         role="status"
         aria-label="Loading collection grid view"
       >

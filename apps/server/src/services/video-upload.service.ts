@@ -20,7 +20,7 @@ import type { IObjectStorageService } from "@/services/object-storage.service";
 import { TaskQueueService } from "@/services/task-queue.service";
 
 export type VideoUploadStatus = {
-  id: number;
+  id: string;
   status: "pending" | "uploaded" | "processing" | "completed" | "failed";
   errorMessage: string | null;
   assetId: string;
@@ -229,7 +229,7 @@ export class VideoUploadService {
   async status(
     orgId: string,
     collectionSlug: string | null,
-    id: number,
+    id: string,
   ): Promise<VideoUploadStatus> {
     const target = collectionSlug
       ? await resolveCollectionTargetBySlug(orgId, collectionSlug)
@@ -269,7 +269,7 @@ export class VideoUploadService {
     orgId: string,
     userId: string,
     collectionSlug: string | null,
-    id: number,
+    id: string,
   ): Promise<VideoUploadStatus> {
     const existing = await this.status(orgId, collectionSlug, id);
     const [row] = await db
@@ -286,12 +286,9 @@ export class VideoUploadService {
         "Only the uploader can fail this direct upload",
       );
     if (existing.status === "pending")
-      await this.failUpload(
-        id,
-        Number(existing.assetId.slice(6)),
-        "Upload failed",
-        ["pending"],
-      );
+      await this.failUpload(id, existing.assetId.slice(6), "Upload failed", [
+        "pending",
+      ]);
     return this.status(orgId, collectionSlug, id);
   }
 
@@ -330,7 +327,7 @@ export class VideoUploadService {
     return failed;
   }
 
-  async getRemoteClaim(uploadId: number) {
+  async getRemoteClaim(uploadId: string) {
     const [row] = await db
       .select()
       .from(videoUploads)
@@ -578,8 +575,8 @@ export class VideoUploadService {
   }
 
   private async failUpload(
-    id: number,
-    assetId: number,
+    id: string,
+    assetId: string,
     message: string,
     allowedStatuses: Array<"pending" | "uploaded" | "processing"> = [
       "pending",

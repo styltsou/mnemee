@@ -20,14 +20,14 @@ describe("account-level onboarding tour", () => {
         type: "note-created",
         workspaceSlug: "second-workspace",
         collectionSlug: "ideas",
-        noteId: "note-1",
+        noteId: "note-00000000-0000-4000-8000-000000000001",
       }),
     ).toEqual(collection);
     const note = advanceOnboardingTourState(collection, {
       type: "note-created",
       workspaceSlug: "first-workspace",
       collectionSlug: "ideas",
-      noteId: "note-1",
+      noteId: "note-00000000-0000-4000-8000-000000000001",
     });
     expect(note.step).toBe("move");
     expect(
@@ -35,7 +35,7 @@ describe("account-level onboarding tour", () => {
         type: "note-moved",
         workspaceSlug: "first-workspace",
         collectionSlug: "ideas",
-        noteId: "note-2",
+        noteId: "note-00000000-0000-4000-8000-000000000002",
       }),
     ).toEqual(note);
     expect(
@@ -43,7 +43,7 @@ describe("account-level onboarding tour", () => {
         type: "note-moved",
         workspaceSlug: "first-workspace",
         collectionSlug: "ideas",
-        noteId: "note-1",
+        noteId: "note-00000000-0000-4000-8000-000000000001",
       }).status,
     ).toBe("completed");
   });

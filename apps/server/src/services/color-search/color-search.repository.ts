@@ -21,7 +21,7 @@ import { COLOR_SEARCH_CONFIG } from "./color-search-ranker";
 import type { SearchPaletteColor } from "./color-assignment";
 
 export type ScopedSearchImage = {
-  assetId: number;
+  assetId: string;
   location: ColorSearchLocation;
 };
 
@@ -29,20 +29,20 @@ export type ResolvedColorSearchScope =
   | { type: "inbox" }
   | {
       type: "collection";
-      collectionId: number;
+      collectionId: string;
       collectionSlug: string;
-      parentFolderId: number | null;
+      parentFolderId: string | null;
       includeDescendants: boolean;
       folderPath?: string;
     };
 
 export type BroadCandidateAssets = {
-  assetIds: number[];
+  assetIds: string[];
   reachedSafetyCap: boolean;
 };
 
 export type SearchImageMetadata = {
-  assetId: number;
+  assetId: string;
   title: string | null;
   width: number;
   height: number;
@@ -53,11 +53,11 @@ export type SearchImageMetadata = {
 };
 
 export type SearchPaletteRow = SearchPaletteColor & {
-  assetId: number;
+  assetId: string;
 };
 
 type CandidateAssetRow = {
-  asset_id: number;
+  asset_id: string;
 };
 
 /** Database-only access patterns for color search. */
@@ -103,7 +103,7 @@ export class ColorSearchRepository {
   async getImageLocations(
     orgId: string,
     scope: ResolvedColorSearchScope,
-    assetIds: readonly number[],
+    assetIds: readonly string[],
   ): Promise<ScopedSearchImage[]> {
     if (assetIds.length === 0) return [];
 
@@ -291,7 +291,7 @@ export class ColorSearchRepository {
     return {
       assetIds: result.rows
         .slice(0, COLOR_SEARCH_CONFIG.maxBroadCandidates)
-        .map((row) => Number(row.asset_id)),
+        .map((row) => row.asset_id),
       reachedSafetyCap,
     };
   }
@@ -355,7 +355,7 @@ export class ColorSearchRepository {
 
   async getPaletteColors(
     orgId: string,
-    assetIds: readonly number[],
+    assetIds: readonly string[],
   ): Promise<SearchPaletteRow[]> {
     if (assetIds.length === 0) return [];
 
@@ -382,7 +382,7 @@ export class ColorSearchRepository {
 
   async getImageMetadata(
     orgId: string,
-    assetIds: readonly number[],
+    assetIds: readonly string[],
   ): Promise<SearchImageMetadata[]> {
     if (assetIds.length === 0) return [];
 

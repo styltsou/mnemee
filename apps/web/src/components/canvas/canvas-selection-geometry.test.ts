@@ -8,11 +8,14 @@ import {
 } from "./canvas-selection-geometry";
 
 const arrow: CanvasArrowObject = {
-  id: "arrow-1",
+  id: "arrow-00000000-0000-4000-8000-000000000001",
   type: "arrow",
   start: {
     position: { x: 100, y: 100 },
-    binding: { targetId: "note-1", anchor: { x: 1, y: 0.5 } },
+    binding: {
+      targetId: "note-00000000-0000-4000-8000-000000000001",
+      anchor: { x: 1, y: 0.5 },
+    },
   },
   end: { position: { x: 300, y: 100 } },
   points: [{ x: 200, y: 75 }],
@@ -37,7 +40,10 @@ describe("moving connected arrows", () => {
     const [result] = getTranslatedArrowUpdates(
       [arrow],
       [snapshot],
-      new Set(["note-1", "arrow-1"]),
+      new Set([
+        "note-00000000-0000-4000-8000-000000000001",
+        "arrow-00000000-0000-4000-8000-000000000001",
+      ]),
       { x: 40, y: 20 },
     );
     expect(result?.start).toEqual({
@@ -52,7 +58,7 @@ describe("moving connected arrows", () => {
     const [result] = getTranslatedArrowUpdates(
       [arrow],
       [snapshot],
-      new Set(["arrow-1"]),
+      new Set(["arrow-00000000-0000-4000-8000-000000000001"]),
       { x: 40, y: 20 },
     );
     expect(result?.start).toEqual({ position: { x: 140, y: 120 } });
@@ -63,20 +69,36 @@ describe("moving connected arrows", () => {
       ...arrow,
       end: {
         position: { x: 300, y: 100 },
-        binding: { targetId: "text-2", anchor: { x: 0, y: 0.5 } },
+        binding: {
+          targetId: "text-00000000-0000-4000-8000-000000000002",
+          anchor: { x: 0, y: 0.5 },
+        },
       },
     };
     expect(
-      getInternalArrowIds([internal], new Set(["note-1", "text-2"])),
-    ).toEqual(["arrow-1"]);
-    expect(getInternalArrowIds([internal], new Set(["note-1"]))).toEqual([]);
+      getInternalArrowIds(
+        [internal],
+        new Set([
+          "note-00000000-0000-4000-8000-000000000001",
+          "text-00000000-0000-4000-8000-000000000002",
+        ]),
+      ),
+    ).toEqual(["arrow-00000000-0000-4000-8000-000000000001"]);
+    expect(
+      getInternalArrowIds(
+        [internal],
+        new Set(["note-00000000-0000-4000-8000-000000000001"]),
+      ),
+    ).toEqual([]);
   });
 
   it("adapts bends when a layout moves one endpoint", () => {
     const [result] = getLayoutArrowUpdates(
       [arrow],
       [snapshot],
-      new Map([["note-1", { x: 40, y: 20 }]]),
+      new Map([
+        ["note-00000000-0000-4000-8000-000000000001", { x: 40, y: 20 }],
+      ]),
     );
     expect(result?.start.position).toEqual({ x: 140, y: 120 });
     expect(result?.end.position).toEqual({ x: 300, y: 100 });

@@ -32,11 +32,17 @@ describe("WorkspaceSearchQuerySchema", () => {
   it("accepts a small de-duplicated list of recent assets", () => {
     expect(
       WorkspaceSearchQuerySchema.parse({
-        recent: "note-1,image-2,note-1",
+        recent:
+          "note-00000000-0000-4000-8000-000000000001,image-00000000-0000-4000-8000-000000000002,note-00000000-0000-4000-8000-000000000001",
       }).recent,
-    ).toEqual(["note-1", "image-2"]);
+    ).toEqual([
+      "note-00000000-0000-4000-8000-000000000001",
+      "image-00000000-0000-4000-8000-000000000002",
+    ]);
     expect(
-      WorkspaceSearchQuerySchema.safeParse({ recent: "folder-1" }).success,
+      WorkspaceSearchQuerySchema.safeParse({
+        recent: "folder-00000000-0000-4000-8000-000000000001",
+      }).success,
     ).toBe(false);
   });
 });

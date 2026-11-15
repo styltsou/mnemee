@@ -82,7 +82,7 @@ export function namingStateFromStored(
 }
 
 export async function queueGradientName(
-  assetId: number,
+  assetId: string,
   gradient: StoredColorGradient,
   expectedTitle: string,
   expectedManual: boolean,
@@ -172,7 +172,7 @@ export function validateGeneratedTitle(value: string): string | null {
     .join(" ");
 }
 
-async function currentNamingTarget(assetId: number) {
+async function currentNamingTarget(assetId: string) {
   const [row] = await db
     .select({
       id: assets.id,

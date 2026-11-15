@@ -1,3 +1,4 @@
+import { LINK_ID_PATTERN } from "@mnemee/id-shared";
 import { z } from "zod";
 
 import {
@@ -15,11 +16,11 @@ export type CreateLinkInput = z.infer<typeof CreateLinkSchema>;
 
 export const LinkAssetPathParamSchema = z.object({
   workspaceSlug: z.string(),
-  assetId: z.string().regex(/^link-\d+$/),
+  assetId: z.string().regex(LINK_ID_PATTERN),
 });
 
 const PipelineClaimBaseSchema = z.object({
-  id: z.number().int().positive(),
+  id: z.uuidv4(),
   generation: z.number().int().positive(),
 });
 

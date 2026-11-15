@@ -116,6 +116,9 @@ jobs:
       - name: Apply database migrations
         run: bunx sst shell --print-logs --stage dev -- bun run scripts/migrate-stage.ts
         env:
+          # This is the deployed database selected for the UUID cutover.
+          # Complete docs/server/uuid-id-cutover.md before its first rollout.
+          MNEMEE_UUID_CUTOVER_READY: "1"
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
           CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}

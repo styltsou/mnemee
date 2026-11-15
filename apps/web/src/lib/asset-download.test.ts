@@ -28,13 +28,16 @@ describe("original downloads", () => {
     );
     await downloadAssetOriginal("workspace", {
       type: "image",
-      id: "image-1",
+      id: "image-00000000-0000-4000-8000-000000000001",
       url: "",
       width: 1,
       height: 1,
       title: "picture",
     });
-    expect(fetchAssetImageBlob).toHaveBeenCalledWith("workspace", "image-1");
+    expect(fetchAssetImageBlob).toHaveBeenCalledWith(
+      "workspace",
+      "image-00000000-0000-4000-8000-000000000001",
+    );
     expect(link.href).toBe("blob:original");
     expect(link.download).toBe("picture.png");
     expect(link.click).toHaveBeenCalled();
@@ -50,13 +53,13 @@ describe("original downloads", () => {
     });
     await downloadAssetOriginal("my workspace", {
       type: "video",
-      id: "video-1",
+      id: "video-00000000-0000-4000-8000-000000000001",
       url: "",
       contentType: "video/mp4",
       processingStatus: "completed",
     });
     expect(apiGet).toHaveBeenCalledWith(
-      "/api/v1/workspace/my%20workspace/assets/video-1/download?format=json",
+      "/api/v1/workspace/my%20workspace/assets/video-00000000-0000-4000-8000-000000000001/download?format=json",
     );
     expect(link.href).toBe("https://storage.example/video");
     expect(link.click).toHaveBeenCalled();

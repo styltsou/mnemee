@@ -70,7 +70,7 @@ export type ResolutionClaim =
   | { ignored: true }
   | {
       ignored: false;
-      attemptId: number;
+      attemptId: string;
       generation: number;
       url: string;
       resolverKey: string;
@@ -81,7 +81,7 @@ export type MediaClaim =
   | { ignored: true }
   | {
       ignored: false;
-      mediaId: number;
+      mediaId: string;
       generation: number;
       url: string;
       organizationId: string;
@@ -244,7 +244,7 @@ export class UrlUnfurlService {
         });
       }
 
-      let attemptId: number | undefined;
+      let attemptId: string | undefined;
       const active =
         resource.resolutionStatus === "queued" ||
         resource.resolutionStatus === "resolving";
@@ -339,9 +339,9 @@ export class UrlUnfurlService {
 
   async refreshResource(
     orgId: string,
-    resourceId: number,
+    resourceId: string,
   ): Promise<{
-    attemptId: number;
+    attemptId: string;
     generation: number;
     queued: boolean;
     enqueued: boolean;
@@ -429,7 +429,7 @@ export class UrlUnfurlService {
   }
 
   async claimResolution(
-    attemptId: number,
+    attemptId: string,
     generation: number,
   ): Promise<ResolutionClaim> {
     const staleBefore = new Date(Date.now() - TASK_CLAIM_LEASE_MS);
@@ -577,7 +577,7 @@ export class UrlUnfurlService {
       return { ignored: false };
     }
 
-    const mediaToQueue: Array<{ id: number; generation: number }> = [];
+    const mediaToQueue: Array<{ id: string; generation: number }> = [];
     await db.transaction(async (tx) => {
       const currentResource = first(
         await tx
@@ -749,7 +749,7 @@ export class UrlUnfurlService {
   }
 
   async claimResourceMedia(
-    mediaId: number,
+    mediaId: string,
     generation: number,
   ): Promise<MediaClaim> {
     const staleBefore = new Date(Date.now() - TASK_CLAIM_LEASE_MS);
@@ -886,7 +886,7 @@ export class UrlUnfurlService {
     return { ignored: false };
   }
 
-  async markResourceUnreferencedIfNeeded(resourceId: number): Promise<void> {
+  async markResourceUnreferencedIfNeeded(resourceId: string): Promise<void> {
     const reference = first(
       await db
         .select({ id: linkAssets.assetId })
@@ -1049,7 +1049,7 @@ export class UrlUnfurlService {
 
   async getLinkNode(
     orgId: string,
-    assetId: number,
+    assetId: string,
     position: CollectionLinkNode["position"],
   ): Promise<CollectionLinkNode> {
     const row = first(
@@ -1102,7 +1102,7 @@ export class UrlUnfurlService {
   }
 
   private async enqueueResolutionOrFail(
-    attemptId: number,
+    attemptId: string,
     generation: number,
   ): Promise<boolean> {
     try {
@@ -1126,9 +1126,9 @@ export class UrlUnfurlService {
   }
 
   private async enqueueMediaOrFail(
-    mediaId: number,
+    mediaId: string,
     generation: number,
-    resourceId: number,
+    resourceId: string,
   ) {
     try {
       if (
@@ -1153,7 +1153,7 @@ export class UrlUnfurlService {
   }
 
   private async recomputeResourceStatus(
-    resourceId: number,
+    resourceId: string,
     generation: number,
   ) {
     const rows = await db

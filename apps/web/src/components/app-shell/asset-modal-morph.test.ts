@@ -103,7 +103,7 @@ describe("asset modal morph source", () => {
       }),
     };
     const canvasCard = {
-      dataset: { canvasAssetId: "note-1" },
+      dataset: { canvasAssetId: "note-00000000-0000-4000-8000-000000000001" },
       isConnected: true,
       closest: (selector: string) =>
         selector === ".mnemee-flow" ? canvasViewport : null,
@@ -116,7 +116,7 @@ describe("asset modal morph source", () => {
     };
     let gridTop = 100;
     const gridCard = {
-      dataset: { assetCardId: "note-1" },
+      dataset: { assetCardId: "note-00000000-0000-4000-8000-000000000001" },
       isConnected: true,
       closest: (selector: string) =>
         selector === '[data-slot="scroll-area-viewport"]' ? gridViewport : null,
@@ -133,12 +133,23 @@ describe("asset modal morph source", () => {
     vi.stubGlobal("innerWidth", 1000);
     vi.stubGlobal("innerHeight", 800);
 
-    expect(findVisibleAssetCard("note-1", "canvas")).toBe(canvasCard);
-    expect(findVisibleAssetCard("note-1", "grid")).toBe(gridCard);
-    expect(findVisibleAssetCard("note-2")).toBeUndefined();
+    expect(
+      findVisibleAssetCard(
+        "note-00000000-0000-4000-8000-000000000001",
+        "canvas",
+      ),
+    ).toBe(canvasCard);
+    expect(
+      findVisibleAssetCard("note-00000000-0000-4000-8000-000000000001", "grid"),
+    ).toBe(gridCard);
+    expect(
+      findVisibleAssetCard("note-00000000-0000-4000-8000-000000000002"),
+    ).toBeUndefined();
 
     gridTop = 600;
-    expect(findVisibleAssetCard("note-1", "grid")).toBeUndefined();
+    expect(
+      findVisibleAssetCard("note-00000000-0000-4000-8000-000000000001", "grid"),
+    ).toBeUndefined();
   });
 });
 

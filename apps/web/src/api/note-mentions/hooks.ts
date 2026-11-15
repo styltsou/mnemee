@@ -27,7 +27,7 @@ export const noteMentionQueryKeys = {
   all: (workspaceSlug: string) => ["note-mentions", workspaceSlug] as const,
   resolve: (
     workspaceSlug: string,
-    sourceAssetId: number | undefined,
+    sourceAssetId: string | undefined,
     signature: string,
   ) =>
     [
@@ -38,8 +38,8 @@ export const noteMentionQueryKeys = {
     ] as const,
   resolvedTarget: (
     workspaceSlug: string,
-    sourceAssetId: number | undefined,
-    target: { assetId: number; assetType: NoteMentionType },
+    sourceAssetId: string | undefined,
+    target: { assetId: string; assetType: NoteMentionType },
   ) =>
     [
       ...noteMentionQueryKeys.all(workspaceSlug),
@@ -59,7 +59,7 @@ export const noteMentionQueryKeys = {
     [...noteMentionQueryKeys.all(workspaceSlug), "backlinks", assetId] as const,
   search: (
     workspaceSlug: string,
-    sourceAssetId: number | undefined,
+    sourceAssetId: string | undefined,
     input: MentionSearchInput,
   ) =>
     [
@@ -130,12 +130,12 @@ export function useNoteBacklinks(
   });
 }
 
-type MentionIdentity = { assetId: number; assetType: NoteMentionType };
+type MentionIdentity = { assetId: string; assetType: NoteMentionType };
 
 export async function resolveCachedNoteMentions(
   queryClient: QueryClient,
   workspaceSlug: string,
-  sourceAssetId: number | undefined,
+  sourceAssetId: string | undefined,
   targets: readonly MentionIdentity[],
   signal: AbortSignal,
 ) {
@@ -187,8 +187,8 @@ export async function resolveCachedNoteMentions(
 
 export function useResolvedNoteMentions(
   workspaceSlug: string | undefined,
-  sourceAssetId: number | undefined,
-  targets: ReadonlyArray<{ assetId: number; assetType: NoteMentionType }>,
+  sourceAssetId: string | undefined,
+  targets: ReadonlyArray<{ assetId: string; assetType: NoteMentionType }>,
 ) {
   const queryClient = useQueryClient();
   const uniqueTargets = [
@@ -200,7 +200,7 @@ export function useResolvedNoteMentions(
     ).values(),
   ].sort(
     (left, right) =>
-      left.assetId - right.assetId ||
+      left.assetId.localeCompare(right.assetId) ||
       left.assetType.localeCompare(right.assetType),
   );
   const signature = uniqueTargets

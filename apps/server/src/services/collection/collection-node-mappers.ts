@@ -9,7 +9,7 @@ import type { StoredColorGradient } from "@/lib/color-gradient";
 import type { ProjectedMedia } from "@/services/url-unfurl/projection";
 
 export type ImageVariantLookup = Map<
-  number,
+  string,
   ImageAssetVariants & {
     original?: ImageAssetVariants["original"] & { url?: string };
     display?: ImageAssetVariants["display"] & { url?: string };
@@ -18,16 +18,16 @@ export type ImageVariantLookup = Map<
   }
 >;
 
-export type LinkMediaLookup = Map<number, ProjectedMedia>;
+export type LinkMediaLookup = Map<string, ProjectedMedia>;
 
 export type FolderPreviewRow = {
-  folderId: number | null;
+  folderId: string | null;
   assetType: string | null;
-  assetId: number | null;
+  assetId: string | null;
   hex?: string | null;
   gradient?: StoredColorGradient | null;
   content: string | null;
-  resourceId?: number | null;
+  resourceId?: string | null;
   hostname?: string | null;
   siteName?: string | null;
   assetTitle?: string | null;
@@ -48,7 +48,7 @@ export function toFolderPreview(
   row: FolderPreviewRow,
   imageVariants: ImageVariantLookup,
   linkMedia?: LinkMediaLookup,
-  mentionColors?: Map<number, MentionColors>,
+  mentionColors?: Map<string, MentionColors>,
 ): FolderChildPreview {
   const variants = row.assetId ? imageVariants.get(row.assetId) : undefined;
   const previewUrl = variants?.preview?.url ?? variants?.original?.url;
@@ -111,10 +111,10 @@ export function toFolderPreview(
 /** Keeps the first rows in query order, up to the fixed preview limit per folder. */
 export function firstPreviewRowsByParent<T>(
   rows: T[],
-  getParentId: (row: T) => number | null,
+  getParentId: (row: T) => string | null,
   limit = 4,
 ): T[] {
-  const counts = new Map<number, number>();
+  const counts = new Map<string, number>();
   const selected: T[] = [];
 
   for (const row of rows) {

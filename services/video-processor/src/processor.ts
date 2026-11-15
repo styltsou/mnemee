@@ -474,7 +474,7 @@ export async function processExistingVideoStoryboard(input: {
   }
 }
 
-export async function processRemoteVideo(uploadId: number): Promise<void> {
+export async function processRemoteVideo(uploadId: string): Promise<void> {
   type Claim =
     | { ignored: true }
     | {
@@ -594,7 +594,7 @@ async function removeVideoObjects(bucket: string, originalKey: string) {
   );
 }
 
-export async function reportRemoteFailure(uploadId: number, error: unknown) {
+export async function reportRemoteFailure(uploadId: string, error: unknown) {
   await callPipeline(CALLBACK_PATH, {
     event: "video.import.failed",
     uploadId,

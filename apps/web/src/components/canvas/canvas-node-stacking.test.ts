@@ -24,10 +24,13 @@ const note = (id: string, isExpanded = false) => ({
 describe("canvas node stacking", () => {
   it("puts new drafts above the highest existing or arriving persisted item", () => {
     const result = resolveCanvasInsertionFrontIndexes(
-      [{ id: "note-1", frontIndex: 40 }, { id: "legacy" }],
+      [
+        { id: "note-00000000-0000-4000-8000-000000000001", frontIndex: 40 },
+        { id: "legacy" },
+      ],
       [
         { id: "legacy" },
-        { id: "note-2", frontIndex: 50 },
+        { id: "note-00000000-0000-4000-8000-000000000002", frontIndex: 50 },
         { id: "image-draft" },
         { id: "text-draft" },
       ],
@@ -41,20 +44,24 @@ describe("canvas node stacking", () => {
     const current = [{ id: "draft", clientId: "draft", frontIndex: 70 }];
     expect(
       resolveCanvasInsertionFrontIndexes(current, [
-        { id: "image-2", clientId: "draft" },
-      ]).get("image-2"),
+        { id: "image-00000000-0000-4000-8000-000000000002", clientId: "draft" },
+      ]).get("image-00000000-0000-4000-8000-000000000002"),
     ).toBe(70);
     expect(
       resolveCanvasInsertionFrontIndexes(current, [
-        { id: "image-2", clientId: "draft", frontIndex: 81 },
-      ]).get("image-2"),
+        {
+          id: "image-00000000-0000-4000-8000-000000000002",
+          clientId: "draft",
+          frontIndex: 81,
+        },
+      ]).get("image-00000000-0000-4000-8000-000000000002"),
     ).toBe(81);
   });
   it("places every expanded note above resting cards", () => {
     const nodes = [
-      note("note-1", true),
-      note("note-2"),
-      { id: "image-1", type: "image" },
+      note("note-00000000-0000-4000-8000-000000000001", true),
+      note("note-00000000-0000-4000-8000-000000000002"),
+      { id: "image-00000000-0000-4000-8000-000000000001", type: "image" },
     ];
     const order = updateExpandedNoteOrder([], nodes);
 
@@ -67,30 +74,48 @@ describe("canvas node stacking", () => {
   });
 
   it("moves a newly expanded note above notes that were already expanded", () => {
-    const initiallyExpanded = [note("note-1", true), note("note-2", true)];
+    const initiallyExpanded = [
+      note("note-00000000-0000-4000-8000-000000000001", true),
+      note("note-00000000-0000-4000-8000-000000000002", true),
+    ];
     const initialOrder = updateExpandedNoteOrder([], initiallyExpanded);
     const collapsedOrder = updateExpandedNoteOrder(initialOrder, [
-      note("note-1"),
-      note("note-2", true),
+      note("note-00000000-0000-4000-8000-000000000001"),
+      note("note-00000000-0000-4000-8000-000000000002", true),
     ]);
     const expandedOrder = updateExpandedNoteOrder(collapsedOrder, [
-      note("note-1", true),
-      note("note-2", true),
+      note("note-00000000-0000-4000-8000-000000000001", true),
+      note("note-00000000-0000-4000-8000-000000000002", true),
     ]);
 
-    expect(expandedOrder).toEqual(["note-2", "note-1"]);
+    expect(expandedOrder).toEqual([
+      "note-00000000-0000-4000-8000-000000000002",
+      "note-00000000-0000-4000-8000-000000000001",
+    ]);
     expect(
-      getCanvasRestingZIndex(note("note-1", true), expandedOrder),
+      getCanvasRestingZIndex(
+        note("note-00000000-0000-4000-8000-000000000001", true),
+        expandedOrder,
+      ),
     ).toBeGreaterThan(
-      getCanvasRestingZIndex(note("note-2", true), expandedOrder),
+      getCanvasRestingZIndex(
+        note("note-00000000-0000-4000-8000-000000000002", true),
+        expandedOrder,
+      ),
     );
   });
 
   it("keeps drag and drop-stack layers above expanded notes", () => {
-    const order = updateExpandedNoteOrder([], [note("note-1", true)]);
+    const order = updateExpandedNoteOrder(
+      [],
+      [note("note-00000000-0000-4000-8000-000000000001", true)],
+    );
 
     expect(getCanvasInteractionZIndex()).toBeGreaterThan(
-      getCanvasRestingZIndex(note("note-1", true), order),
+      getCanvasRestingZIndex(
+        note("note-00000000-0000-4000-8000-000000000001", true),
+        order,
+      ),
     );
     expect(getCanvasInteractionZIndex(2)).toBeGreaterThan(
       getCanvasInteractionZIndex(),
@@ -99,16 +124,28 @@ describe("canvas node stacking", () => {
 
   it("removes collapsed or deleted notes from the stacking order", () => {
     const order = updateExpandedNoteOrder(
-      ["note-1", "note-2"],
-      [note("note-1"), { id: "image-1", type: "image" }],
+      [
+        "note-00000000-0000-4000-8000-000000000001",
+        "note-00000000-0000-4000-8000-000000000002",
+      ],
+      [
+        note("note-00000000-0000-4000-8000-000000000001"),
+        { id: "image-00000000-0000-4000-8000-000000000001", type: "image" },
+      ],
     );
 
     expect(order).toEqual([]);
   });
 
   it("keeps every visual band in the intended order", () => {
-    const order = updateExpandedNoteOrder([], [note("note-1", true)]);
-    const expanded = getCanvasRestingZIndex(note("note-1", true), order);
+    const order = updateExpandedNoteOrder(
+      [],
+      [note("note-00000000-0000-4000-8000-000000000001", true)],
+    );
+    const expanded = getCanvasRestingZIndex(
+      note("note-00000000-0000-4000-8000-000000000001", true),
+      order,
+    );
     const front = getCanvasFrontZIndex(0);
 
     expect(RESTING_TEXT_Z_INDEX).toBeGreaterThan(RESTING_CARD_Z_INDEX);

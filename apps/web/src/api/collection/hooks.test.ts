@@ -30,7 +30,7 @@ afterEach(() => {
 
 describe("pending link refetches", () => {
   const pending: CollectionLinkNode = {
-    id: "link-9",
+    id: "link-00000000-0000-4000-8000-000000000009",
     type: "link",
     originalUrl: "https://github.com/styltsou/mnemee",
     hostname: "github.com",
@@ -56,7 +56,11 @@ describe("pending link refetches", () => {
       contentsWith([pending]),
     );
     vi.spyOn(fetchers, "fetchInboxContents").mockResolvedValue({
-      collection: { id: 0, name: "Inbox", slug: "inbox" },
+      collection: {
+        id: "00000000-0000-4000-8000-000000000000",
+        name: "Inbox",
+        slug: "inbox",
+      },
       breadcrumbs: [],
       nodes: [pending],
     });
@@ -157,9 +161,9 @@ function noteNode(
   overrides: Partial<CollectionNoteNode> = {},
 ): CollectionNoteNode {
   return {
-    id: "note-5",
+    id: "note-00000000-0000-4000-8000-000000000005",
     type: "note",
-    content: "Use [Ocean](color:7).",
+    content: "Use [Ocean](color:00000000-0000-4000-8000-000000000007).",
     title: "Palette",
     isFavorite: false,
     wordCount: 3,
@@ -168,8 +172,14 @@ function noteNode(
     position: null,
     frontIndex: null,
     mentionColors: {
-      "color:7": { hex: "#0a5", gradient: null },
-      "color:8": { hex: "#f00", gradient: null },
+      "color:00000000-0000-4000-8000-000000000007": {
+        hex: "#0a5",
+        gradient: null,
+      },
+      "color:00000000-0000-4000-8000-000000000008": {
+        hex: "#f00",
+        gradient: null,
+      },
     },
     ...overrides,
   };
@@ -177,7 +187,11 @@ function noteNode(
 
 function contentsWith(nodes: CollectionNode[]): CollectionContentsResponse {
   return {
-    collection: { id: 1, name: "Ref", slug: "ref" },
+    collection: {
+      id: "00000000-0000-4000-8000-000000000001",
+      name: "Ref",
+      slug: "ref",
+    },
     breadcrumbs: [],
     nodes,
     canvasObjects: [],
@@ -188,9 +202,9 @@ function imageNode(
   overrides: Partial<CollectionImageNode> = {},
 ): CollectionImageNode {
   return {
-    id: "image-1",
+    id: "image-00000000-0000-4000-8000-000000000001",
     type: "image",
-    url: "/media/image-1",
+    url: "/media/image-00000000-0000-4000-8000-000000000001",
     width: 1200,
     height: 800,
     title: null,
@@ -211,7 +225,7 @@ describe("local uploads during contents refetch", () => {
       id: "file-drop-pending-1",
       url: "blob:preview",
       uploadStatus: "uploading",
-      serverAssetId: "image-1",
+      serverAssetId: "image-00000000-0000-4000-8000-000000000001",
     });
 
     expect(
@@ -245,7 +259,7 @@ function contentsWithMention(): CollectionContentsResponse {
 
 function folderNode(previews: FolderChildPreview[]): CollectionFolderNode {
   return {
-    id: "folder-1",
+    id: "folder-00000000-0000-4000-8000-000000000001",
     type: "folder",
     name: "Refs",
     slug: "refs",
@@ -259,7 +273,7 @@ function folderNode(previews: FolderChildPreview[]): CollectionFolderNode {
 
 describe("color edits repainting mention swatches", () => {
   const updated = {
-    id: "color-7",
+    id: "color-00000000-0000-4000-8000-000000000007",
     type: "color" as const,
     hex: "#00f",
     note: null,
@@ -275,7 +289,9 @@ describe("color edits repainting mention swatches", () => {
 
     expect(node.type).toBe("note");
     if (node.type !== "note") throw new Error("expected a note node");
-    expect(node.mentionColors!["color:7"]).toEqual({
+    expect(
+      node.mentionColors!["color:00000000-0000-4000-8000-000000000007"],
+    ).toEqual({
       hex: "#00f",
       gradient: null,
       label: "Ink",
@@ -287,7 +303,9 @@ describe("color edits repainting mention swatches", () => {
     const node = next!.nodes[0]!;
     if (node.type !== "note") throw new Error("expected a note node");
 
-    expect(node.mentionColors!["color:8"]).toEqual({
+    expect(
+      node.mentionColors!["color:00000000-0000-4000-8000-000000000008"],
+    ).toEqual({
       hex: "#f00",
       gradient: null,
     });
@@ -296,31 +314,35 @@ describe("color edits repainting mention swatches", () => {
   it("does not invent an entry for a color the note never referenced", () => {
     const next = applyUpdatedColorToContents(contentsWithMention(), {
       ...updated,
-      id: "color-42",
+      id: "color-00000000-0000-4000-8000-00000000002a",
     });
     const node = next!.nodes[0]!;
     if (node.type !== "note") throw new Error("expected a note node");
 
-    expect(node.mentionColors!["color:42"]).toBeUndefined();
+    expect(
+      node.mentionColors!["color:00000000-0000-4000-8000-00000000002a"],
+    ).toBeUndefined();
     expect(Object.keys(node.mentionColors!)).toHaveLength(2);
   });
 
   it("applies a draft before the server responds, preserving untouched fields", () => {
     const next = applyColorDraftToContents(contentsWithMention(), {
-      assetId: "color-7",
+      assetId: "color-00000000-0000-4000-8000-000000000007",
       hex: "#123456",
     });
     const node = next!.nodes[0]!;
     if (node.type !== "note") throw new Error("expected a note node");
 
-    expect(node.mentionColors!["color:7"]!.hex).toBe("#123456");
+    expect(
+      node.mentionColors!["color:00000000-0000-4000-8000-000000000007"]!.hex,
+    ).toBe("#123456");
   });
 
   it("keeps the existing gradient when only the hex is drafted", () => {
     const withGradient = contentsWith([
       noteNode({
         mentionColors: {
-          "color:7": {
+          "color:00000000-0000-4000-8000-000000000007": {
             hex: "#0a5",
             gradient: { from: "#f00", to: "#00f", angle: 90 },
           },
@@ -329,13 +351,16 @@ describe("color edits repainting mention swatches", () => {
     ]);
 
     const next = applyColorDraftToContents(withGradient, {
-      assetId: "color-7",
+      assetId: "color-00000000-0000-4000-8000-000000000007",
       hex: "#123456",
     });
     const node = next!.nodes[0]!;
     if (node.type !== "note") throw new Error("expected a note node");
 
-    expect(node.mentionColors!["color:7"]!.gradient).toEqual({
+    expect(
+      node.mentionColors!["color:00000000-0000-4000-8000-000000000007"]!
+        .gradient,
+    ).toEqual({
       from: "#f00",
       to: "#00f",
       angle: 90,
@@ -351,10 +376,15 @@ describe("color edits repainting mention swatches", () => {
     const withFolder = contentsWith([
       folderNode([
         {
-          assetId: "note-5",
+          assetId: "note-00000000-0000-4000-8000-000000000005",
           type: "note",
-          snippet: "Use [Ocean](color:7).",
-          mentionColors: { "color:7": { hex: "#0a5", gradient: null } },
+          snippet: "Use [Ocean](color:00000000-0000-4000-8000-000000000007).",
+          mentionColors: {
+            "color:00000000-0000-4000-8000-000000000007": {
+              hex: "#0a5",
+              gradient: null,
+            },
+          },
         },
       ]),
     ]);
@@ -363,7 +393,11 @@ describe("color edits repainting mention swatches", () => {
     const folder = next!.nodes[0]!;
     if (folder.type !== "folder") throw new Error("expected a folder node");
 
-    expect(folder.previews[0]!.mentionColors!["color:7"]).toEqual({
+    expect(
+      folder.previews[0]!.mentionColors![
+        "color:00000000-0000-4000-8000-000000000007"
+      ],
+    ).toEqual({
       hex: "#00f",
       gradient: null,
       label: "Ink",
@@ -373,7 +407,12 @@ describe("color edits repainting mention swatches", () => {
   it("updates the gradient on a color preview inside a folder node", () => {
     const withColorFolder = contentsWith([
       folderNode([
-        { assetId: "color-7", type: "color", hex: "#0a5", gradient: null },
+        {
+          assetId: "color-00000000-0000-4000-8000-000000000007",
+          type: "color",
+          hex: "#0a5",
+          gradient: null,
+        },
       ]),
     ]);
 
@@ -395,10 +434,15 @@ describe("color edits repainting mention swatches", () => {
     const withUnrelated = contentsWith([
       folderNode([
         {
-          assetId: "note-9",
+          assetId: "note-00000000-0000-4000-8000-000000000009",
           type: "note",
           snippet: "Mentions nothing relevant.",
-          mentionColors: { "color:99": { hex: "#123", gradient: null } },
+          mentionColors: {
+            "color:00000000-0000-4000-8000-000000000063": {
+              hex: "#123",
+              gradient: null,
+            },
+          },
         },
       ]),
     ]);
@@ -408,7 +452,10 @@ describe("color edits repainting mention swatches", () => {
     if (folder.type !== "folder") throw new Error("expected a folder node");
 
     expect(folder.previews[0]!.mentionColors).toEqual({
-      "color:99": { hex: "#123", gradient: null },
+      "color:00000000-0000-4000-8000-000000000063": {
+        hex: "#123",
+        gradient: null,
+      },
     });
   });
 });

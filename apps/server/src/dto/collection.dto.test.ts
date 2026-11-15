@@ -132,8 +132,14 @@ describe("collection board position DTOs", () => {
     expect(
       UpdateNodePositionsSchema.safeParse({
         positions: [
-          { nodeId: "image-1", position: { x: 48, y: 24 } },
-          { nodeId: "folder-2", position: { x: 144, y: 24 } },
+          {
+            nodeId: "image-00000000-0000-4000-8000-000000000001",
+            position: { x: 48, y: 24 },
+          },
+          {
+            nodeId: "folder-00000000-0000-4000-8000-000000000002",
+            position: { x: 144, y: 24 },
+          },
         ],
         expectedParentFolderNodeId: null,
       }).success,
@@ -141,15 +147,26 @@ describe("collection board position DTOs", () => {
     expect(
       UpdateNodePositionsSchema.safeParse({
         positions: [
-          { nodeId: "image-1", position: { x: 48, y: 24 } },
-          { nodeId: "image-1", position: { x: 144, y: 24 } },
+          {
+            nodeId: "image-00000000-0000-4000-8000-000000000001",
+            position: { x: 48, y: 24 },
+          },
+          {
+            nodeId: "image-00000000-0000-4000-8000-000000000001",
+            position: { x: 144, y: 24 },
+          },
         ],
         expectedParentFolderNodeId: null,
       }).success,
     ).toBe(false);
     expect(
       UpdateNodePositionsSchema.safeParse({
-        positions: [{ nodeId: "image-1", position: { x: 48, y: 24 } }],
+        positions: [
+          {
+            nodeId: "image-00000000-0000-4000-8000-000000000001",
+            position: { x: 48, y: 24 },
+          },
+        ],
         expectedParentFolderNodeId: null,
       }).success,
     ).toBe(false);
@@ -158,19 +175,26 @@ describe("collection board position DTOs", () => {
   it("accepts unique stackable canvas items and rejects arrows", () => {
     expect(
       UpdateCanvasItemFrontIndexesSchema.safeParse({
-        itemIds: ["image-1", "text-2", "folder-3"],
+        itemIds: [
+          "image-00000000-0000-4000-8000-000000000001",
+          "text-00000000-0000-4000-8000-000000000002",
+          "folder-00000000-0000-4000-8000-000000000003",
+        ],
         expectedParentFolderNodeId: null,
       }).success,
     ).toBe(true);
     expect(
       UpdateCanvasItemFrontIndexesSchema.safeParse({
-        itemIds: ["image-1", "image-1"],
+        itemIds: [
+          "image-00000000-0000-4000-8000-000000000001",
+          "image-00000000-0000-4000-8000-000000000001",
+        ],
         expectedParentFolderNodeId: null,
       }).success,
     ).toBe(false);
     expect(
       UpdateCanvasItemFrontIndexesSchema.safeParse({
-        itemIds: ["arrow-1"],
+        itemIds: ["arrow-00000000-0000-4000-8000-000000000001"],
         expectedParentFolderNodeId: null,
       }).success,
     ).toBe(false);
@@ -183,48 +207,55 @@ describe("collection board position DTOs", () => {
     ).toBe(false);
     expect(
       MoveCollectionNodesParentSchema.safeParse({
-        nodeIds: ["image-1"],
-        targetFolderNodeId: "folder-7",
+        nodeIds: ["image-00000000-0000-4000-8000-000000000001"],
+        targetFolderNodeId: "folder-00000000-0000-4000-8000-000000000007",
       }).success,
     ).toBe(true);
     expect(
       CollectionNodePathParamSchema.safeParse({
         workspaceSlug: "design",
         collectionSlug: "references",
-        nodeId: "folder-7",
+        nodeId: "folder-00000000-0000-4000-8000-000000000007",
       }).success,
     ).toBe(true);
     expect(
       MoveCollectionNodesParentSchema.safeParse({
-        nodeIds: ["image-1"],
-        targetFolderNodeId: "note-7",
+        nodeIds: ["image-00000000-0000-4000-8000-000000000001"],
+        targetFolderNodeId: "note-00000000-0000-4000-8000-000000000007",
       }).success,
     ).toBe(false);
     expect(
       CollectionAssetNodePathParamSchema.safeParse({
         workspaceSlug: "design",
         collectionSlug: "references",
-        nodeId: "folder-7",
+        nodeId: "folder-00000000-0000-4000-8000-000000000007",
       }).success,
     ).toBe(false);
   });
 
   it("accepts unique mixed-node batch moves and rejects duplicates", () => {
     const move = {
-      nodeIds: ["image-1", "folder-2", "note-3"],
-      targetFolderNodeId: "folder-7",
+      nodeIds: [
+        "image-00000000-0000-4000-8000-000000000001",
+        "folder-00000000-0000-4000-8000-000000000002",
+        "note-00000000-0000-4000-8000-000000000003",
+      ],
+      targetFolderNodeId: "folder-00000000-0000-4000-8000-000000000007",
     };
 
     expect(MoveCollectionNodesParentSchema.safeParse(move).success).toBe(true);
     expect(
       MoveCollectionNodesParentSchema.safeParse({
         ...move,
-        nodeIds: ["image-1", "image-1"],
+        nodeIds: [
+          "image-00000000-0000-4000-8000-000000000001",
+          "image-00000000-0000-4000-8000-000000000001",
+        ],
       }).success,
     ).toBe(false);
     expect(
       MoveCollectionNodesParentSchema.safeParse({
-        nodeIds: ["image-1"],
+        nodeIds: ["image-00000000-0000-4000-8000-000000000001"],
         targetFolderNodeId: null,
       }).success,
     ).toBe(true);
@@ -234,20 +265,20 @@ describe("collection board position DTOs", () => {
     expect(
       AssetPathParamSchema.safeParse({
         workspaceSlug: "design",
-        assetId: "image-12",
+        assetId: "image-00000000-0000-4000-8000-00000000000c",
       }).success,
     ).toBe(true);
     expect(
       CollectionNodePathParamSchema.safeParse({
         workspaceSlug: "design",
         collectionSlug: "references",
-        nodeId: "folder-7",
+        nodeId: "folder-00000000-0000-4000-8000-000000000007",
       }).success,
     ).toBe(true);
     expect(
       AssetPathParamSchema.safeParse({
         workspaceSlug: "design",
-        assetId: "folder-7",
+        assetId: "folder-00000000-0000-4000-8000-000000000007",
       }).success,
     ).toBe(false);
     expect(
@@ -311,7 +342,10 @@ describe("canvas object DTOs", () => {
       start: { position: { x: 0, y: 0 } },
       end: {
         position: { x: 160, y: 40 },
-        binding: { targetId: "image-9", anchor: { x: 0, y: 0.5 } },
+        binding: {
+          targetId: "image-00000000-0000-4000-8000-000000000009",
+          anchor: { x: 0, y: 0.5 },
+        },
       },
       style: "sketch",
       pattern: "dashed",
@@ -327,7 +361,10 @@ describe("canvas object DTOs", () => {
         start: { position: { x: 0, y: 0 } },
         end: {
           position: { x: 160, y: 40 },
-          binding: { targetId: "image-9", anchor: { x: 1.1, y: 0.5 } },
+          binding: {
+            targetId: "image-00000000-0000-4000-8000-000000000009",
+            anchor: { x: 1.1, y: 0.5 },
+          },
         },
       }).success,
     ).toBe(false);

@@ -6,7 +6,7 @@ export type WorkspaceInfo = {
 };
 
 export type CreatedCollectionRow = {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;
@@ -17,7 +17,7 @@ export type CreatedCollectionRow = {
 import type { FolderChildPreview } from "@/dto/collection.dto";
 
 export type DetailedCollectionRow = {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;

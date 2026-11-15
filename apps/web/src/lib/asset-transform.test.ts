@@ -11,7 +11,7 @@ describe("collectionNodeToAsset", () => {
       channelUrl: "https://www.youtube.com/@channel",
     };
     const asset = collectionNodeToAsset({
-      id: "link-1",
+      id: "link-00000000-0000-4000-8000-000000000001",
       type: "link",
       originalUrl: "https://youtu.be/dQw4w9WgXcQ",
       canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -44,7 +44,7 @@ describe("collectionNodeToAsset", () => {
 
   it("carries the asset edit time when converting an image node", () => {
     const asset = collectionNodeToAsset({
-      id: "image-1",
+      id: "image-00000000-0000-4000-8000-000000000001",
       type: "image",
       url: "https://cdn.example.com/one.jpg",
       width: 1200,
@@ -69,7 +69,7 @@ describe("collectionNodeToAsset", () => {
 
   it("keeps a color gradient when converting a collection node for a card", () => {
     const asset = collectionNodeToAsset({
-      id: "color-1",
+      id: "color-00000000-0000-4000-8000-000000000001",
       type: "color",
       hex: "#f43f5e",
       note: null,

@@ -27,7 +27,7 @@ describe("mentionQueryBefore", () => {
 
 describe("mentionsForRequest", () => {
   it("sends each mention's ID and type only", () => {
-    const target = (assetId: number, assetType: "note" | "link" | "color") =>
+    const target = (assetId: string, assetType: "note" | "link" | "color") =>
       ({
         assetId,
         assetType,
@@ -43,14 +43,14 @@ describe("mentionsForRequest", () => {
 
     expect(
       mentionsForRequest([
-        target(1, "note"),
-        target(2, "link"),
-        target(3, "color"),
+        target("00000000-0000-4000-8000-000000000001", "note"),
+        target("00000000-0000-4000-8000-000000000002", "link"),
+        target("00000000-0000-4000-8000-000000000003", "color"),
       ]),
     ).toEqual([
-      { assetId: 1, type: "note" },
-      { assetId: 2, type: "link" },
-      { assetId: 3, type: "color" },
+      { assetId: "00000000-0000-4000-8000-000000000001", type: "note" },
+      { assetId: "00000000-0000-4000-8000-000000000002", type: "link" },
+      { assetId: "00000000-0000-4000-8000-000000000003", type: "color" },
     ]);
   });
 });

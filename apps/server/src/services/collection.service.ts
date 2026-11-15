@@ -156,7 +156,7 @@ export interface ICollectionService {
   deleteFolders(
     orgId: string,
     collectionSlug: string,
-    folderIds: number[],
+    folderIds: string[],
   ): Promise<number>;
   getCollectionContents(
     orgId: string,
@@ -391,7 +391,7 @@ export class CollectionService implements ICollectionService {
   deleteFolders(
     orgId: string,
     collectionSlug: string,
-    folderIds: number[],
+    folderIds: string[],
   ): Promise<number> {
     return this.deletes.deleteFolders(orgId, collectionSlug, folderIds);
   }

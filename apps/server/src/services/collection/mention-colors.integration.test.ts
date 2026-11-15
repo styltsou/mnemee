@@ -76,7 +76,7 @@ afterEach(async () => {
 });
 
 async function noteIdOf(assetNodeId: string) {
-  return Number(assetNodeId.replace(/^note-/, ""));
+  return assetNodeId.replace(/^note-/, "");
 }
 
 describe("fetchMentionColorsBySource", () => {
@@ -86,7 +86,7 @@ describe("fetchMentionColorsBySource", () => {
       fixture.userId,
       { hex: "#0a5" },
     );
-    const colorId = Number(color.id.replace(/^color-/, ""));
+    const colorId = color.id.replace(/^color-/, "");
     const note = await assetService.createInboxNote(
       fixture.organizationId,
       fixture.userId,
@@ -131,7 +131,7 @@ describe("fetchMentionColorsBySource", () => {
         gradient: { from: "#ff0000", to: "#0000ff", angle: 120 },
       },
     );
-    const colorId = Number(color.id.replace(/^color-/, ""));
+    const colorId = color.id.replace(/^color-/, "");
     const note = await assetService.createInboxNote(
       fixture.organizationId,
       fixture.userId,
@@ -175,7 +175,7 @@ describe("fetchMentionColorsBySource", () => {
         otherUserId,
         { hex: "#123456" },
       );
-      const colorId = Number(color.id.replace(/^color-/, ""));
+      const colorId = color.id.replace(/^color-/, "");
       const source = await assetService.createInboxNote(
         otherOrgId,
         otherUserId,
@@ -199,7 +199,7 @@ describe("fetchMentionColorsBySource", () => {
       fixture.userId,
       { hex: "#abc" },
     );
-    const colorId = Number(color.id.replace(/^color-/, ""));
+    const colorId = color.id.replace(/^color-/, "");
     const note = await assetService.createInboxNote(
       fixture.organizationId,
       fixture.userId,

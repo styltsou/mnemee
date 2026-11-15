@@ -24,13 +24,13 @@ import type { IObjectStorageService } from "@/services/object-storage.service";
  */
 export async function fetchMentionColorsBySource(
   orgId: string,
-  sourceAssetIds: ReadonlyArray<number | null | undefined>,
+  sourceAssetIds: ReadonlyArray<string | null | undefined>,
   objectStorageService?: IObjectStorageService,
-): Promise<Map<number, MentionColors>> {
+): Promise<Map<string, MentionColors>> {
   const ids = [
-    ...new Set(sourceAssetIds.filter((id): id is number => id != null)),
+    ...new Set(sourceAssetIds.filter((id): id is string => id != null)),
   ];
-  const result = new Map<number, MentionColors>();
+  const result = new Map<string, MentionColors>();
   if (ids.length === 0) return result;
 
   const rows = await db
@@ -92,8 +92,8 @@ export async function fetchMentionColorsBySource(
       ),
     );
 
-  const imageKeysByAsset = new Map<number, string>();
-  const videoKeysByAsset = new Map<number, string>();
+  const imageKeysByAsset = new Map<string, string>();
+  const videoKeysByAsset = new Map<string, string>();
   for (const row of rows) {
     if (row.targetType === "image") {
       const key =
@@ -128,7 +128,7 @@ export async function fetchMentionColorsBySource(
             ),
           )
       : [];
-  const keysByResource = new Map<number, { preview?: string; icon?: string }>();
+  const keysByResource = new Map<string, { preview?: string; icon?: string }>();
   for (const row of mediaRows) {
     const variant =
       row.variants.preview ?? row.variants.master ?? row.variants.display;

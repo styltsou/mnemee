@@ -1,3 +1,4 @@
+import { CANVAS_OBJECT_ID_PATTERN } from "@mnemee/id-shared";
 import { parseCollectionNodeId } from "@/lib/collection-node-id";
 
 import {
@@ -555,12 +556,12 @@ export const bulkDelete = factory.createHandlers(
       userId,
     );
 
-    const folderIds: number[] = [];
+    const folderIds: string[] = [];
     const assetNodeIds: string[] = [];
     const canvasObjectIds: string[] = [];
 
     for (const nodeId of nodeIds) {
-      if (/^(text|arrow)-\d+$/.test(nodeId)) {
+      if (CANVAS_OBJECT_ID_PATTERN.test(nodeId)) {
         canvasObjectIds.push(nodeId);
         continue;
       }

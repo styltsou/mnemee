@@ -12,6 +12,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -192,7 +193,7 @@ export type VideoStoryboard = {
 export const collectionsTable = pgTable(
   "collections",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
@@ -227,7 +228,7 @@ export const collectionsTable = pgTable(
 export const assets = pgTable(
   "assets",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
@@ -270,7 +271,7 @@ export const assets = pgTable(
 export const imageAssets = pgTable(
   "image_assets",
   {
-    assetId: integer("asset_id")
+    assetId: uuid("asset_id")
       .primaryKey()
       .references(() => assets.id, { onDelete: "cascade" }),
     width: integer().notNull(),
@@ -308,7 +309,7 @@ export const imageAssets = pgTable(
 export const videoAssets = pgTable(
   "video_assets",
   {
-    assetId: integer("asset_id")
+    assetId: uuid("asset_id")
       .primaryKey()
       .references(() => assets.id, { onDelete: "cascade" }),
     original: jsonb().$type<VideoOriginal>(),
@@ -341,7 +342,7 @@ export const videoAssets = pgTable(
 export const externalResources = pgTable(
   "external_resources",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
@@ -408,11 +409,11 @@ export const externalResources = pgTable(
 export const linkAssets = pgTable(
   "link_assets",
   {
-    assetId: integer("asset_id")
+    assetId: uuid("asset_id")
       .primaryKey()
       .references(() => assets.id, { onDelete: "cascade" }),
     organizationId: text("organization_id").notNull(),
-    resourceId: integer("resource_id").notNull(),
+    resourceId: uuid("resource_id").notNull(),
     originalUrl: text("original_url").notNull(),
     note: text(),
   },
@@ -435,9 +436,9 @@ export const linkAssets = pgTable(
 export const resourceResolutionAttempts = pgTable(
   "resource_resolution_attempts",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id").notNull(),
-    resourceId: integer("resource_id").notNull(),
+    resourceId: uuid("resource_id").notNull(),
     generation: integer().notNull(),
     trigger: resourceResolutionTriggerEnum().notNull(),
     status: resourceResolutionAttemptStatusEnum().notNull().default("queued"),
@@ -481,9 +482,9 @@ export const resourceResolutionAttempts = pgTable(
 export const externalResourceMedia = pgTable(
   "external_resource_media",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id").notNull(),
-    resourceId: integer("resource_id").notNull(),
+    resourceId: uuid("resource_id").notNull(),
     role: resourceMediaRoleEnum().notNull(),
     ordinal: integer().notNull().default(0),
     sourceUrl: text("source_url").notNull(),
@@ -549,9 +550,9 @@ export const externalResourceMedia = pgTable(
 export const imageColors = pgTable(
   "image_colors",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id").notNull(),
-    assetId: integer("asset_id")
+    assetId: uuid("asset_id")
       .notNull()
       .references(() => imageAssets.assetId, { onDelete: "cascade" }),
     hex: varchar({ length: 7 }).notNull(),
@@ -598,16 +599,13 @@ export const imageColors = pgTable(
 export const uploads = pgTable(
   "uploads",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    collectionId: integer("collection_id").references(
-      () => collectionsTable.id,
-      {
-        onDelete: "cascade",
-      },
-    ),
+    collectionId: uuid("collection_id").references(() => collectionsTable.id, {
+      onDelete: "cascade",
+    }),
     parentFolderPath: text("parent_folder_path"),
     positionX: integer("position_x"),
     positionY: integer("position_y"),
@@ -615,7 +613,7 @@ export const uploads = pgTable(
     status: uploadStatusEnum().notNull().default("pending"),
     originalObjectKey: text("original_object_key").notNull(),
     storageId: text("storage_id").notNull(),
-    assetId: integer("asset_id").references(() => assets.id, {
+    assetId: uuid("asset_id").references(() => assets.id, {
       onDelete: "set null",
     }),
     fileName: varchar("file_name", { length: 255 }),
@@ -657,14 +655,13 @@ export const uploads = pgTable(
 export const videoUploads = pgTable(
   "video_uploads",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    collectionId: integer("collection_id").references(
-      () => collectionsTable.id,
-      { onDelete: "cascade" },
-    ),
+    collectionId: uuid("collection_id").references(() => collectionsTable.id, {
+      onDelete: "cascade",
+    }),
     parentFolderPath: text("parent_folder_path"),
     positionX: integer("position_x"),
     positionY: integer("position_y"),
@@ -672,7 +669,7 @@ export const videoUploads = pgTable(
     status: uploadStatusEnum().notNull().default("pending"),
     originalObjectKey: text("original_object_key"),
     storageId: text("storage_id").notNull(),
-    assetId: integer("asset_id").references(() => assets.id, {
+    assetId: uuid("asset_id").references(() => assets.id, {
       onDelete: "set null",
     }),
     fileName: varchar("file_name", { length: 255 }).notNull(),
@@ -718,11 +715,11 @@ export const videoUploads = pgTable(
 export const mediaCleanupJobs = pgTable(
   "media_cleanup_jobs",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    assetId: integer("asset_id").references(() => assets.id, {
+    assetId: uuid("asset_id").references(() => assets.id, {
       onDelete: "set null",
     }),
     objectKeys: text("object_keys").array().notNull(),
@@ -747,7 +744,7 @@ export const mediaCleanupJobs = pgTable(
 );
 
 export const noteAssets = pgTable("note_assets", {
-  assetId: integer("asset_id")
+  assetId: uuid("asset_id")
     .primaryKey()
     .references(() => assets.id, { onDelete: "cascade" }),
   markdown: text().notNull(),
@@ -757,10 +754,10 @@ export const noteAssets = pgTable("note_assets", {
 export const noteReferences = pgTable(
   "note_references",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id").notNull(),
-    sourceAssetId: integer("source_asset_id").notNull(),
-    targetAssetId: integer("target_asset_id").notNull(),
+    sourceAssetId: uuid("source_asset_id").notNull(),
+    targetAssetId: uuid("target_asset_id").notNull(),
     targetType: assetTypeEnum("target_type").notNull(),
     fallbackLabel: varchar("fallback_label", { length: 255 }).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -801,7 +798,7 @@ export const noteReferences = pgTable(
 export const colorAssets = pgTable(
   "color_assets",
   {
-    assetId: integer("asset_id")
+    assetId: uuid("asset_id")
       .primaryKey()
       .references(() => assets.id, { onDelete: "cascade" }),
     hex: varchar({ length: 9 }),
@@ -840,7 +837,7 @@ export const colorAssets = pgTable(
 export const folders = pgTable(
   "folders",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
@@ -871,23 +868,23 @@ export const folders = pgTable(
 export const collectionNodes = pgTable(
   "collection_nodes",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    collectionId: integer("collection_id").notNull(),
-    parentFolderId: integer("parent_folder_id"),
+    collectionId: uuid("collection_id").notNull(),
+    parentFolderId: uuid("parent_folder_id"),
     nodeType: collectionNodeTypeEnum("node_type").notNull(),
-    assetId: integer("asset_id"),
-    folderId: integer("folder_id"),
+    assetId: uuid("asset_id"),
+    folderId: uuid("folder_id"),
     positionX: integer("position_x"),
     positionY: integer("position_y"),
     frontIndex: integer("front_index"),
     depth: integer().default(0).notNull(),
-    pathFolderIds: integer("path_folder_ids")
+    pathFolderIds: uuid("path_folder_ids")
       .array()
       .notNull()
-      .default(sql`'{}'::integer[]`),
+      .default(sql`'{}'::uuid[]`),
     pathFolderSlugs: text("path_folder_slugs")
       .array()
       .notNull()
@@ -998,12 +995,12 @@ export const collectionNodes = pgTable(
 export const canvasObjects = pgTable(
   "canvas_objects",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    collectionId: integer("collection_id").notNull(),
-    parentFolderId: integer("parent_folder_id"),
+    collectionId: uuid("collection_id").notNull(),
+    parentFolderId: uuid("parent_folder_id"),
     objectType: canvasObjectTypeEnum("object_type").notNull(),
     frontIndex: integer("front_index"),
     createdByUserId: text("created_by_user_id").references(() => user.id, {
@@ -1050,7 +1047,7 @@ export const canvasObjects = pgTable(
 export const canvasTextObjects = pgTable(
   "canvas_text_objects",
   {
-    canvasObjectId: integer("canvas_object_id")
+    canvasObjectId: uuid("canvas_object_id")
       .primaryKey()
       .references(() => canvasObjects.id, { onDelete: "cascade" }),
     content: text().notNull(),
@@ -1071,28 +1068,28 @@ export const canvasTextObjects = pgTable(
 export const canvasArrowObjects = pgTable(
   "canvas_arrow_objects",
   {
-    canvasObjectId: integer("canvas_object_id")
+    canvasObjectId: uuid("canvas_object_id")
       .primaryKey()
       .references(() => canvasObjects.id, { onDelete: "cascade" }),
     startX: integer("start_x").notNull(),
     startY: integer("start_y").notNull(),
     endX: integer("end_x").notNull(),
     endY: integer("end_y").notNull(),
-    startCollectionNodeId: integer("start_collection_node_id").references(
+    startCollectionNodeId: uuid("start_collection_node_id").references(
       () => collectionNodes.id,
       { onDelete: "set null" },
     ),
-    startCanvasObjectId: integer("start_canvas_object_id").references(
+    startCanvasObjectId: uuid("start_canvas_object_id").references(
       () => canvasObjects.id,
       { onDelete: "set null" },
     ),
     startAnchorX: doublePrecision("start_anchor_x"),
     startAnchorY: doublePrecision("start_anchor_y"),
-    endCollectionNodeId: integer("end_collection_node_id").references(
+    endCollectionNodeId: uuid("end_collection_node_id").references(
       () => collectionNodes.id,
       { onDelete: "set null" },
     ),
-    endCanvasObjectId: integer("end_canvas_object_id").references(
+    endCanvasObjectId: uuid("end_canvas_object_id").references(
       () => canvasObjects.id,
       { onDelete: "set null" },
     ),

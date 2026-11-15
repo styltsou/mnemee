@@ -3,6 +3,10 @@
 Collections render a spatial tree of heterogeneous nodes. Assets are archived
 content. Folders are organizational containers.
 
+Application entity keys and their references are UUIDs. Public node IDs retain
+their type prefixes, such as `note-<uuid>` and `color-<uuid>`. See the
+[UUID cutover guide](./uuid-id-cutover.md) for existing-data migration and rollout.
+
 For the design rationale and tradeoffs, see
 [Schema Design Rationale](./schema-design-rationale.md).
 

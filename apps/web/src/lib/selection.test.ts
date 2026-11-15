@@ -6,7 +6,7 @@ describe("selection helpers", () => {
   it("excludes pending images and optimistic notes", () => {
     expect(
       isPersistedSelectableAsset({
-        id: "image-1",
+        id: "image-00000000-0000-4000-8000-000000000001",
         type: "image",
         uploadStatus: "processing",
       }),
@@ -17,9 +17,12 @@ describe("selection helpers", () => {
         type: "note",
       }),
     ).toBe(false);
-    expect(isPersistedSelectableAsset({ id: "folder-1", type: "folder" })).toBe(
-      true,
-    );
+    expect(
+      isPersistedSelectableAsset({
+        id: "folder-00000000-0000-4000-8000-000000000001",
+        type: "folder",
+      }),
+    ).toBe(true);
   });
 
   it("requires complete rectangle containment while accepting equal edges", () => {

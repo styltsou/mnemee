@@ -8,7 +8,7 @@ describe("ColorAssetCard", () => {
     const html = renderToStaticMarkup(
       <ColorAssetCard
         asset={{
-          id: "color-1",
+          id: "color-00000000-0000-4000-8000-000000000001",
           type: "color",
           hex: "#1a2b3c",
           title: "Midnight blue",
@@ -35,7 +35,7 @@ describe("ColorAssetCard", () => {
     const html = renderToStaticMarkup(
       <ColorAssetCard
         asset={{
-          id: "color-1",
+          id: "color-00000000-0000-4000-8000-000000000001",
           type: "color",
           hex: "#1a2b3c",
           title: null,
@@ -52,7 +52,7 @@ describe("ColorAssetCard", () => {
     const html = renderToStaticMarkup(
       <ColorAssetCard
         asset={{
-          id: "color-1",
+          id: "color-00000000-0000-4000-8000-000000000001",
           type: "color",
           hex: null,
           title: "Radial Gradient",

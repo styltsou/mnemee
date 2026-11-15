@@ -1,4 +1,5 @@
-const WORKSPACE_ASSET_ID = /^(?:image|video|note|link|color)-\d+$/;
+import { ASSET_ID_PATTERN } from "@mnemee/id-shared";
+const WORKSPACE_ASSET_ID = ASSET_ID_PATTERN;
 const ASSET_SEGMENT = "asset";
 
 export function parseWorkspaceAssetId(value: unknown): string | undefined {

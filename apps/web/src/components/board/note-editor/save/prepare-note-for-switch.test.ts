@@ -15,7 +15,7 @@ beforeEach(() => storage.clear());
 
 function setup() {
   const note: NoteAsset = {
-    id: "note-1",
+    id: "note-00000000-0000-4000-8000-000000000001",
     type: "note",
     content: "Original",
     title: "Title",
@@ -156,7 +156,9 @@ describe("preparing a note for switching", () => {
         title: "",
         revision: 0,
       };
-    if (reason === "wrong-note") options.syncedNoteIdRef.current = "note-2";
+    if (reason === "wrong-note")
+      options.syncedNoteIdRef.current =
+        "note-00000000-0000-4000-8000-000000000002";
     if (reason === "empty") {
       options.draftRef.current = "";
       options.titleRef.current = "";

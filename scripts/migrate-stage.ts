@@ -8,11 +8,13 @@ if (!databaseUrl) {
 }
 console.info(`Migrating database host: ${new URL(databaseUrl).hostname}`);
 
-const serverDirectory = fileURLToPath(new URL("../apps/server/", import.meta.url));
+const serverDirectory = fileURLToPath(
+  new URL("../apps/server/", import.meta.url),
+);
 const migration = Bun.spawn(
   // Drizzle Kit's Neon migration connection uses WebSockets. Run its CLI in
   // Node so the upgrade handshake is handled by the supported Node runtime.
-  ["node", "node_modules/drizzle-kit/bin.cjs", "migrate"],
+  ["node", "scripts/migrate.cjs"],
   {
     cwd: serverDirectory,
     env: {

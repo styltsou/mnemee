@@ -11,7 +11,7 @@ describe("canvas card entrance suppression", () => {
     expect(
       resolveCanvasCardPresence({
         currentNodeId: "note-optimistic-1",
-        nextNodeId: "note-42",
+        nextNodeId: "note-00000000-0000-4000-8000-00000000002a",
         currentPresence: "entering",
         isNew: false,
         entranceSuppressed: false,
@@ -22,8 +22,8 @@ describe("canvas card entrance suppression", () => {
   it("keeps the current presence when a node keeps the same id", () => {
     expect(
       resolveCanvasCardPresence({
-        currentNodeId: "note-42",
-        nextNodeId: "note-42",
+        currentNodeId: "note-00000000-0000-4000-8000-00000000002a",
+        nextNodeId: "note-00000000-0000-4000-8000-00000000002a",
         currentPresence: "entering",
         isNew: false,
         entranceSuppressed: false,

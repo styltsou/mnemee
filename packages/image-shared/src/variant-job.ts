@@ -1,12 +1,13 @@
+import { isUuid } from "@mnemee/id-shared";
 export type ResourceMediaRenditionJob = {
   version: 1;
   kind: "resource-media.render";
-  mediaId: number;
+  mediaId: string;
   generation: number;
 };
 
 export function resourceMediaRenditionJob(
-  mediaId: number,
+  mediaId: string,
   generation: number,
 ): ResourceMediaRenditionJob {
   return { version: 1, kind: "resource-media.render", mediaId, generation };
@@ -20,7 +21,7 @@ export function parseResourceMediaRenditionJob(
   if (candidate.kind !== "resource-media.render") return undefined;
   if (
     candidate.version !== 1 ||
-    !Number.isSafeInteger(candidate.mediaId) ||
+    !isUuid(candidate.mediaId) ||
     !Number.isSafeInteger(candidate.generation)
   )
     throw new Error("Invalid resource media rendition job");

@@ -22,7 +22,7 @@ const requestSchema = z.object({
   mentions: z
     .array(
       z.object({
-        assetId: z.number().int().positive(),
+        assetId: z.uuidv4(),
         // Mirrors MENTIONABLE_TYPES (agent/mentioned-assets.ts), which can't be
         // imported here before the env is configured. Requests saved before
         // types existed only mentioned notes.

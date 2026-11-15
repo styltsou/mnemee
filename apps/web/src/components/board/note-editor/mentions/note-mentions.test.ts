@@ -23,7 +23,7 @@ import {
   getMentionTargetSignature,
   nextMentionScope,
   parseMentionQuery,
-  parseNumericAssetId,
+  parseAssetUuid,
   shouldShowMentionSuggestion,
 } from "./note-mentions";
 import {
@@ -33,7 +33,7 @@ import {
 } from "@/api/note-mentions/hooks";
 
 const target = {
-  assetId: 1,
+  assetId: "00000000-0000-4000-8000-000000000001",
   assetType: "note" as const,
   label: "Project plan",
   title: "Project plan",
@@ -57,68 +57,116 @@ describe("mention query parsing", () => {
     const client = new QueryClient();
     const image = {
       ...target,
-      assetId: 2,
+      assetId: "00000000-0000-4000-8000-000000000002",
       assetType: "image" as const,
       title: null,
       label: "Landscape",
     };
     const options = mentionSearchQueryOptions("personal", {
       q: "",
-      sourceAssetId: 10,
+      sourceAssetId: "00000000-0000-4000-8000-00000000000a",
       types: ["image"],
     });
     client.setQueryData(options.queryKey, { targets: [image] });
     await invalidateMentionSuggestionQueries(client, "personal");
     expect(
-      getMentionSearchFallback(client, "personal", 10, {
-        scope: "image",
-        search: "",
-      }),
+      getMentionSearchFallback(
+        client,
+        "personal",
+        "00000000-0000-4000-8000-00000000000a",
+        {
+          scope: "image",
+          search: "",
+        },
+      ),
     ).toEqual({ targets: [image] });
     expect(
-      getMentionSearchFallback(client, "personal", 10, {
-        scope: "image",
-        search: "land",
-      }),
+      getMentionSearchFallback(
+        client,
+        "personal",
+        "00000000-0000-4000-8000-00000000000a",
+        {
+          scope: "image",
+          search: "land",
+        },
+      ),
     ).toEqual({ targets: [image] });
     expect(
-      getMentionSearchFallback(client, "personal", 10, {
-        scope: "note",
-        search: "",
-      }),
+      getMentionSearchFallback(
+        client,
+        "personal",
+        "00000000-0000-4000-8000-00000000000a",
+        {
+          scope: "note",
+          search: "",
+        },
+      ),
     ).toBeUndefined();
     expect(
-      getMentionSearchFallback(client, "other", 10, { search: "" }),
+      getMentionSearchFallback(
+        client,
+        "other",
+        "00000000-0000-4000-8000-00000000000a",
+        { search: "" },
+      ),
     ).toBeUndefined();
     expect(
-      getMentionSearchFallback(client, "personal", 11, { search: "" }),
+      getMentionSearchFallback(
+        client,
+        "personal",
+        "00000000-0000-4000-8000-00000000000b",
+        { search: "" },
+      ),
     ).toBeUndefined();
     expect(
-      getMentionSearchFallback(client, "personal", 10, { search: "unrelated" }),
+      getMentionSearchFallback(
+        client,
+        "personal",
+        "00000000-0000-4000-8000-00000000000a",
+        { search: "unrelated" },
+      ),
     ).toBeUndefined();
     client.clear();
   });
 
   it("keeps selection on the same target when results reorder", () => {
-    const other = { ...target, assetId: 2 };
-    expect(getMentionSelectionIndex([target, other], "note:2")).toBe(1);
-    expect(getMentionSelectionIndex([other, target], "note:2")).toBe(0);
-    expect(getMentionSelectionIndex([target], "note:2")).toBe(0);
+    const other = {
+      ...target,
+      assetId: "00000000-0000-4000-8000-000000000002",
+    };
+    expect(
+      getMentionSelectionIndex(
+        [target, other],
+        "note:00000000-0000-4000-8000-000000000002",
+      ),
+    ).toBe(1);
+    expect(
+      getMentionSelectionIndex(
+        [other, target],
+        "note:00000000-0000-4000-8000-000000000002",
+      ),
+    ).toBe(0);
+    expect(
+      getMentionSelectionIndex(
+        [target],
+        "note:00000000-0000-4000-8000-000000000002",
+      ),
+    ).toBe(0);
   });
 
   it("keeps mention-search cache entries isolated by source, scope, and query", () => {
     const base = mentionSearchQueryOptions("test", {
       q: "project",
-      sourceAssetId: 1,
+      sourceAssetId: "00000000-0000-4000-8000-000000000001",
     });
     const scoped = mentionSearchQueryOptions("test", {
       q: "project",
-      sourceAssetId: 1,
+      sourceAssetId: "00000000-0000-4000-8000-000000000001",
       types: ["note"],
     });
     const differentSource = mentionSearchQueryOptions("test", {
       q: "project",
-      sourceAssetId: 2,
+      sourceAssetId: "00000000-0000-4000-8000-000000000002",
     });
 
     expect(base.queryKey).not.toEqual(scoped.queryKey);
@@ -128,7 +176,7 @@ describe("mention query parsing", () => {
   it("filters the warm recent list by scope and supported search fields", () => {
     const gradient = {
       ...target,
-      assetId: 2,
+      assetId: "00000000-0000-4000-8000-000000000002",
       assetType: "color" as const,
       title: "Radial Gradient",
       label: "Radial Gradient",
@@ -142,7 +190,7 @@ describe("mention query parsing", () => {
     };
     const color = {
       ...gradient,
-      assetId: 3,
+      assetId: "00000000-0000-4000-8000-000000000003",
       title: "Spring Green",
       label: "Spring Green",
       hex: "#BADA55",
@@ -295,17 +343,24 @@ describe("mention query parsing", () => {
   it("resolves video mentions alongside other mentions", () => {
     const editor = new Editor({
       extensions: [StarterKit, Markdown, AssetMention],
-      content: "[A note](note:4) and [A clip](video:9) and [The clip](video:9)",
+      content:
+        "[A note](note:00000000-0000-4000-8000-000000000004) and [A clip](video:00000000-0000-4000-8000-000000000009) and [The clip](video:00000000-0000-4000-8000-000000000009)",
       contentType: "markdown",
     });
 
-    expect(getMentionTargetSignature(editor.state.doc)).toBe("note:4,video:9");
+    expect(getMentionTargetSignature(editor.state.doc)).toBe(
+      "note:00000000-0000-4000-8000-000000000004,video:00000000-0000-4000-8000-000000000009",
+    );
     editor.destroy();
   });
 
-  it("reads the numeric entity id from client note ids", () => {
-    expect(parseNumericAssetId("note-42")).toBe(42);
-    expect(parseNumericAssetId("image-42")).toBe(42);
+  it("reads the UUID from client note ids", () => {
+    expect(parseAssetUuid("note-00000000-0000-4000-8000-00000000002a")).toBe(
+      "00000000-0000-4000-8000-00000000002a",
+    );
+    expect(parseAssetUuid("image-00000000-0000-4000-8000-00000000002a")).toBe(
+      "00000000-0000-4000-8000-00000000002a",
+    );
   });
 
   it("tolerates unavailable Tiptap editor snapshots during initial render", () => {
@@ -324,7 +379,7 @@ describe("mention query parsing", () => {
           createElement(NoteMentionProvider, {
             editor,
             workspaceSlug: "test",
-            sourceAssetId: 42,
+            sourceAssetId: "00000000-0000-4000-8000-00000000002a",
             // createElement's types require the required children prop here.
             // eslint-disable-next-line react/no-children-prop
             children: createElement("div", null, "Editor content"),
@@ -353,7 +408,7 @@ describe("mention query parsing", () => {
           createElement(NoteMentionProvider, {
             editor,
             workspaceSlug: "test",
-            sourceAssetId: 42,
+            sourceAssetId: "00000000-0000-4000-8000-00000000002a",
             // createElement's types require the required children prop here.
             // eslint-disable-next-line react/no-children-prop
             children: createElement("div", null, "Editor content"),

@@ -1,8 +1,9 @@
+import { ASSET_ID_PATTERN } from "@mnemee/id-shared";
 import { useCallback, useSyncExternalStore } from "react";
 
 const STORAGE_PREFIX = "mnemee.workspace-recent-assets:";
 const MAX_RECENT_ASSETS = 12;
-const ASSET_ID = /^(?:image|video|note|link|color)-\d+$/;
+const ASSET_ID = ASSET_ID_PATTERN;
 const RECENT_ASSETS_CHANGED_EVENT = "mnemee:workspace-recent-assets-changed";
 const EMPTY_RECENT_ASSET_IDS: readonly string[] = [];
 const cachedRecentAssetIds = new Map<

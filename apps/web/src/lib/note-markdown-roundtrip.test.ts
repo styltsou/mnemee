@@ -94,7 +94,7 @@ describe("note Markdown round trips", () => {
 
   it("round-trips internal asset mentions without claiming normal links", () => {
     const source =
-      "See [Project plan](note:12), [Ocean](color:7), and [docs](https://example.com).";
+      "See [Project plan](note:00000000-0000-4000-8000-00000000000c), [Ocean](color:00000000-0000-4000-8000-000000000007), and [docs](https://example.com).";
     const parsed = noteMarkdown.parse(source);
 
     expect(parsed.content?.[0]?.content?.map((node) => node.type)).toContain(

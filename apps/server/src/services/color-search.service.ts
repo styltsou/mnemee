@@ -205,8 +205,8 @@ function normalizeWeightedQueryColors(
 
 function groupPaletteRows(
   rows: Awaited<ReturnType<ColorSearchRepository["getPaletteColors"]>>,
-): Map<number, typeof rows> {
-  const grouped = new Map<number, typeof rows>();
+): Map<string, typeof rows> {
+  const grouped = new Map<string, typeof rows>();
   for (const row of rows) {
     const palette = grouped.get(row.assetId);
     if (palette) {

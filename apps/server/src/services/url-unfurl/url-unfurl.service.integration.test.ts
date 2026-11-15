@@ -61,8 +61,8 @@ const logger: ILoggerService = {
 };
 
 let fixture: { organizationId: string; userId: string };
-let resolutionTasks: Array<{ id: number; generation: number }>;
-let mediaTasks: Array<{ id: number; generation: number }>;
+let resolutionTasks: Array<{ id: string; generation: number }>;
+let mediaTasks: Array<{ id: string; generation: number }>;
 let service: UrlUnfurlService;
 let assetService: AssetService;
 
@@ -244,7 +244,7 @@ describe("UrlUnfurlService integration", () => {
     await expect(
       service.getLinkNode(
         fixture.organizationId,
-        Number(link.id.slice("link-".length)),
+        link.id.slice("link-".length),
         null,
       ),
     ).resolves.toMatchObject({
@@ -268,7 +268,7 @@ describe("UrlUnfurlService integration", () => {
     await expect(
       service.getLinkNode(
         fixture.organizationId,
-        Number(link.id.slice("link-".length)),
+        link.id.slice("link-".length),
         null,
       ),
     ).resolves.toMatchObject({
@@ -306,7 +306,7 @@ describe("UrlUnfurlService integration", () => {
     await expect(
       service.getLinkNode(
         fixture.organizationId,
-        Number(link.id.slice("link-".length)),
+        link.id.slice("link-".length),
         null,
       ),
     ).resolves.toMatchObject({ resolutionStatus: "resolving" });
@@ -378,7 +378,7 @@ describe("UrlUnfurlService integration", () => {
     await expect(
       service.getLinkNode(
         fixture.organizationId,
-        Number(link.id.slice("link-".length)),
+        link.id.slice("link-".length),
         null,
       ),
     ).resolves.toMatchObject({

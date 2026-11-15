@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { nextOverlayTrail } from "./workspace-overlay-history";
 
 const board = "/work/collections/ideas";
-const first = `${board}/asset/note-1`;
-const second = `${board}/asset/note-2`;
+const first = `${board}/asset/note-00000000-0000-4000-8000-000000000001`;
+const second = `${board}/asset/note-00000000-0000-4000-8000-000000000002`;
 
 describe("overlay history shortcuts", () => {
   it("counts peek entries between main views", () => {

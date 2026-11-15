@@ -13,7 +13,7 @@ import {
 } from "./canvas-node-layout";
 
 const note: CollectionNode = {
-  id: "note-1",
+  id: "note-00000000-0000-4000-8000-000000000001",
   type: "note",
   content: "Reference",
   isFavorite: false,
@@ -61,10 +61,14 @@ describe("infinite canvas node placement", () => {
 
   it("places a batch from the requested canvas coordinate", () => {
     expect(
-      reserveNodePositions([], [note, { ...note, id: "note-2" }], {
-        x: -51.4,
-        y: 73.8,
-      }),
+      reserveNodePositions(
+        [],
+        [note, { ...note, id: "note-00000000-0000-4000-8000-000000000002" }],
+        {
+          x: -51.4,
+          y: 73.8,
+        },
+      ),
     ).toEqual([
       { x: -51, y: 74 },
       { x: -51 + BOARD_CARD_WIDTH + BOARD_ITEM_GAP, y: 74 },
@@ -73,10 +77,14 @@ describe("infinite canvas node placement", () => {
 
   it("centers the first inserted card at a center anchor", () => {
     expect(
-      reserveNodePositions([], [note, { ...note, id: "note-2" }], {
-        position: { x: 500, y: 400 },
-        anchor: "center",
-      }),
+      reserveNodePositions(
+        [],
+        [note, { ...note, id: "note-00000000-0000-4000-8000-000000000002" }],
+        {
+          position: { x: 500, y: 400 },
+          anchor: "center",
+        },
+      ),
     ).toEqual([
       { x: 360, y: 240 },
       { x: 360 + BOARD_CARD_WIDTH + BOARD_ITEM_GAP, y: 240 },
@@ -110,7 +118,7 @@ describe("infinite canvas node placement", () => {
   it("moves a requested insertion only when it collides with an existing card", () => {
     const [position] = reserveNodePositions(
       [{ ...note, position: { x: 48, y: 48 } }],
-      [{ ...note, id: "note-2" }],
+      [{ ...note, id: "note-00000000-0000-4000-8000-000000000002" }],
       { x: 48, y: 48 },
     );
 
@@ -124,9 +132,9 @@ describe("infinite canvas node placement", () => {
         [],
         [
           note,
-          { ...note, id: "note-2" },
-          { ...note, id: "note-3" },
-          { ...note, id: "note-4" },
+          { ...note, id: "note-00000000-0000-4000-8000-000000000002" },
+          { ...note, id: "note-00000000-0000-4000-8000-000000000003" },
+          { ...note, id: "note-00000000-0000-4000-8000-000000000004" },
         ],
         { position: { x: 360, y: 340 } },
       ),
@@ -197,10 +205,14 @@ describe("infinite canvas node placement", () => {
 
   it("preserves an occupied pointer anchor", () => {
     expect(
-      reserveNodePositions([note], [{ ...note, id: "note-2" }], {
-        position: { x: 48, y: 48 },
-        collisionBehavior: "preserve-anchor",
-      }),
+      reserveNodePositions(
+        [note],
+        [{ ...note, id: "note-00000000-0000-4000-8000-000000000002" }],
+        {
+          position: { x: 48, y: 48 },
+          collisionBehavior: "preserve-anchor",
+        },
+      ),
     ).toEqual([{ x: 48, y: 48 }]);
   });
 
@@ -208,7 +220,7 @@ describe("infinite canvas node placement", () => {
     expect(
       reserveNodePositions(
         [{ ...note, position: { x: 360, y: 340 } }],
-        [note, { ...note, id: "note-2" }],
+        [note, { ...note, id: "note-00000000-0000-4000-8000-000000000002" }],
         {
           position: { x: 360, y: 340 },
           collisionBehavior: "preserve-anchor",
@@ -222,9 +234,13 @@ describe("infinite canvas node placement", () => {
 
   it("nudges an unmarked placement when its coordinate is occupied", () => {
     expect(
-      reserveNodePositions([note], [{ ...note, id: "note-2" }], {
-        position: { x: 0, y: 0 },
-      }),
+      reserveNodePositions(
+        [note],
+        [{ ...note, id: "note-00000000-0000-4000-8000-000000000002" }],
+        {
+          position: { x: 0, y: 0 },
+        },
+      ),
     ).toEqual([{ x: 2 * (BOARD_CARD_WIDTH + BOARD_ITEM_GAP), y: 0 }]);
   });
 
@@ -235,9 +251,9 @@ describe("infinite canvas node placement", () => {
         [
           note,
           portraitImage,
-          { ...note, id: "note-3" },
-          { ...note, id: "note-4" },
-          { ...note, id: "note-5" },
+          { ...note, id: "note-00000000-0000-4000-8000-000000000003" },
+          { ...note, id: "note-00000000-0000-4000-8000-000000000004" },
+          { ...note, id: "note-00000000-0000-4000-8000-000000000005" },
         ],
         { x: 100, y: 200 },
       ),

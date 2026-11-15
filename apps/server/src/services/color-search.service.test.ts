@@ -11,13 +11,16 @@ describe("ColorSearchService", () => {
       resolveScope: vi.fn().mockResolvedValue({ type: "inbox" }),
       getScopedImageCount: vi.fn().mockResolvedValue(2),
       findBroadCandidateAssets: vi.fn().mockResolvedValue({
-        assetIds: [17, 99],
+        assetIds: [
+          "00000000-0000-4000-8000-000000000011",
+          "00000000-0000-4000-8000-000000000063",
+        ],
         reachedSafetyCap: false,
       }),
       getPaletteColors: vi.fn().mockResolvedValue([
         {
-          id: 1,
-          assetId: 17,
+          id: "00000000-0000-4000-8000-000000000001",
+          assetId: "00000000-0000-4000-8000-000000000011",
           hex: "#d94732",
           oklabL: 0.628,
           oklabA: 0.225,
@@ -29,7 +32,7 @@ describe("ColorSearchService", () => {
       ]),
       getImageMetadata: vi.fn().mockResolvedValue([
         {
-          assetId: 17,
+          assetId: "00000000-0000-4000-8000-000000000011",
           title: "Reference",
           width: 1200,
           height: 800,
@@ -49,8 +52,12 @@ describe("ColorSearchService", () => {
       ]),
       getImageLocations: vi.fn().mockResolvedValue([
         {
-          assetId: 17,
-          location: { type: "inbox", nodeId: "image-17", position: null },
+          assetId: "00000000-0000-4000-8000-000000000011",
+          location: {
+            type: "inbox",
+            nodeId: "image-00000000-0000-4000-8000-000000000011",
+            position: null,
+          },
         },
       ]),
     } as unknown as ColorSearchRepository;
@@ -93,25 +100,27 @@ describe("ColorSearchService", () => {
       [{ oklabL: 0.628, oklabA: 0.225, oklabB: 0.126 }],
       "strict",
     );
-    expect(repository.getPaletteColors).toHaveBeenCalledWith(
-      "workspace-1",
-      [17, 99],
-    );
-    expect(repository.getImageMetadata).toHaveBeenCalledWith(
-      "workspace-1",
-      [17],
-    );
+    expect(repository.getPaletteColors).toHaveBeenCalledWith("workspace-1", [
+      "00000000-0000-4000-8000-000000000011",
+      "00000000-0000-4000-8000-000000000063",
+    ]);
+    expect(repository.getImageMetadata).toHaveBeenCalledWith("workspace-1", [
+      "00000000-0000-4000-8000-000000000011",
+    ]);
     expect(repository.getImageLocations).toHaveBeenCalledWith(
       "workspace-1",
       { type: "inbox" },
-      [17],
+      ["00000000-0000-4000-8000-000000000011"],
     );
     expect(createPresignedGetUrls).toHaveBeenCalledWith([
       "workspace-1/17/preview.webp",
     ]);
     expect(response.results).toMatchObject([
       {
-        image: { id: "image-17", url: "https://signed.example/17" },
+        image: {
+          id: "image-00000000-0000-4000-8000-000000000011",
+          url: "https://signed.example/17",
+        },
         location: { type: "inbox" },
       },
     ]);

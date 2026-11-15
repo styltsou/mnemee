@@ -12,7 +12,9 @@ vi.mock("@/db", () => ({
   db: { transaction: (callback: (tx: unknown) => unknown) => callback(mocks) },
 }));
 vi.mock("./collection-target-resolver", () => ({
-  getCollectionBySlug: async () => ({ id: 10 }),
+  getCollectionBySlug: async () => ({
+    id: "00000000-0000-4000-8000-00000000000a",
+  }),
 }));
 
 import {
@@ -41,23 +43,34 @@ beforeEach(() => {
 
 describe("canvas stacking persistence", () => {
   it("accepts video cards and places them above cards and freeform text", async () => {
-    rows([{ id: 7, nodeType: "asset", assetId: 42, assetType: "video" }]);
     rows([
       {
-        id: 8,
+        id: "00000000-0000-4000-8000-000000000007",
         nodeType: "asset",
-        assetId: 43,
+        assetId: "00000000-0000-4000-8000-00000000002a",
+        assetType: "video",
+      },
+    ]);
+    rows([
+      {
+        id: "00000000-0000-4000-8000-000000000008",
+        nodeType: "asset",
+        assetId: "00000000-0000-4000-8000-00000000002b",
         assetType: "note",
         frontIndex: 9,
       },
     ]);
-    rows([{ id: 3, frontIndex: 12 }]);
+    rows([{ id: "00000000-0000-4000-8000-000000000003", frontIndex: 12 }]);
     await expect(
       new CanvasStackingService().bringItemsToFront("org", "user", "ideas", {
-        itemIds: ["video-42"],
+        itemIds: ["video-00000000-0000-4000-8000-00000000002a"],
         expectedParentFolderNodeId: null,
       }),
-    ).resolves.toEqual({ items: [{ id: "video-42", frontIndex: 13 }] });
+    ).resolves.toEqual({
+      items: [
+        { id: "video-00000000-0000-4000-8000-00000000002a", frontIndex: 13 },
+      ],
+    });
     expect(mocks.set).toHaveBeenCalledWith({ frontIndex: 13 });
   });
 
@@ -65,7 +78,7 @@ describe("canvas stacking persistence", () => {
     rows([]);
     await expect(
       new CanvasStackingService().bringItemsToFront("org", "user", "ideas", {
-        itemIds: ["video-42"],
+        itemIds: ["video-00000000-0000-4000-8000-00000000002a"],
         expectedParentFolderNodeId: null,
       }),
     ).rejects.toThrow("Canvas item moved");
@@ -76,7 +89,12 @@ describe("canvas stacking persistence", () => {
     rows([{ maximum: 4 }]);
     rows([{ maximum: 19 }]);
     await expect(
-      reserveCanvasFrontIndex(mocks as never, "org", 10, null),
+      reserveCanvasFrontIndex(
+        mocks as never,
+        "org",
+        "00000000-0000-4000-8000-00000000000a",
+        null,
+      ),
     ).resolves.toBe(20);
     expect(mocks.execute).toHaveBeenCalledTimes(1);
     expect(mocks.execute.mock.invocationCallOrder[0]).toBeLessThan(
@@ -88,7 +106,12 @@ describe("canvas stacking persistence", () => {
     rows([{ maximum: null }]);
     rows([{ maximum: null }]);
     await expect(
-      reserveCanvasFrontIndex(mocks as never, "org", 10, 2),
+      reserveCanvasFrontIndex(
+        mocks as never,
+        "org",
+        "00000000-0000-4000-8000-00000000000a",
+        "00000000-0000-4000-8000-000000000002",
+      ),
     ).resolves.toBe(0);
   });
 
@@ -97,16 +120,21 @@ describe("canvas stacking persistence", () => {
     rows([{ maximum: 9 }]);
     rows([
       {
-        id: 8,
+        id: "00000000-0000-4000-8000-000000000008",
         nodeType: "asset",
-        assetId: 43,
+        assetId: "00000000-0000-4000-8000-00000000002b",
         assetType: "note",
         frontIndex: 100_000,
       },
     ]);
-    rows([{ id: 3, frontIndex: 9 }]);
+    rows([{ id: "00000000-0000-4000-8000-000000000003", frontIndex: 9 }]);
     await expect(
-      reserveCanvasFrontIndex(mocks as never, "org", 10, null),
+      reserveCanvasFrontIndex(
+        mocks as never,
+        "org",
+        "00000000-0000-4000-8000-00000000000a",
+        null,
+      ),
     ).resolves.toBe(2);
     expect(mocks.set.mock.calls).toEqual([
       [{ frontIndex: 0 }],

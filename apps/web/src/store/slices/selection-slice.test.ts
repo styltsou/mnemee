@@ -10,11 +10,15 @@ function createTestStore() {
 describe("selection slice", () => {
   it("resets only when activating a different scope", () => {
     const store = createTestStore();
-    store.getState().replaceSelection("inbox:design", ["image-1"]);
+    store
+      .getState()
+      .replaceSelection("inbox:design", [
+        "image-00000000-0000-4000-8000-000000000001",
+      ]);
     store.getState().activateSelectionScope("inbox:design");
     expect(store.getState().selection).toEqual({
       scopeKey: "inbox:design",
-      nodeIds: ["image-1"],
+      nodeIds: ["image-00000000-0000-4000-8000-000000000001"],
     });
 
     store.getState().activateSelectionScope("collection:design:ideas");
@@ -28,22 +32,47 @@ describe("selection slice", () => {
     const store = createTestStore();
     store
       .getState()
-      .replaceSelection("inbox:design", ["image-1", "note-2", "image-1"]);
-    store.getState().toggleSelectedNode("inbox:design", "note-2");
-    store.getState().toggleSelectedNode("inbox:design", "folder-3");
+      .replaceSelection("inbox:design", [
+        "image-00000000-0000-4000-8000-000000000001",
+        "note-00000000-0000-4000-8000-000000000002",
+        "image-00000000-0000-4000-8000-000000000001",
+      ]);
+    store
+      .getState()
+      .toggleSelectedNode(
+        "inbox:design",
+        "note-00000000-0000-4000-8000-000000000002",
+      );
+    store
+      .getState()
+      .toggleSelectedNode(
+        "inbox:design",
+        "folder-00000000-0000-4000-8000-000000000003",
+      );
 
-    expect(store.getState().selection.nodeIds).toEqual(["image-1", "folder-3"]);
+    expect(store.getState().selection.nodeIds).toEqual([
+      "image-00000000-0000-4000-8000-000000000001",
+      "folder-00000000-0000-4000-8000-000000000003",
+    ]);
   });
 
   it("does not clear a newer surface from late cleanup", () => {
     const store = createTestStore();
-    store.getState().replaceSelection("inbox:design", ["image-1"]);
-    store.getState().replaceSelection("collection:design:ideas", ["note-2"]);
+    store
+      .getState()
+      .replaceSelection("inbox:design", [
+        "image-00000000-0000-4000-8000-000000000001",
+      ]);
+    store
+      .getState()
+      .replaceSelection("collection:design:ideas", [
+        "note-00000000-0000-4000-8000-000000000002",
+      ]);
     store.getState().clearSelection("inbox:design");
 
     expect(store.getState().selection).toEqual({
       scopeKey: "collection:design:ideas",
-      nodeIds: ["note-2"],
+      nodeIds: ["note-00000000-0000-4000-8000-000000000002"],
     });
   });
 });

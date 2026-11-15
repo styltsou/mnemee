@@ -14,13 +14,13 @@ describe("batch placement completion", () => {
 
     emitBatchPlacementCompleted({
       boardKey: "workspace/collection/",
-      nodeIds: ["image-1"],
+      nodeIds: ["image-00000000-0000-4000-8000-000000000001"],
       bounds: { left: 0, top: 0, right: 280, bottom: 280 },
     });
     unsubscribe();
     emitBatchPlacementCompleted({
       boardKey: "workspace/collection/",
-      nodeIds: ["image-2"],
+      nodeIds: ["image-00000000-0000-4000-8000-000000000002"],
       bounds: { left: 0, top: 0, right: 280, bottom: 280 },
     });
 

@@ -50,7 +50,7 @@ type Executor = typeof db | DatabaseTransaction;
 type Deps = { objectStorageService: IObjectStorageService };
 
 type MentionRow = {
-  assetId: number;
+  assetId: string;
   assetType: "image" | "video" | "note" | "link" | "color";
   title: string | null;
   updatedAt: Date;
@@ -63,7 +63,7 @@ type MentionRow = {
   pathFolderSlugs: string[] | null;
   hostname: string | null;
   url: string | null;
-  resourceId: number | null;
+  resourceId: string | null;
   resourceKind: string | null;
   resolverKey: string | null;
   imageVariants: typeof imageAssets.$inferSelect.variants | null;
@@ -259,12 +259,12 @@ function noteAssetId(assetNodeId: string) {
 export async function reconcileNoteReferences(
   tx: DatabaseTransaction,
   orgId: string,
-  sourceAssetId: number,
+  sourceAssetId: string,
   markdown: string,
 ): Promise<string> {
   const parsed = extractNoteMentions(markdown);
   const requestedKeys = new Set<string>();
-  const requestedIds = new Set<number>();
+  const requestedIds = new Set<string>();
   for (const mention of parsed) {
     if (mention.targetAssetId !== sourceAssetId) {
       requestedKeys.add(mentionKey(mention.targetType, mention.targetAssetId));
@@ -299,7 +299,7 @@ export async function reconcileNoteReferences(
   const canonicalMarkdown = rewriteNoteMentionLabels(markdown, replacements);
   const canonicalMentions = extractNoteMentions(canonicalMarkdown);
   const desired = new Map<
-    number,
+    string,
     { targetType: MentionType; fallbackLabel: string }
   >();
   const validKeys = new Set(replacements.keys());
@@ -376,7 +376,7 @@ export async function reconcileNoteReferences(
 export async function rewriteReferencedTargetLabel(
   tx: DatabaseTransaction,
   orgId: string,
-  targetAssetId: number,
+  targetAssetId: string,
   targetType: MentionType,
   label: string | null,
 ) {
@@ -470,7 +470,7 @@ async function findMentionRows(
   types: MentionType[],
   query: string,
   limit: number,
-  sourceAssetId?: number,
+  sourceAssetId?: string,
 ): Promise<MentionRow[]> {
   const match = `%${query}%`;
   const score = sql<number>`case
@@ -546,7 +546,7 @@ function balanceRecentTargets(
     .sort(
       (left, right) =>
         right.updatedAt.getTime() - left.updatedAt.getTime() ||
-        left.assetId - right.assetId,
+        left.assetId.localeCompare(right.assetId),
     );
   return [...selected, ...remaining].slice(0, limit);
 }
@@ -564,11 +564,11 @@ async function toTargets(
     ),
   ];
   const mediaByResource = new Map<
-    number,
+    string,
     { preview?: string; icon?: string }
   >();
-  const imageKeysByAsset = new Map<number, string>();
-  const videoKeysByAsset = new Map<number, string>();
+  const imageKeysByAsset = new Map<string, string>();
+  const videoKeysByAsset = new Map<string, string>();
   for (const row of rows) {
     if (row.assetType === "image") {
       const key =
@@ -608,7 +608,7 @@ async function toTargets(
         ),
       );
     const keysByResource = new Map<
-      number,
+      string,
       { preview?: string; icon?: string }
     >();
     for (const row of mediaRows) {

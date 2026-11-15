@@ -6,15 +6,15 @@ import { AppError, ErrorCode } from "@/lib/errors";
 import { first } from "@/lib/query";
 
 export type CollectionIdentity = {
-  id: number;
+  id: string;
   name: string;
   slug: string;
 };
 
 export type CollectionTarget = {
   collection: CollectionIdentity;
-  parentFolderId: number | null;
-  pathFolderIds: number[];
+  parentFolderId: string | null;
+  pathFolderIds: string[];
   pathFolderSlugs: string[];
   pathFolderNames: string[];
 };
@@ -63,7 +63,7 @@ export async function resolveCollectionTargetBySlug(
 /** Re-resolves a saved upload target so deleted collections and folders cannot be reused. */
 export async function resolveCollectionTargetById(
   orgId: string,
-  collectionId: number | null,
+  collectionId: string | null,
   folderPath?: string,
 ): Promise<CollectionTarget | null> {
   if (!collectionId) return null;

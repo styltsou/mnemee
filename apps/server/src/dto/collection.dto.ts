@@ -1,3 +1,14 @@
+import {
+  CANVAS_ITEM_ID_PATTERN,
+  ASSET_ID_PATTERN,
+  COLLECTION_NODE_ID_PATTERN,
+  CANVAS_OBJECT_ID_PATTERN,
+  STACKABLE_CANVAS_ITEM_ID_PATTERN,
+  TEXT_ID_PATTERN,
+  ARROW_ID_PATTERN,
+  FOLDER_ID_PATTERN,
+  IMAGE_ID_PATTERN,
+} from "@mnemee/id-shared";
 import { z } from "zod";
 
 import { NOTE_CONTENT_MAX_LENGTH } from "@/constants";
@@ -31,9 +42,7 @@ export const CanvasArrowPatternSchema = z.enum(["solid", "dashed", "dotted"]);
 export const CanvasArrowHeadSchema = z.enum(["filled", "hollow", "chevron"]);
 export const CanvasArrowRoutingSchema = z.enum(["straight", "smooth"]);
 
-const CanvasBindableIdSchema = z
-  .string()
-  .regex(/^(folder|image|note|link|color|text|arrow)-\d+$/);
+const CanvasBindableIdSchema = z.string().regex(CANVAS_ITEM_ID_PATTERN);
 
 export const CanvasArrowEndpointSchema = z.object({
   position: BoardPositionSchema,
@@ -49,7 +58,7 @@ export const CanvasArrowEndpointSchema = z.object({
 });
 
 export const CanvasTextObjectSchema = z.object({
-  id: z.string().regex(/^text-\d+$/),
+  id: z.string().regex(TEXT_ID_PATTERN),
   type: z.literal("text"),
   content: z.string(),
   position: BoardPositionSchema,
@@ -62,7 +71,7 @@ export const CanvasTextObjectSchema = z.object({
 });
 
 export const CanvasArrowObjectSchema = z.object({
-  id: z.string().regex(/^arrow-\d+$/),
+  id: z.string().regex(ARROW_ID_PATTERN),
   type: z.literal("arrow"),
   start: CanvasArrowEndpointSchema,
   end: CanvasArrowEndpointSchema,
@@ -150,7 +159,7 @@ export const UpdateCanvasArrowSchema = z
 export type UpdateCanvasArrowInput = z.infer<typeof UpdateCanvasArrowSchema>;
 
 export const LightCollectionSchema = z.object({
-  id: z.number(),
+  id: z.uuidv4(),
   name: z.string(),
   slug: z.string(),
   assetCount: z.number(),
@@ -233,7 +242,7 @@ export const FolderChildPreviewSchema = z.object({
 export type FolderChildPreview = z.infer<typeof FolderChildPreviewSchema>;
 
 export const DetailedCollectionSchema = z.object({
-  id: z.number(),
+  id: z.uuidv4(),
   name: z.string(),
   slug: z.string(),
   description: z.string().nullable(),
@@ -444,7 +453,7 @@ export type UpdatedNote = {
 };
 
 export const CreatedCollectionSchema = z.object({
-  id: z.number(),
+  id: z.uuidv4(),
   name: z.string(),
   slug: z.string(),
   description: z.string().nullable(),
@@ -673,7 +682,7 @@ export const CollectionNodeSchema = z.discriminatedUnion("type", [
 export type CollectionNode = z.infer<typeof CollectionNodeSchema>;
 
 export const BreadcrumbSchema = z.object({
-  id: z.number(),
+  id: z.uuidv4(),
   name: z.string(),
   slug: z.string(),
 });
@@ -681,7 +690,7 @@ export const BreadcrumbSchema = z.object({
 export type Breadcrumb = z.infer<typeof BreadcrumbSchema>;
 
 export const CreatedFolderSchema = z.object({
-  id: z.number(),
+  id: z.uuidv4(),
   name: z.string(),
   slug: z.string(),
   path: z.string(),
@@ -696,7 +705,7 @@ export type CreatedFolder = z.infer<typeof CreatedFolderSchema>;
 
 export const CollectionContentsResponseSchema = z.object({
   collection: z.object({
-    id: z.number(),
+    id: z.union([z.uuidv4(), z.literal("inbox")]),
     name: z.string(),
     slug: z.string(),
   }),
@@ -723,20 +732,14 @@ export type InboxGridResponse = Pick<
   nextCursor: string | null;
 };
 
-const AssetNodeIdSchema = z
-  .string()
-  .regex(/^(image|video|note|link|color)-\d+$/);
-const CollectionNodeIdSchema = z
-  .string()
-  .regex(/^(folder|image|video|note|link|color)-\d+$/);
-const CanvasObjectIdSchema = z.string().regex(/^(text|arrow)-\d+$/);
-const CanvasItemIdSchema = z
-  .string()
-  .regex(/^(folder|image|video|note|link|color|text|arrow)-\d+$/);
+const AssetNodeIdSchema = z.string().regex(ASSET_ID_PATTERN);
+const CollectionNodeIdSchema = z.string().regex(COLLECTION_NODE_ID_PATTERN);
+const CanvasObjectIdSchema = z.string().regex(CANVAS_OBJECT_ID_PATTERN);
+const CanvasItemIdSchema = z.string().regex(CANVAS_ITEM_ID_PATTERN);
 const StackableCanvasItemIdSchema = z
   .string()
-  .regex(/^(folder|image|video|note|link|color|text)-\d+$/);
-const FolderNodeIdSchema = z.string().regex(/^folder-\d+$/);
+  .regex(STACKABLE_CANVAS_ITEM_ID_PATTERN);
+const FolderNodeIdSchema = z.string().regex(FOLDER_ID_PATTERN);
 
 export const AssetPathParamSchema = z.object({
   workspaceSlug: z.string(),
@@ -745,7 +748,7 @@ export const AssetPathParamSchema = z.object({
 
 export const ImageCropPathParamSchema = z.object({
   workspaceSlug: z.string(),
-  assetId: z.string().regex(/^image-\d+$/),
+  assetId: z.string().regex(IMAGE_ID_PATTERN),
 });
 
 export const CropInputSchema = z.object({
@@ -814,7 +817,7 @@ export const MoveCollectionNodesParentSchema = z.object({
   arrowSnapshots: z
     .array(
       z.object({
-        id: z.string().regex(/^arrow-\d+$/),
+        id: z.string().regex(ARROW_ID_PATTERN),
         start: BoardPositionSchema,
         end: BoardPositionSchema,
         points: z.array(BoardPositionSchema).max(16),
@@ -840,12 +843,12 @@ export const UpdateCanvasItemsGeometrySchema = z.object({
         }),
         z.object({
           type: z.literal("text"),
-          id: z.string().regex(/^text-\d+$/),
+          id: z.string().regex(TEXT_ID_PATTERN),
           position: BoardPositionSchema,
         }),
         z.object({
           type: z.literal("arrow"),
-          id: z.string().regex(/^arrow-\d+$/),
+          id: z.string().regex(ARROW_ID_PATTERN),
           start: CanvasArrowEndpointSchema,
           end: CanvasArrowEndpointSchema,
           points: z.array(BoardPositionSchema).max(16),

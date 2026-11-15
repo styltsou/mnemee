@@ -9,7 +9,7 @@ import { ImagePeek } from "./image-peek";
 describe("ImagePeek", () => {
   it("renders a compact image inspector with source, note, palette, and metadata", () => {
     const asset: ImageAsset = {
-      id: "image-1",
+      id: "image-00000000-0000-4000-8000-000000000001",
       type: "image",
       url: "https://example.com/preview.jpg",
       originalUrl: "https://example.com/original.jpg",

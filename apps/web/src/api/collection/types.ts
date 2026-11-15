@@ -156,7 +156,7 @@ export type BoardInsertionPlacement = {
 };
 
 export type DetailedCollection = {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;
@@ -176,7 +176,7 @@ export type CreateCollectionInput = {
 };
 
 export type CreatedCollection = {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;
@@ -223,7 +223,7 @@ export type CollectionFolderNode = {
 };
 
 export type CreatedFolder = {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   path: string;
@@ -589,7 +589,7 @@ export type CreateImageUploadInput = {
 
 export type CreateImageUploadResponse = {
   upload: {
-    id: number;
+    id: string;
     objectKey: string;
     url: string;
     headers: Record<string, string>;
@@ -600,7 +600,7 @@ export type CreateImageUploadResponse = {
 };
 
 export type ImageUploadStatus = {
-  id: number;
+  id: string;
   status: "pending" | "uploaded" | "processing" | "completed" | "failed";
   errorMessage: string | null;
   image?: CollectionImageNode;
@@ -746,14 +746,14 @@ export type CollectionNode =
   | CollectionColorNode;
 
 export type Breadcrumb = {
-  id: number;
+  id: string;
   name: string;
   slug: string;
 };
 
 export type CollectionContentsResponse = {
   collection: {
-    id: number;
+    id: string;
     name: string;
     slug: string;
   };

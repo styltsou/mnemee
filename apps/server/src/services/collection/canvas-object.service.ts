@@ -1,3 +1,4 @@
+import { CANVAS_OBJECT_ID_PATTERN } from "@mnemee/id-shared";
 import { reserveCanvasFrontIndex } from "@/services/collection/canvas-stacking.service";
 import { and, eq, inArray, isNull, or } from "drizzle-orm";
 
@@ -27,19 +28,19 @@ import {
 } from "./collection-target-resolver";
 
 type CanvasParent = {
-  collectionId: number;
-  parentFolderId: number | null;
+  collectionId: string;
+  parentFolderId: string | null;
 };
 
 type ResolvedBinding = {
-  collectionNodeId: number | null;
-  canvasObjectId: number | null;
+  collectionNodeId: string | null;
+  canvasObjectId: string | null;
 };
 
 function parseCanvasObjectId(objectId: string) {
-  const match = /^(text|arrow)-(\d+)$/.exec(objectId);
-  const id = match ? Number(match[2]) : NaN;
-  if (!match || !Number.isSafeInteger(id)) {
+  const match = CANVAS_OBJECT_ID_PATTERN.exec(objectId);
+  const id = match?.[2];
+  if (!match || !id) {
     throw new AppError(ErrorCode.VALIDATION_ERROR, "Invalid canvas object id");
   }
   return { type: match[1] as "text" | "arrow", id };
@@ -193,8 +194,8 @@ export class CanvasObjectService {
   }
   async getObjects(
     orgId: string,
-    collectionId: number,
-    parentFolderId: number | null,
+    collectionId: string,
+    parentFolderId: string | null,
   ): Promise<CanvasObject[]> {
     const rows = await db
       .select({
@@ -253,7 +254,7 @@ export class CanvasObjectService {
       ...new Set(
         rows.flatMap((row) =>
           [row.startCollectionNodeId, row.endCollectionNodeId].filter(
-            (id): id is number => id !== null,
+            (id): id is string => id !== null,
           ),
         ),
       ),
@@ -283,7 +284,7 @@ export class CanvasObjectService {
     // Asset type is encoded in the public ID, but collection_nodes deliberately
     // stores only the broad asset/folder kind. Resolve the concrete prefix in a
     // second lightweight query through the public parser's source tables.
-    const nodeIdLookup = new Map<number, string>();
+    const nodeIdLookup = new Map<string, string>();
     for (const target of targetNodes) {
       if (target.nodeType === "folder") {
         nodeIdLookup.set(target.id, `folder-${target.folderId}`);
@@ -315,8 +316,8 @@ export class CanvasObjectService {
     );
     const makeEndpoint = (
       position: { x: number; y: number },
-      collectionNodeId: number | null,
-      canvasObjectId: number | null,
+      collectionNodeId: string | null,
+      canvasObjectId: string | null,
       anchorX: number | null,
       anchorY: number | null,
     ): CanvasArrowObject["start"] => {
@@ -697,8 +698,8 @@ export class CanvasObjectService {
 
   private async requireObject(
     orgId: string,
-    collectionId: number,
-    id: number,
+    collectionId: string,
+    id: string,
     type: "text" | "arrow",
   ) {
     const [object] = await db
@@ -722,7 +723,7 @@ export class CanvasObjectService {
     orgId: string,
     parent: CanvasParent,
     targetId?: string,
-    excludedCanvasObjectId?: number,
+    excludedCanvasObjectId?: string,
   ): Promise<ResolvedBinding> {
     if (!targetId) return { collectionNodeId: null, canvasObjectId: null };
     if (/^(text|arrow)-/.test(targetId)) {

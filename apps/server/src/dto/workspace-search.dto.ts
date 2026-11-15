@@ -1,8 +1,7 @@
+import { ASSET_ID_PATTERN } from "@mnemee/id-shared";
 import { z } from "zod";
 
-const WorkspaceRecentAssetIdSchema = z
-  .string()
-  .regex(/^(?:image|video|note|link|color)-\d+$/);
+const WorkspaceRecentAssetIdSchema = z.string().regex(ASSET_ID_PATTERN);
 
 export const WorkspaceSearchQuerySchema = z.object({
   q: z.string().max(120).optional().default(""),

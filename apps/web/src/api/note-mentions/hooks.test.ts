@@ -14,7 +14,7 @@ vi.mock("./fetchers", () => ({
   searchNoteMentions: vi.fn(),
 }));
 
-const target = (assetId: number): NoteMentionTarget => ({
+const target = (assetId: string): NoteMentionTarget => ({
   assetId,
   assetType: "color",
   label: `Color ${assetId}`,
@@ -26,7 +26,7 @@ const target = (assetId: number): NoteMentionTarget => ({
   collectionSlug: null,
   folderPath: null,
 });
-const identity = (assetId: number) => ({
+const identity = (assetId: string) => ({
   assetId,
   assetType: "color" as const,
 });
@@ -36,9 +36,12 @@ it("keeps active image results during invalidation and failure, and accepts a su
   const options = mentionSearchQueryOptions("workspace", {
     q: "",
     types: ["image"],
-    sourceAssetId: 10,
+    sourceAssetId: "00000000-0000-4000-8000-00000000000a",
   });
-  const image = { ...target(2), assetType: "image" as const };
+  const image = {
+    ...target("00000000-0000-4000-8000-000000000002"),
+    assetType: "image" as const,
+  };
   client.setQueryData(options.queryKey, { targets: [image] });
   let fail!: (error: Error) => void;
   vi.mocked(searchNoteMentions).mockReturnValueOnce(
@@ -69,7 +72,9 @@ describe("mention resolution cache", () => {
     vi.mocked(resolveNoteMentions).mockImplementation(
       async (_workspace, input) => ({
         targets: input.targets
-          .filter((item) => item.assetId !== 3)
+          .filter(
+            (item) => item.assetId !== "00000000-0000-4000-8000-000000000003",
+          )
           .map((item) => target(item.assetId)),
       }),
     );
@@ -82,41 +87,60 @@ describe("mention resolution cache", () => {
       await resolveCachedNoteMentions(
         client,
         "workspace",
-        10,
-        [identity(1), identity(3)],
+        "00000000-0000-4000-8000-00000000000a",
+        [
+          identity("00000000-0000-4000-8000-000000000001"),
+          identity("00000000-0000-4000-8000-000000000003"),
+        ],
         signal,
       ),
-    ).toEqual([target(1)]);
+    ).toEqual([target("00000000-0000-4000-8000-000000000001")]);
     expect(
       await resolveCachedNoteMentions(
         client,
         "workspace",
-        10,
-        [identity(1), identity(2), identity(3)],
+        "00000000-0000-4000-8000-00000000000a",
+        [
+          identity("00000000-0000-4000-8000-000000000001"),
+          identity("00000000-0000-4000-8000-000000000002"),
+          identity("00000000-0000-4000-8000-000000000003"),
+        ],
         signal,
       ),
-    ).toEqual([target(1), target(2)]);
+    ).toEqual([
+      target("00000000-0000-4000-8000-000000000001"),
+      target("00000000-0000-4000-8000-000000000002"),
+    ]);
     expect(vi.mocked(resolveNoteMentions).mock.calls[1][1].targets).toEqual([
-      identity(2),
+      identity("00000000-0000-4000-8000-000000000002"),
     ]);
     await invalidateMentionSuggestionQueries(client, "workspace");
     await resolveCachedNoteMentions(
       client,
       "workspace",
-      10,
-      [identity(1), identity(2)],
+      "00000000-0000-4000-8000-00000000000a",
+      [
+        identity("00000000-0000-4000-8000-000000000001"),
+        identity("00000000-0000-4000-8000-000000000002"),
+      ],
       signal,
     );
     expect(vi.mocked(resolveNoteMentions).mock.calls[2][1].targets).toEqual([
-      identity(1),
-      identity(2),
+      identity("00000000-0000-4000-8000-000000000001"),
+      identity("00000000-0000-4000-8000-000000000002"),
     ]);
-    await resolveCachedNoteMentions(client, "other", 10, [identity(1)], signal);
+    await resolveCachedNoteMentions(
+      client,
+      "other",
+      "00000000-0000-4000-8000-00000000000a",
+      [identity("00000000-0000-4000-8000-000000000001")],
+      signal,
+    );
     await resolveCachedNoteMentions(
       client,
       "workspace",
-      11,
-      [identity(1)],
+      "00000000-0000-4000-8000-00000000000b",
+      [identity("00000000-0000-4000-8000-000000000001")],
       signal,
     );
     expect(resolveNoteMentions).toHaveBeenCalledTimes(5);

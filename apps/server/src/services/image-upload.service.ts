@@ -47,7 +47,7 @@ import {
 } from "@mnemee/url-unfurl-shared/safe-fetch";
 
 export type ImageUploadStatus = {
-  id: number;
+  id: string;
   status: UploadStatus;
   errorMessage: string | null;
   image?: CollectionImageNode;
@@ -63,7 +63,7 @@ export interface IImageUploadService {
   getDirectImageUploadStatus(
     orgId: string,
     collectionSlug: string,
-    uploadId: number,
+    uploadId: string,
   ): Promise<ImageUploadStatus>;
   createImageFromRemoteUrl(
     orgId: string,
@@ -78,7 +78,7 @@ export interface IImageUploadService {
   ): Promise<CreateImageUploadResponse["upload"]>;
   getInboxImageUploadStatus(
     orgId: string,
-    uploadId: number,
+    uploadId: string,
   ): Promise<ImageUploadStatus>;
   createInboxImageFromRemoteUrl(
     orgId: string,
@@ -230,7 +230,7 @@ export class ImageUploadService implements IImageUploadService {
   async getDirectImageUploadStatus(
     orgId: string,
     collectionSlug: string,
-    uploadId: number,
+    uploadId: string,
   ): Promise<ImageUploadStatus> {
     const target = await resolveCollectionTargetBySlug(orgId, collectionSlug);
     const upload = await getUploadForAccess(
@@ -244,7 +244,7 @@ export class ImageUploadService implements IImageUploadService {
 
   async getInboxImageUploadStatus(
     orgId: string,
-    uploadId: number,
+    uploadId: string,
   ): Promise<ImageUploadStatus> {
     const upload = await getUploadForAccess(orgId, null, uploadId);
     if (!upload) throw new AppError(ErrorCode.NOT_FOUND, "Upload not found");
@@ -533,7 +533,7 @@ export class ImageUploadService implements IImageUploadService {
   }
 
   private async getUploadStatusById(
-    uploadId: number,
+    uploadId: string,
   ): Promise<ImageUploadStatus> {
     const upload = await getUploadById(uploadId);
     if (!upload) throw new AppError(ErrorCode.NOT_FOUND, "Upload not found");
@@ -561,7 +561,7 @@ export class ImageUploadService implements IImageUploadService {
     };
   }
 
-  private async getImageNode(assetId: number): Promise<CollectionImageNode> {
+  private async getImageNode(assetId: string): Promise<CollectionImageNode> {
     const row = first(
       await db
         .select({

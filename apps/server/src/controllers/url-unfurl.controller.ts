@@ -79,7 +79,7 @@ export const getLinkResolutionStatus = factory.createHandlers(
     );
     const link = await container.urlUnfurlService.getLinkNode(
       workspace.id,
-      Number(assetId.slice("link-".length)),
+      assetId.slice("link-".length),
       null,
     );
     return c.json(success({ link }));

@@ -91,7 +91,7 @@ import {
 type Deps = {
   objectStorageService: IObjectStorageService;
   resourceLifecycle?: {
-    markResourceUnreferencedIfNeeded(resourceId: number): Promise<void>;
+    markResourceUnreferencedIfNeeded(resourceId: string): Promise<void>;
   };
 };
 
@@ -347,7 +347,7 @@ export class AssetService implements IAssetService {
 
     if (types !== undefined && assetTypes?.length === 0) {
       return {
-        collection: { id: 0, name: "Inbox", slug: "inbox" },
+        collection: { id: "inbox", name: "Inbox", slug: "inbox" },
         breadcrumbs: [],
         nodes: [],
         ...(gridPage ? { nextCursor: null } : {}),
@@ -461,7 +461,7 @@ export class AssetService implements IAssetService {
 
     return {
       collection: {
-        id: 0,
+        id: "inbox",
         name: "Inbox",
         slug: "inbox",
       },
@@ -1345,7 +1345,7 @@ export class AssetService implements IAssetService {
 
   private async rowsToAssetNodes(
     rows: Array<{
-      assetId: number;
+      assetId: string;
       assetType: "image" | "video" | "note" | "link" | "color";
       title: string | null;
       isFavorite: boolean;
@@ -1384,7 +1384,7 @@ export class AssetService implements IAssetService {
       colorNameJobError: string | null;
       linkOriginalUrl: string | null;
       linkNote: string | null;
-      linkResourceId: number | null;
+      linkResourceId: string | null;
       linkHostname: string | null;
       linkCanonicalUrl: string | null;
       linkDescription: string | null;
@@ -1598,7 +1598,7 @@ export class AssetService implements IAssetService {
 
 export async function collectAssetObjectKeys(
   orgId: string,
-  assetIds: number[],
+  assetIds: string[],
 ): Promise<string[]> {
   if (assetIds.length === 0) return [];
 

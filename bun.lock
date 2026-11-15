@@ -44,6 +44,7 @@
         "@langchain/core": "^1.3.1",
         "@langchain/google-genai": "^2.3.4",
         "@langchain/langgraph": "^1.5.3",
+        "@mnemee/id-shared": "workspace:*",
         "@mnemee/image-shared": "workspace:*",
         "@mnemee/url-unfurl-shared": "workspace:*",
         "@neondatabase/serverless": "^1.1.0",
@@ -67,6 +68,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@electric-sql/pglite": "^0.5.16",
         "@mnemee/oxlint-config": "workspace:*",
         "@types/aws-lambda": "catalog:",
         "@types/node": "catalog:",
@@ -97,6 +99,7 @@
         "@fontsource-variable/inter": "^5.2.8",
         "@fontsource/ibm-plex-mono": "^5.3.0",
         "@langchain/langgraph-sdk": "^1.12.8",
+        "@mnemee/id-shared": "workspace:*",
         "@sentry/react": "^10.69.0",
         "@sentry/replay": "^10.69.0",
         "@tailwindcss/vite": "^4.3.2",
@@ -189,9 +192,21 @@
         "wrangler": "^4.112.0",
       },
     },
+    "packages/id-shared": {
+      "name": "@mnemee/id-shared",
+      "devDependencies": {
+        "@mnemee/oxlint-config": "workspace:*",
+        "@mnemee/tsconfig": "workspace:*",
+        "@types/node": "catalog:",
+        "oxfmt": "catalog:",
+        "oxlint": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/image-shared": {
       "name": "@mnemee/image-shared",
       "dependencies": {
+        "@mnemee/id-shared": "workspace:*",
         "@sentry/aws-serverless": "^10.69.0",
       },
       "devDependencies": {
@@ -213,6 +228,7 @@
     "packages/url-unfurl-shared": {
       "name": "@mnemee/url-unfurl-shared",
       "dependencies": {
+        "@mnemee/id-shared": "workspace:*",
         "ipaddr.js": "^2.2.0",
       },
       "devDependencies": {
@@ -306,6 +322,7 @@
       "name": "video-processor",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.1081.0",
+        "@mnemee/id-shared": "workspace:*",
         "@mnemee/image-shared": "workspace:*",
         "@mnemee/url-unfurl-shared": "workspace:*",
         "@sentry/aws-serverless": "^10.69.0",
@@ -625,6 +642,8 @@
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.12.0", "", {}, "sha512-mlUE+rZ8CatQekLhnaiN91Iemdd+e2gFKooGlnRB3oPTL3VghLfX24dx7HrzMNeC1JrIB/0kpsfyty3f5HNfxQ=="],
 
+    "@electric-sql/pglite": ["@electric-sql/pglite@0.5.16", "", {}, "sha512-Nj8KcIsJL748W408U2N8q4+9IlONdpRIU8MJypIAAINMJ5nqKyqpX7Mgg/5XKkXiAib3AoZGR6hnJFlrlLBrcg=="],
+
     "@emnapi/core": ["@emnapi/core@1.11.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.2", "tslib": "^2.4.0" } }, "sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ=="],
 
     "@emnapi/runtime": ["@emnapi/runtime@1.11.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA=="],
@@ -798,6 +817,8 @@
     "@marijn/find-cluster-break": ["@marijn/find-cluster-break@1.0.4", "", {}, "sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ=="],
 
     "@mermaid-js/parser": ["@mermaid-js/parser@2.0.0", "", { "dependencies": { "@chevrotain/types": "~11.1.2" } }, "sha512-K8BeapFUfrfxbRAUQAG5oBOCwo1+bNWzaVnPxTCutkfrTBn6T/j91FIhqxWJ32SUeQ9T3iy1zcmPZ5ROZEvDrg=="],
+
+    "@mnemee/id-shared": ["@mnemee/id-shared@workspace:packages/id-shared"],
 
     "@mnemee/image-shared": ["@mnemee/image-shared@workspace:packages/image-shared"],
 

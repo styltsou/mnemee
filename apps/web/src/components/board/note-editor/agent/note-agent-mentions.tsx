@@ -75,7 +75,7 @@ export function useNoteAgentMentions({
   sourceAssetId,
 }: {
   workspaceSlug?: string;
-  sourceAssetId?: number;
+  sourceAssetId?: string;
 }) {
   const [items, setItems] = useState<NoteAgentMention[]>([]);
   const [query, setQuery] = useState<ReturnType<
@@ -131,7 +131,7 @@ export function useNoteAgentMentions({
       setActive((index) =>
         options.length ? (index + delta + options.length) % options.length : 0,
       ),
-    remove: (assetId: number) =>
+    remove: (assetId: string) =>
       setItems((current) => current.filter((item) => item.assetId !== assetId)),
   };
 }
@@ -141,7 +141,7 @@ export function NoteAgentMentionChips({
   onRemove,
 }: {
   items: NoteAgentMention[];
-  onRemove: (assetId: number) => void;
+  onRemove: (assetId: string) => void;
 }) {
   return items.map((item) => (
     <span

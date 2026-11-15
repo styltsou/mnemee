@@ -6,7 +6,7 @@ describe("resource media result contract", () => {
   it("accepts the display-only manifest used by link-preview-v2", () => {
     const result = ResourceMediaResultSchema.safeParse({
       event: "resource.media.completed",
-      id: 7,
+      id: "00000000-0000-4000-8000-000000000007",
       generation: 2,
       width: 1_200,
       height: 630,
@@ -30,7 +30,7 @@ describe("resource media result contract", () => {
   it("rejects a completed result without a stored rendition", () => {
     const result = ResourceMediaResultSchema.safeParse({
       event: "resource.media.completed",
-      id: 7,
+      id: "00000000-0000-4000-8000-000000000007",
       generation: 2,
       width: 1,
       height: 1,

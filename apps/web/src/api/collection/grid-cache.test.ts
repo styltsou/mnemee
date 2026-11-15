@@ -11,7 +11,11 @@ describe("updateCollectionContents", () => {
     const gridKey = ["inboxGrid", "workspace", ""];
     const node = { id: "one", type: "note" } as CollectionNode;
     const contents = {
-      collection: { id: 0, name: "Inbox", slug: "inbox" },
+      collection: {
+        id: "00000000-0000-4000-8000-000000000000",
+        name: "Inbox",
+        slug: "inbox",
+      },
       breadcrumbs: [],
       nodes: [node],
     };
@@ -40,7 +44,11 @@ describe("updateCollectionContents", () => {
     const grid = {
       pages: [
         {
-          collection: { id: 1, name: "Collection", slug: "collection" },
+          collection: {
+            id: "00000000-0000-4000-8000-000000000001",
+            name: "Collection",
+            slug: "collection",
+          },
           breadcrumbs: [],
           folders: [],
           assets: [original],

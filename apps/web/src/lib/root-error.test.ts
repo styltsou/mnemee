@@ -8,7 +8,7 @@ describe("getRootErrorContent", () => {
     expect(
       getRootErrorContent(
         new TypeError("Cropper failed"),
-        "/work/collections/photos/asset/image-68",
+        "/work/collections/photos/asset/image-00000000-0000-4000-8000-000000000044",
       ),
     ).toMatchObject({
       title: "This image view hit a problem",
@@ -21,7 +21,7 @@ describe("getRootErrorContent", () => {
   it("distinguishes a missing asset from a client crash", () => {
     const content = getRootErrorContent(
       new ApiError(404, "Not found", "not_found"),
-      "/work/inbox/asset/note-1",
+      "/work/inbox/asset/note-00000000-0000-4000-8000-000000000001",
     );
 
     expect(content.title).toBe("Couldn't load this note");
@@ -44,11 +44,11 @@ describe("formatRootErrorDetails", () => {
     expect(
       formatRootErrorDetails(
         new Error("Cropper failed"),
-        "/work/asset/image-68",
+        "/work/asset/image-00000000-0000-4000-8000-000000000044",
         "2026-09-28T00:00:00.000Z",
       ),
     ).toContain(
-      "Page: /work/asset/image-68\nTime: 2026-09-28T00:00:00.000Z\nError: Error: Cropper failed",
+      "Page: /work/asset/image-00000000-0000-4000-8000-000000000044\nTime: 2026-09-28T00:00:00.000Z\nError: Error: Cropper failed",
     );
   });
 });

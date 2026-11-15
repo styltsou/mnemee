@@ -24,14 +24,14 @@ type VideoScope = {
 };
 
 type Upload = {
-  id: number;
+  id: string;
   assetId: string;
   url: string;
   headers: Record<string, string>;
   maxSizeBytes: number;
 };
 type Status = {
-  id: number;
+  id: string;
   status: "pending" | "uploaded" | "processing" | "completed" | "failed";
   errorMessage: string | null;
   assetId: string;
@@ -111,7 +111,7 @@ export function useVideoAssets(scope: VideoScope) {
           ]
         : []),
     ]);
-  const watch = async (id: number, previewAssetId?: string) => {
+  const watch = async (id: string, previewAssetId?: string) => {
     let announcedReady = false;
     const deadline = Date.now() + 20 * 60_000;
     while (Date.now() < deadline) {

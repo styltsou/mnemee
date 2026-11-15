@@ -12,9 +12,9 @@ export type UploadStatus =
   | "failed";
 
 export type UploadRecord = {
-  id: number;
+  id: string;
   organizationId: string;
-  collectionId: number | null;
+  collectionId: string | null;
   parentFolderPath: string | null;
   positionX: number | null;
   positionY: number | null;
@@ -22,7 +22,7 @@ export type UploadRecord = {
   status: UploadStatus;
   originalObjectKey: string;
   storageId: string;
-  assetId: number | null;
+  assetId: string | null;
   fileName: string | null;
   title: string | null;
   alt: string | null;
@@ -62,8 +62,8 @@ const uploadSelection = {
 /** Reads an upload only when it belongs to the requested Inbox or collection scope. */
 export async function getUploadForAccess(
   orgId: string,
-  collectionId: number | null,
-  uploadId: number,
+  collectionId: string | null,
+  uploadId: string,
 ): Promise<UploadRecord | undefined> {
   return (
     first(
@@ -86,7 +86,7 @@ export async function getUploadForAccess(
 
 /** Reads a single upload by identity for post-create status responses. */
 export async function getUploadById(
-  uploadId: number,
+  uploadId: string,
 ): Promise<UploadRecord | undefined> {
   return (
     first(

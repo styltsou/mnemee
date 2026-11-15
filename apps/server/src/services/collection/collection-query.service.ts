@@ -256,7 +256,7 @@ export class CollectionQueryService {
       this.objectStorageService,
     );
 
-    const previewMap = new Map<number, FolderChildPreview[]>();
+    const previewMap = new Map<string, FolderChildPreview[]>();
     for (const row of selectedPreviewRows) {
       let preview: FolderChildPreview | undefined;
 
@@ -495,15 +495,15 @@ export class CollectionQueryService {
       .filter((c) => c.nodeType === "folder" && c.folderId !== null)
       .map((c) => c.folderId!);
 
-    const countMap = new Map<number, number>();
-    const folderCountMap = new Map<number, number>();
-    const previewMap = new Map<number, FolderChildPreview[]>();
+    const countMap = new Map<string, number>();
+    const folderCountMap = new Map<string, number>();
+    const previewMap = new Map<string, FolderChildPreview[]>();
     let folderPreviewRows: FolderPreviewRow[] = [];
 
     if (folderChildIds.length > 0) {
       const countRows = await db
         .select({
-          folderId: sql<number>`unnest(${collectionNodes.pathFolderIds})`,
+          folderId: sql<string>`unnest(${collectionNodes.pathFolderIds})`,
           count: sql<number>`COUNT(*)`,
         })
         .from(collectionNodes)
@@ -827,7 +827,7 @@ export class CollectionQueryService {
       };
     });
 
-    let breadcrumbs: { id: number; name: string; slug: string }[] = [];
+    let breadcrumbs: { id: string; name: string; slug: string }[] = [];
 
     if (target.pathFolderIds.length > 0) {
       const breadcrumbFolders = await db
@@ -859,11 +859,11 @@ export class CollectionQueryService {
     };
   }
 
-  private async getSignedVideoLookup(assetIds: number[]) {
+  private async getSignedVideoLookup(assetIds: string[]) {
     const ids = [...new Set(assetIds)];
     if (ids.length === 0)
       return new Map<
-        number,
+        string,
         {
           original: typeof videoAssets.$inferSelect.original;
           poster: typeof videoAssets.$inferSelect.poster;
@@ -932,7 +932,7 @@ export class CollectionQueryService {
   }
 
   private async getSignedImageVariantLookup(
-    assetIds: number[],
+    assetIds: string[],
   ): Promise<ImageVariantLookup> {
     const uniqueAssetIds = [...new Set(assetIds)];
     if (uniqueAssetIds.length === 0) return new Map();
@@ -970,7 +970,7 @@ export class CollectionQueryService {
       const originalUrl = original
         ? signed.get(original.objectKey)?.url
         : undefined;
-      const lookupValue: ImageVariantLookup extends Map<number, infer Value>
+      const lookupValue: ImageVariantLookup extends Map<string, infer Value>
         ? Value
         : never = {
         ...row.variants,

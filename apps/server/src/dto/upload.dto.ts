@@ -82,12 +82,12 @@ const VideoStoryboardSchema = z.object({
 export const VideoPipelineCallbackSchema = z.discriminatedUnion("event", [
   z.object({
     event: z.literal("video.import.failed"),
-    uploadId: z.number().int().positive(),
+    uploadId: z.uuidv4(),
     error: z.string().min(1).max(1000),
   }),
   z.object({
     event: z.literal("video.import.ready"),
-    uploadId: z.number().int().positive(),
+    uploadId: z.uuidv4(),
     originalObjectKey: z.string().min(1),
     contentType: z.enum(AllowedVideoContentTypes),
     sizeBytes: z.number().int().positive().max(MAX_VIDEO_UPLOAD_BYTES),
@@ -227,17 +227,17 @@ export type PexelsSearchQuery = z.infer<typeof PexelsSearchQuerySchema>;
 export const UploadPathParamSchema = z.object({
   workspaceSlug: z.string(),
   collectionSlug: z.string(),
-  uploadId: z.coerce.number().int().positive(),
+  uploadId: z.uuidv4(),
 });
 
 export const InboxUploadPathParamSchema = z.object({
   workspaceSlug: z.string(),
-  uploadId: z.coerce.number().int().positive(),
+  uploadId: z.uuidv4(),
 });
 
 export const CreateImageUploadResponseSchema = z.object({
   upload: z.object({
-    id: z.number(),
+    id: z.uuidv4(),
     objectKey: z.string(),
     url: z.string(),
     headers: z.record(z.string(), z.string()),

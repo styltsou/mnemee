@@ -1,9 +1,10 @@
+import { NOTE_ID_PATTERN } from "@mnemee/id-shared";
 import { z } from "zod";
 
 const MentionTypeSchema = z.enum(["note", "color", "link", "image", "video"]);
-const NoteAssetIdSchema = z.string().regex(/^note-\d+$/);
+const NoteAssetIdSchema = z.string().regex(NOTE_ID_PATTERN);
 const MentionTargetSchema = z.object({
-  assetId: z.number().int().positive(),
+  assetId: z.uuidv4(),
   assetType: MentionTypeSchema,
 });
 
@@ -15,11 +16,11 @@ export const MentionSearchQuerySchema = z.object({
     z.array(MentionTypeSchema).min(1).max(5).optional(),
   ),
   limit: z.coerce.number().int().min(1).max(20).optional().default(10),
-  sourceAssetId: z.coerce.number().int().positive().optional(),
+  sourceAssetId: z.uuidv4().optional(),
 });
 
 export const MentionResolveSchema = z.object({
-  sourceAssetId: z.number().int().positive().optional(),
+  sourceAssetId: z.uuidv4().optional(),
   targets: z.array(MentionTargetSchema).max(100),
 });
 
@@ -43,7 +44,7 @@ export type NoteBacklinkSummaryResponse = { count: number };
 export type NoteBacklinksResponse = { backlinks: NoteBacklink[] };
 
 export type MentionTarget = {
-  assetId: number;
+  assetId: string;
   assetType: MentionType;
   label: string;
   title: string | null;

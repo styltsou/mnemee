@@ -5,7 +5,7 @@ import { applySavedNoteToWorkspaceAsset } from "./note-asset-cache";
 
 const cached: PeekableAssetResponse = {
   asset: {
-    id: "note-1",
+    id: "note-00000000-0000-4000-8000-000000000001",
     type: "note",
     content: "Old body",
     title: "Old title",
@@ -18,7 +18,7 @@ const cached: PeekableAssetResponse = {
   location: { type: "inbox" },
 };
 const saved: UpdatedNote = {
-  id: "note-1",
+  id: "note-00000000-0000-4000-8000-000000000001",
   type: "note",
   content: "New body",
   title: "New title",
@@ -40,7 +40,10 @@ describe("workspace note asset cache", () => {
   it("never applies a saved body to another note", () => {
     const other = {
       ...cached,
-      asset: { ...cached.asset, id: "note-2" },
+      asset: {
+        ...cached.asset,
+        id: "note-00000000-0000-4000-8000-000000000002",
+      },
     } as PeekableAssetResponse;
     expect(applySavedNoteToWorkspaceAsset(other, saved)).toBe(other);
   });

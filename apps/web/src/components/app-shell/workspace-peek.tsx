@@ -1987,7 +1987,7 @@ function PeekNote({
   const openMentionTarget = useCallback(
     async (
       identity: {
-        assetId: number;
+        assetId: string;
         assetType: "note" | "color" | "link" | "image" | "video";
       },
       resolved?: NoteMentionTarget,

@@ -9,10 +9,16 @@ const router = createRouter({
 
 describe("workspace asset routes", () => {
   it.each([
-    ["/work/asset/note-1", "/$workspaceSlug/asset/$assetId"],
-    ["/work/inbox/asset/image-2", "/$workspaceSlug/inbox/$"],
     [
-      "/work/collections/ideas/nested/asset/color-3",
+      "/work/asset/note-00000000-0000-4000-8000-000000000001",
+      "/$workspaceSlug/asset/$assetId",
+    ],
+    [
+      "/work/inbox/asset/image-00000000-0000-4000-8000-000000000002",
+      "/$workspaceSlug/inbox/$",
+    ],
+    [
+      "/work/collections/ideas/nested/asset/color-00000000-0000-4000-8000-000000000003",
       "/$workspaceSlug/collections/$",
     ],
   ])("matches %s", (pathname, routeId) => {

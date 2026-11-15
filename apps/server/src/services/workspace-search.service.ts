@@ -1,3 +1,4 @@
+import { isUuid } from "@mnemee/id-shared";
 import {
   and,
   asc,
@@ -193,7 +194,7 @@ async function searchAssets(
     )
     .limit(limit);
 
-  const imageVariantKeys = new Map<number, string>();
+  const imageVariantKeys = new Map<string, string>();
   for (const row of rows) {
     if (row.assetType !== "image") continue;
     const variant =
@@ -203,7 +204,7 @@ async function searchAssets(
     if (variant?.objectKey)
       imageVariantKeys.set(row.assetId, variant.objectKey);
   }
-  const videoPosterKeys = new Map<number, string>();
+  const videoPosterKeys = new Map<string, string>();
   for (const row of rows) {
     if (row.assetType !== "video") continue;
     const variant = row.videoPoster?.preview ?? row.videoPoster?.display;
@@ -231,7 +232,7 @@ async function searchAssets(
         )
     : [];
   const resourceMediaKeys = new Map<
-    number,
+    string,
     { preview?: string; icon?: string }
   >();
   for (const row of resourceMediaRows) {
@@ -350,11 +351,11 @@ async function searchAssets(
 
 function getRecentAssetRanks(
   assetNodeIds: readonly string[],
-): Map<number, number> {
-  const ranks = new Map<number, number>();
+): Map<string, number> {
+  const ranks = new Map<string, number>();
   for (const assetNodeId of assetNodeIds) {
-    const assetId = Number(assetNodeId.slice(assetNodeId.lastIndexOf("-") + 1));
-    if (!Number.isSafeInteger(assetId) || ranks.has(assetId)) continue;
+    const assetId = assetNodeId.slice(assetNodeId.indexOf("-") + 1);
+    if (!isUuid(assetId) || ranks.has(assetId)) continue;
     ranks.set(assetId, ranks.size);
   }
   return ranks;

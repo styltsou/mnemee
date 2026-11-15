@@ -1124,7 +1124,7 @@ export function NoteDetailDrawer({
 
   const openMentionTarget = useCallback(
     async (
-      identity: { assetId: number; assetType: NoteMentionType },
+      identity: { assetId: string; assetType: NoteMentionType },
       resolved?: NoteMentionTarget,
     ) => {
       try {

@@ -25,7 +25,7 @@ export type RankedPaletteMatch = {
 };
 
 export type RankedColorSearchCandidate = {
-  assetId: number;
+  assetId: string;
   relevance: number;
   matches: RankedPaletteMatch[];
 };
@@ -50,7 +50,7 @@ export function normalizeQueryColors<T extends OklabColor>(
 }
 
 export function rankPalette(
-  assetId: number,
+  assetId: string,
   queryColors: readonly OklabColor[],
   paletteColors: readonly SearchPaletteColor[],
 ): RankedColorSearchCandidate | null {
@@ -104,7 +104,7 @@ export function rankPalette(
  * gradient it occupies, so broad matches outrank incidental accents.
  */
 export function rankWeightedPalette(
-  assetId: number,
+  assetId: string,
   queryColors: readonly (OklabColor & { weight?: number | undefined })[],
   paletteColors: readonly SearchPaletteColor[],
 ): RankedColorSearchCandidate | null {
@@ -177,7 +177,10 @@ export function compareCandidates(
   first: RankedColorSearchCandidate,
   second: RankedColorSearchCandidate,
 ): number {
-  return second.relevance - first.relevance || second.assetId - first.assetId;
+  return (
+    second.relevance - first.relevance ||
+    second.assetId.localeCompare(first.assetId)
+  );
 }
 
 function roundScore(value: number): number {

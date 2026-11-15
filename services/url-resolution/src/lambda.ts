@@ -9,12 +9,12 @@ import { YouTubeDataApiResolver } from "./youtube-resolver";
 
 initializeSentry("url-resolution");
 
-type Task = { attemptId: number; generation: number };
+type Task = { attemptId: string; generation: number };
 type Claim =
   | { ignored: true }
   | {
       ignored: false;
-      attemptId: number;
+      attemptId: string;
       generation: number;
       url: string;
       resolverKey: string;

@@ -1,3 +1,4 @@
+import { STACKABLE_CANVAS_ITEM_ID_PATTERN } from "@mnemee/id-shared";
 import { and, asc, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -18,8 +19,8 @@ import { getCollectionBySlug } from "./collection-target-resolver";
 type DatabaseTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type StackTarget =
-  | { kind: "collection"; id: number; externalId: string }
-  | { kind: "text"; id: number; externalId: string };
+  | { kind: "collection"; id: string; externalId: string }
+  | { kind: "text"; id: string; externalId: string };
 
 type ExistingStackTarget = StackTarget & { frontIndex: number };
 
@@ -110,8 +111,8 @@ export class CanvasStackingService {
 
 export async function lockCanvasStack(
   tx: DatabaseTransaction,
-  collectionId: number,
-  parentFolderId: number | null,
+  collectionId: string,
+  parentFolderId: string | null,
 ) {
   await tx.execute(
     sql`select pg_advisory_xact_lock(${collectionId}, ${parentFolderId ?? 0})`,
@@ -121,15 +122,13 @@ export async function lockCanvasStack(
 async function requireStackTarget(
   tx: DatabaseTransaction,
   orgId: string,
-  collectionId: number,
-  parentFolderId: number | null,
+  collectionId: string,
+  parentFolderId: string | null,
   itemId: string,
 ): Promise<StackTarget> {
-  const match = /^(folder|image|video|note|link|color|text)-(\d+)$/.exec(
-    itemId,
-  );
-  const entityId = match ? Number(match[2]) : NaN;
-  if (!match || !Number.isSafeInteger(entityId)) {
+  const match = STACKABLE_CANVAS_ITEM_ID_PATTERN.exec(itemId);
+  const entityId = match?.[2];
+  if (!match || !entityId) {
     throw new AppError(ErrorCode.VALIDATION_ERROR, "Invalid canvas item id");
   }
 
@@ -218,8 +217,8 @@ async function requireStackTarget(
 async function getExistingStackTargets(
   tx: DatabaseTransaction,
   orgId: string,
-  collectionId: number,
-  parentFolderId: number | null,
+  collectionId: string,
+  parentFolderId: string | null,
 ): Promise<ExistingStackTarget[]> {
   const collectionParentCondition =
     parentFolderId === null
@@ -318,8 +317,8 @@ async function updateFrontIndex(
 export async function reserveCanvasFrontIndex(
   tx: DatabaseTransaction,
   orgId: string,
-  collectionId: number,
-  parentFolderId: number | null,
+  collectionId: string,
+  parentFolderId: string | null,
 ): Promise<number> {
   await lockCanvasStack(tx, collectionId, parentFolderId);
   const [nodes] = await tx

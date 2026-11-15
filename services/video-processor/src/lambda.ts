@@ -1,3 +1,4 @@
+import { isUuid } from "@mnemee/id-shared";
 import type { S3Event } from "aws-lambda";
 import { initializeSentry } from "@mnemee/image-shared/observability";
 import { createTaskHandler } from "@mnemee/image-shared/task-handler";
@@ -12,7 +13,7 @@ import {
 initializeSentry("video-processor");
 
 type Job =
-  | { kind: "remote-video"; uploadId: number }
+  | { kind: "remote-video"; uploadId: string }
   | { kind: "storyboard-video"; bucket: string; objectKey: string }
   | {
       kind: "stored-video";
@@ -29,12 +30,8 @@ function parse(body: string): Job[] {
     Message?: string;
   };
   if (envelope.kind === "remote-video") {
-    if (
-      !Number.isSafeInteger(envelope.uploadId) ||
-      Number(envelope.uploadId) <= 0
-    )
-      throw new Error("Invalid video import job");
-    return [{ kind: "remote-video", uploadId: Number(envelope.uploadId) }];
+    if (!isUuid(envelope.uploadId)) throw new Error("Invalid video import job");
+    return [{ kind: "remote-video", uploadId: envelope.uploadId }];
   }
   if (envelope.kind === "storyboard-video") {
     const job = envelope as { bucket?: unknown; objectKey?: unknown };

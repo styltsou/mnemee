@@ -15,10 +15,10 @@ describe("collection node mappers", () => {
 
   it("limits previews independently for each folder", () => {
     const rows = [
-      { folderId: 1, id: "a" },
-      { folderId: 1, id: "b" },
-      { folderId: 2, id: "c" },
-      { folderId: 1, id: "d" },
+      { folderId: "00000000-0000-4000-8000-000000000001", id: "a" },
+      { folderId: "00000000-0000-4000-8000-000000000001", id: "b" },
+      { folderId: "00000000-0000-4000-8000-000000000002", id: "c" },
+      { folderId: "00000000-0000-4000-8000-000000000001", id: "d" },
     ];
 
     expect(firstPreviewRowsByParent(rows, (row) => row.folderId, 2)).toEqual([
@@ -31,7 +31,7 @@ describe("collection node mappers", () => {
   it("maps image, note, and link folder previews", () => {
     const imageVariants = new Map([
       [
-        7,
+        "00000000-0000-4000-8000-000000000007",
         {
           preview: {
             objectKey: "workspace-1/7/preview.webp",
@@ -49,15 +49,15 @@ describe("collection node mappers", () => {
     expect(
       toFolderPreview(
         {
-          folderId: 1,
+          folderId: "00000000-0000-4000-8000-000000000001",
           assetType: "image",
-          assetId: 7,
+          assetId: "00000000-0000-4000-8000-000000000007",
           content: null,
         },
         imageVariants,
       ),
     ).toMatchObject({
-      assetId: "image-7",
+      assetId: "image-00000000-0000-4000-8000-000000000007",
       type: "image",
       url: "https://example.test/preview.webp",
       width: 200,
@@ -67,16 +67,16 @@ describe("collection node mappers", () => {
     expect(
       toFolderPreview(
         {
-          folderId: 1,
+          folderId: "00000000-0000-4000-8000-000000000001",
           assetType: "note",
-          assetId: 8,
+          assetId: "00000000-0000-4000-8000-000000000008",
           content: "One\n two",
           assetTitle: "Planting notes",
         },
         imageVariants,
       ),
     ).toEqual({
-      assetId: "note-8",
+      assetId: "note-00000000-0000-4000-8000-000000000008",
       type: "note",
       title: "Planting notes",
       snippet: "One\n two",
@@ -84,19 +84,19 @@ describe("collection node mappers", () => {
     expect(
       toFolderPreview(
         {
-          folderId: 1,
+          folderId: "00000000-0000-4000-8000-000000000001",
           assetType: "link",
-          assetId: 9,
+          assetId: "00000000-0000-4000-8000-000000000009",
           content: null,
           hostname: "example.com",
           assetTitle: "Example link",
           description: "A fully resolved example page.",
-          resourceId: 4,
+          resourceId: "00000000-0000-4000-8000-000000000004",
         },
         imageVariants,
         new Map([
           [
-            4,
+            "00000000-0000-4000-8000-000000000004",
             {
               previewImage: {
                 url: "https://example.test/preview.webp",
@@ -114,7 +114,7 @@ describe("collection node mappers", () => {
         ]),
       ),
     ).toEqual({
-      assetId: "link-9",
+      assetId: "link-00000000-0000-4000-8000-000000000009",
       type: "link",
       hostname: "example.com",
       siteName: null,
@@ -128,14 +128,14 @@ describe("collection node mappers", () => {
     expect(
       toFolderPreview(
         {
-          folderId: 1,
+          folderId: "00000000-0000-4000-8000-000000000001",
           assetType: "link",
-          assetId: 10,
+          assetId: "00000000-0000-4000-8000-00000000000a",
           content: null,
           hostname: "www.youtube.com",
           assetTitle: "Some video title",
           description: "A video description",
-          resourceId: 5,
+          resourceId: "00000000-0000-4000-8000-000000000005",
           providerExtensions: {
             youtube: { videoId: "dQw4w9WgXcQ" },
           },
@@ -143,7 +143,7 @@ describe("collection node mappers", () => {
         imageVariants,
       ),
     ).toEqual({
-      assetId: "link-10",
+      assetId: "link-00000000-0000-4000-8000-00000000000a",
       type: "link",
       hostname: "www.youtube.com",
       siteName: null,
@@ -160,9 +160,9 @@ describe("collection node mappers", () => {
     expect(
       toFolderPreview(
         {
-          folderId: 1,
+          folderId: "00000000-0000-4000-8000-000000000001",
           assetType: "color",
-          assetId: 12,
+          assetId: "00000000-0000-4000-8000-00000000000c",
           content: null,
           hex: null,
           gradient: {
@@ -176,7 +176,7 @@ describe("collection node mappers", () => {
         new Map(),
       ),
     ).toEqual({
-      assetId: "color-12",
+      assetId: "color-00000000-0000-4000-8000-00000000000c",
       type: "color",
       hex: undefined,
       gradient: {
@@ -192,7 +192,7 @@ describe("collection node mappers", () => {
   it("falls back from preview to the original image", () => {
     const imageVariants = new Map([
       [
-        7,
+        "00000000-0000-4000-8000-000000000007",
         {
           original: {
             objectKey: "workspace-1/7/original.jpg",
@@ -209,9 +209,9 @@ describe("collection node mappers", () => {
     expect(
       toFolderPreview(
         {
-          folderId: 1,
+          folderId: "00000000-0000-4000-8000-000000000001",
           assetType: "image",
-          assetId: 7,
+          assetId: "00000000-0000-4000-8000-000000000007",
           content: null,
         },
         imageVariants,

@@ -7,18 +7,18 @@ import type { GradientNamingJob } from "@mnemee/image-shared/gradient-naming-job
 import { env } from "@/config";
 
 export interface ITaskQueueService {
-  enqueueResolution(attemptId: number, generation: number): Promise<boolean>;
+  enqueueResolution(attemptId: string, generation: number): Promise<boolean>;
   enqueueResourceMediaRenditions(
-    mediaId: number,
+    mediaId: string,
     generation: number,
   ): Promise<boolean>;
-  enqueueRemoteVideo(uploadId: number): Promise<boolean>;
+  enqueueRemoteVideo(uploadId: string): Promise<boolean>;
 }
 
 export class TaskQueueService implements ITaskQueueService {
   private client: SQSClient | undefined;
 
-  enqueueResolution(attemptId: number, generation: number): Promise<boolean> {
+  enqueueResolution(attemptId: string, generation: number): Promise<boolean> {
     return this.send(
       linkedQueueUrl("UrlResolutionQueue", env.URL_RESOLUTION_QUEUE_URL),
       urlResolutionJob(attemptId, generation),
@@ -26,7 +26,7 @@ export class TaskQueueService implements ITaskQueueService {
   }
 
   enqueueResourceMediaRenditions(
-    mediaId: number,
+    mediaId: string,
     generation: number,
   ): Promise<boolean> {
     return this.send(
@@ -35,7 +35,7 @@ export class TaskQueueService implements ITaskQueueService {
     );
   }
 
-  enqueueRemoteVideo(uploadId: number): Promise<boolean> {
+  enqueueRemoteVideo(uploadId: string): Promise<boolean> {
     return this.send(linkedQueueUrl("VideoProcessingQueue", undefined), {
       kind: "remote-video",
       uploadId,

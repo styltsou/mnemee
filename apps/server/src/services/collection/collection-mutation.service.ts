@@ -570,7 +570,7 @@ export class CollectionMutationService {
 }
 
 async function getAvailableFolderSlug(
-  collectionId: number,
+  collectionId: string,
   parentPathSlugs: string[],
   name: string,
 ): Promise<string> {

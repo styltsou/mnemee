@@ -36,13 +36,17 @@ describe("link resolution tracker", () => {
     );
 
     expect(useLinkResolutionTracker.getState().pendingByWorkspace).toEqual({
-      [workspaceSlug]: ["link-42"],
+      [workspaceSlug]: ["link-00000000-0000-4000-8000-00000000002a"],
     });
   });
 
   it("discards an earlier terminal poll when a new refresh starts", () => {
     const client = new QueryClient();
-    const key = ["linkResolution", workspaceSlug, "link-42"];
+    const key = [
+      "linkResolution",
+      workspaceSlug,
+      "link-00000000-0000-4000-8000-00000000002a",
+    ];
     client.setQueryData(key, resolvedLink());
     trackLinkResolution(
       workspaceSlug,
@@ -98,7 +102,7 @@ describe("link resolution tracker", () => {
     expect(
       queryClient.getQueryData<CollectionContentsResponse>(key)?.nodes[0],
     ).toMatchObject({
-      id: "link-42",
+      id: "link-00000000-0000-4000-8000-00000000002a",
       title: "Resolved title",
       description: "Resolved description",
       note: "Keep this",
@@ -193,7 +197,7 @@ describe("link resolution tracker", () => {
     );
     const pendingPreview = linkPreview();
     const untouchedPreview: FolderChildPreview = {
-      assetId: "note-7",
+      assetId: "note-00000000-0000-4000-8000-000000000007",
       type: "note",
       title: "Leave me alone",
       snippet: "Unchanged",
@@ -202,7 +206,7 @@ describe("link resolution tracker", () => {
     queryClient.setQueryData<CollectionsData>(collectionsKey, {
       collections: [
         {
-          id: 1,
+          id: "00000000-0000-4000-8000-000000000001",
           name: "Ideas",
           slug: "ideas",
           description: null,
@@ -225,7 +229,7 @@ describe("link resolution tracker", () => {
     queryClient.setQueryData(
       folderKey,
       contents({
-        id: "folder-8",
+        id: "folder-00000000-0000-4000-8000-000000000008",
         type: "folder",
         name: "Reading",
         slug: "reading",
@@ -294,7 +298,11 @@ describe("link resolution tracker", () => {
 
 function contents(node: CollectionNode): CollectionContentsResponse {
   return {
-    collection: { id: 1, name: "Ideas", slug: "ideas" },
+    collection: {
+      id: "00000000-0000-4000-8000-000000000001",
+      name: "Ideas",
+      slug: "ideas",
+    },
     breadcrumbs: [],
     nodes: [node],
     canvasObjects: [],
@@ -303,7 +311,7 @@ function contents(node: CollectionNode): CollectionContentsResponse {
 
 function linkPreview(): FolderChildPreview {
   return {
-    assetId: "link-42",
+    assetId: "link-00000000-0000-4000-8000-00000000002a",
     type: "link",
     hostname: "example.com",
     title: "example.com",
@@ -313,7 +321,7 @@ function linkPreview(): FolderChildPreview {
 
 function resolvedPreview() {
   return {
-    assetId: "link-42",
+    assetId: "link-00000000-0000-4000-8000-00000000002a",
     type: "link",
     hostname: "docs.example.com",
     title: "Resolved title",
@@ -353,7 +361,7 @@ function resolvedLink(): CollectionLinkNode {
 
 function link(overrides: Partial<CollectionLinkNode> = {}): CollectionLinkNode {
   return {
-    id: "link-42",
+    id: "link-00000000-0000-4000-8000-00000000002a",
     type: "link",
     originalUrl: "https://example.com/article",
     canonicalUrl: null,

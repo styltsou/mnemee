@@ -76,11 +76,11 @@ export class CollectionDeleteService {
 
     const imageAssetIds = assetIds
       .map((row) => row.assetId)
-      .filter((assetId): assetId is number => assetId !== null);
+      .filter((assetId): assetId is string => assetId !== null);
 
     const collectionFolderIds = folderIds
       .map((row) => row.folderId)
-      .filter((folderId): folderId is number => folderId !== null);
+      .filter((folderId): folderId is string => folderId !== null);
 
     if (imageAssetIds.length > 0) {
       const keys = await collectAssetObjectKeys(orgId, imageAssetIds);
@@ -141,7 +141,7 @@ export class CollectionDeleteService {
   async deleteFolders(
     orgId: string,
     collectionSlug: string,
-    folderIds: number[],
+    folderIds: string[],
   ): Promise<number> {
     const collectionId = await getCollectionIdBySlug(orgId, collectionSlug);
     let deletedAssetCount = 0;
@@ -162,7 +162,7 @@ export class CollectionDeleteService {
 async function getCollectionIdBySlug(
   orgId: string,
   collectionSlug: string,
-): Promise<number> {
+): Promise<string> {
   const collection = first(
     await db
       .select({ id: collectionsTable.id })
@@ -184,8 +184,8 @@ async function getCollectionIdBySlug(
 
 async function deleteFolderNode(
   orgId: string,
-  collectionId: number,
-  folderId: number,
+  collectionId: string,
+  folderId: string,
   objectStorageService: IObjectStorageService,
 ): Promise<number> {
   const folderNode = first(
@@ -250,9 +250,9 @@ async function deleteFolderNode(
 
 async function getFolderDeleteTargets(
   orgId: string,
-  collectionId: number,
-  pathFolderIds: number[],
-): Promise<{ assetIds: number[]; folderIds: number[] }> {
+  collectionId: string,
+  pathFolderIds: string[],
+): Promise<{ assetIds: string[]; folderIds: string[] }> {
   const [assetRows, folderRows] = await Promise.all([
     db
       .select({ assetId: collectionNodes.assetId })
@@ -281,9 +281,9 @@ async function getFolderDeleteTargets(
   return {
     assetIds: assetRows
       .map((row) => row.assetId)
-      .filter((assetId): assetId is number => assetId !== null),
+      .filter((assetId): assetId is string => assetId !== null),
     folderIds: folderRows
       .map((row) => row.folderId)
-      .filter((folderId): folderId is number => folderId !== null),
+      .filter((folderId): folderId is string => folderId !== null),
   };
 }

@@ -1,14 +1,15 @@
+import { MENTION_DESTINATION_PATTERN } from "@mnemee/id-shared";
 export type NoteMentionType = "note" | "color" | "link" | "image" | "video";
 
 export type ParsedNoteMention = {
-  targetAssetId: number;
+  targetAssetId: string;
   targetType: NoteMentionType;
   fallbackLabel: string;
   start: number;
   end: number;
 };
 
-const MENTION_DESTINATION = /^(note|color|link|image|video):(\d+)$/;
+const MENTION_DESTINATION = MENTION_DESTINATION_PATTERN;
 const FENCE_START = /^ {0,3}(`{3,}|~{3,})/;
 
 export function escapeMentionLabel(label: string): string {
@@ -67,7 +68,7 @@ export function rewriteNoteMentionLabels(
   return rewritten;
 }
 
-export function mentionKey(type: NoteMentionType, assetId: number): string {
+export function mentionKey(type: NoteMentionType, assetId: string): string {
   return `${type}:${assetId}`;
 }
 
@@ -113,11 +114,7 @@ function scanInlineMentions(
       index = destinationEnd + 1;
       continue;
     }
-    const targetAssetId = Number(destinationMatch[2]);
-    if (!Number.isSafeInteger(targetAssetId) || targetAssetId <= 0) {
-      index = destinationEnd + 1;
-      continue;
-    }
+    const targetAssetId = destinationMatch[2]!;
 
     mentions.push({
       targetAssetId,

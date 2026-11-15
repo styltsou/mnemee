@@ -612,7 +612,7 @@
             "name": "objectId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^text-\\d+$" }
+            "schema": { "type": "string", "pattern": "^text-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "requestBody": {
@@ -678,7 +678,7 @@
             "name": "objectId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^arrow-\\d+$" }
+            "schema": { "type": "string", "pattern": "^arrow-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "requestBody": {
@@ -747,7 +747,7 @@
             "name": "objectId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^(text|arrow)-\\d+$" }
+            "schema": { "type": "string", "pattern": "^(text|arrow)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "responses": {
@@ -838,10 +838,10 @@
             "name": "nodeId",
             "in": "path",
             "required": true,
-            "description": "Node identifier in the form `{kind}-{id}`, e.g. `folder-42` or `image-7`.",
+            "description": "Node identifier in the form `{kind}-{uuid}`, e.g. `folder-00000000-0000-4000-8000-00000000002a` or `image-00000000-0000-4000-8000-000000000007`.",
             "schema": {
               "type": "string",
-              "pattern": "^(folder|image|video|note|link)-\\d+$"
+              "pattern": "^(folder|image|video|note|link|color)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
             }
           }
         ],
@@ -938,10 +938,10 @@
             "name": "nodeId",
             "in": "path",
             "required": true,
-            "description": "Node identifier in the form `{kind}-{id}`, e.g. `folder-42` or `image-7`.",
+            "description": "Node identifier in the form `{kind}-{uuid}`, e.g. `folder-00000000-0000-4000-8000-00000000002a` or `image-00000000-0000-4000-8000-000000000007`.",
             "schema": {
               "type": "string",
-              "pattern": "^(folder|image|video|note|link)-\\d+$"
+              "pattern": "^(folder|image|video|note|link|color)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
             }
           }
         ],
@@ -1256,7 +1256,7 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^link-\\d+$" }
+            "schema": { "type": "string", "pattern": "^link-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "responses": {
@@ -1287,7 +1287,7 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^link-\\d+$" }
+            "schema": { "type": "string", "pattern": "^link-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "responses": {
@@ -1342,7 +1342,7 @@
           {
             "name": "sourceAssetId",
             "in": "query",
-            "schema": { "type": "integer", "minimum": 1 }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -1407,10 +1407,10 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "description": "Asset identifier in the form `{kind}-{id}`, e.g. `image-42`, `note-17`, or `link-9`.",
+            "description": "Asset identifier in the form `{kind}-{uuid}`, e.g. `image-00000000-0000-4000-8000-00000000002a`, `note-00000000-0000-4000-8000-000000000011`, or `link-00000000-0000-4000-8000-000000000009`.",
             "schema": {
               "type": "string",
-              "pattern": "^(image|video|note|link)-\\d+$"
+              "pattern": "^(image|video|note|link|color)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
             }
           }
         ],
@@ -1452,7 +1452,7 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^color-\\d+$" }
+            "schema": { "type": "string", "pattern": "^color-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "requestBody": {
@@ -1491,7 +1491,7 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^color-\\d+$" }
+            "schema": { "type": "string", "pattern": "^color-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "requestBody": {
@@ -1535,8 +1535,8 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "description": "Note asset identifier, e.g. `note-17`.",
-            "schema": { "type": "string", "pattern": "^note-\\d+$" }
+            "description": "Note asset identifier, e.g. `note-00000000-0000-4000-8000-000000000011`.",
+            "schema": { "type": "string", "pattern": "^note-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "requestBody": {
@@ -1575,8 +1575,8 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "description": "Image asset identifier, e.g. `image-17`.",
-            "schema": { "type": "string", "pattern": "^image-\\d+$" }
+            "description": "Image asset identifier, e.g. `image-00000000-0000-4000-8000-000000000011`.",
+            "schema": { "type": "string", "pattern": "^image-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "requestBody": {
@@ -1615,8 +1615,8 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "description": "Link asset identifier, e.g. `link-17`.",
-            "schema": { "type": "string", "pattern": "^link-\\d+$" }
+            "description": "Link asset identifier, e.g. `link-00000000-0000-4000-8000-000000000011`.",
+            "schema": { "type": "string", "pattern": "^link-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "requestBody": {
@@ -1710,7 +1710,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1848,7 +1849,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -2197,7 +2199,7 @@
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "pattern": "^(image|video)-\\d+$" }
+            "schema": { "type": "string", "pattern": "^(image|video)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
           }
         ],
         "responses": {
@@ -2235,7 +2237,7 @@
         "name": "uploadId",
         "in": "path",
         "required": true,
-        "schema": { "type": "integer", "minimum": 1 }
+        "schema": { "type": "string", "format": "uuid" }
       }
     },
     "responses": {
@@ -2449,7 +2451,8 @@
         "required": ["id", "name", "slug", "assetCount"],
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "string",
+            "format": "uuid"
           },
           "name": {
             "type": "string"
@@ -2552,7 +2555,8 @@
         ],
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "string",
+            "format": "uuid"
           },
           "name": {
             "type": "string"
@@ -2641,7 +2645,8 @@
         ],
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "string",
+            "format": "uuid"
           },
           "name": {
             "type": "string"
@@ -2785,7 +2790,8 @@
         ],
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "string",
+            "format": "uuid"
           },
           "name": {
             "type": "string"
@@ -2944,7 +2950,7 @@
           "isFavorite"
         ],
         "properties": {
-          "id": { "type": "string", "pattern": "^color-\\d+$" },
+          "id": { "type": "string", "pattern": "^color-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
           "type": { "type": "string", "enum": ["color"] },
           "hex": { "type": ["string", "null"] },
           "note": { "type": ["string", "null"] },
@@ -3070,7 +3076,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Node identifier, e.g. `folder-42`."
+            "description": "Node identifier, e.g. `folder-00000000-0000-4000-8000-00000000002a`."
           },
           "type": {
             "type": "string",
@@ -3113,7 +3119,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Node identifier, e.g. `image-42`."
+            "description": "Node identifier, e.g. `image-00000000-0000-4000-8000-00000000002a`."
           },
           "type": {
             "type": "string",
@@ -3279,7 +3285,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Node identifier, e.g. `note-42`."
+            "description": "Node identifier, e.g. `note-00000000-0000-4000-8000-00000000002a`."
           },
           "type": {
             "type": "string",
@@ -3332,7 +3338,7 @@
           "position"
         ],
         "properties": {
-          "id": { "type": "string", "pattern": "^link-\\d+$" },
+          "id": { "type": "string", "pattern": "^link-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
           "type": { "type": "string", "enum": ["link"] },
           "originalUrl": { "type": "string", "format": "uri" },
           "canonicalUrl": { "type": ["string", "null"], "format": "uri" },
@@ -3413,8 +3419,9 @@
         "required": ["id", "name", "slug"],
         "properties": {
           "id": {
-            "type": "integer",
-            "description": "Folder ID."
+            "type": "string",
+            "description": "Folder ID.",
+            "format": "uuid"
           },
           "name": {
             "type": "string"
@@ -3440,7 +3447,7 @@
             "properties": {
               "targetId": {
                 "type": "string",
-                "pattern": "^(folder|image|note|link|color|text|arrow)-\\d+$"
+                "pattern": "^(folder|image|note|link|color|text|arrow)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
               },
               "anchor": {
                 "type": "object",
@@ -3468,7 +3475,7 @@
           "updatedAt"
         ],
         "properties": {
-          "id": { "type": "string", "pattern": "^text-\\d+$" },
+          "id": { "type": "string", "pattern": "^text-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
           "type": { "type": "string", "enum": ["text"] },
           "content": { "type": "string", "maxLength": 2000 },
           "position": { "$ref": "#/components/schemas/BoardPosition" },
@@ -3504,7 +3511,7 @@
           "updatedAt"
         ],
         "properties": {
-          "id": { "type": "string", "pattern": "^arrow-\\d+$" },
+          "id": { "type": "string", "pattern": "^arrow-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
           "type": { "type": "string", "enum": ["arrow"] },
           "start": { "$ref": "#/components/schemas/CanvasArrowEndpoint" },
           "end": { "$ref": "#/components/schemas/CanvasArrowEndpoint" },
@@ -3633,7 +3640,18 @@
                 "required": ["id", "name", "slug"],
                 "properties": {
                   "id": {
-                    "type": "integer"
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "inbox"
+                        ]
+                      }
+                    ]
                   },
                   "name": {
                     "type": "string"
@@ -3717,7 +3735,7 @@
           "updatedAt"
         ],
         "properties": {
-          "id": { "type": "string", "pattern": "^note-\\d+$" },
+          "id": { "type": "string", "pattern": "^note-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
           "type": { "type": "string", "enum": ["note"] },
           "content": { "type": "string" },
           "color": { "type": "string", "nullable": true },
@@ -3744,7 +3762,7 @@
         "type": "object",
         "required": ["id", "type", "note", "isFavorite", "updatedAt"],
         "properties": {
-          "id": { "type": "string", "pattern": "^image-\\d+$" },
+          "id": { "type": "string", "pattern": "^image-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
           "type": { "type": "string", "enum": ["image"] },
           "note": { "type": "string", "nullable": true },
           "isFavorite": { "type": "boolean" },
@@ -3792,7 +3810,7 @@
         "type": "object",
         "required": ["id", "type", "note", "isFavorite", "updatedAt"],
         "properties": {
-          "id": { "type": "string", "pattern": "^link-\\d+$" },
+          "id": { "type": "string", "pattern": "^link-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
           "type": { "type": "string", "enum": ["link"] },
           "note": { "type": "string", "nullable": true },
           "isFavorite": { "type": "boolean" },
@@ -3831,7 +3849,7 @@
         "properties": {
           "deletedNodeId": {
             "type": "string",
-            "description": "The identifier of the deleted node, e.g. `folder-42`."
+            "description": "The identifier of the deleted node, e.g. `folder-00000000-0000-4000-8000-00000000002a`."
           },
           "deletedAssetCount": {
             "type": "integer",
@@ -3859,7 +3877,7 @@
             "oneOf": [
               {
                 "type": "string",
-                "pattern": "^folder-\\d+$"
+                "pattern": "^folder-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
               },
               {
                 "type": "null"
@@ -3905,7 +3923,7 @@
               "properties": {
                 "nodeId": {
                   "type": "string",
-                  "pattern": "^(folder|image|video|note|link)-\\d+$"
+                  "pattern": "^(folder|image|video|note|link|color)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
                 },
                 "position": {
                   "$ref": "#/components/schemas/BoardPosition"
@@ -3917,7 +3935,7 @@
             "oneOf": [
               {
                 "type": "string",
-                "pattern": "^folder-\\d+$"
+                "pattern": "^folder-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
               },
               {
                 "type": "null"
@@ -3958,14 +3976,14 @@
             "uniqueItems": true,
             "items": {
               "type": "string",
-              "pattern": "^(folder|image|video|note|link)-\\d+$"
+              "pattern": "^(folder|image|video|note|link|color)-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
             }
           },
           "targetFolderNodeId": {
             "oneOf": [
               {
                 "type": "string",
-                "pattern": "^folder-\\d+$"
+                "pattern": "^folder-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
               },
               {
                 "type": "null"
@@ -4040,7 +4058,7 @@
         "properties": {
           "deletedAssetId": {
             "type": "string",
-            "description": "The identifier of the permanently deleted asset, e.g. `image-42`."
+            "description": "The identifier of the permanently deleted asset, e.g. `image-00000000-0000-4000-8000-00000000002a`."
           }
         }
       },
@@ -4105,7 +4123,7 @@
                   "maxSizeBytes"
                 ],
                 "properties": {
-                  "id": { "type": "integer" },
+                  "id": { "type": "string", "format": "uuid" },
                   "objectKey": { "type": "string" },
                   "url": { "type": "string", "format": "uri" },
                   "headers": {
@@ -4138,7 +4156,7 @@
                   "ready"
                 ],
                 "properties": {
-                  "id": { "type": "integer" },
+                  "id": { "type": "string", "format": "uuid" },
                   "status": {
                     "type": "string",
                     "enum": [
@@ -4222,8 +4240,9 @@
                 ],
                 "properties": {
                   "id": {
-                    "type": "integer",
-                    "description": "Upload session ID to use when polling asynchronous processing status."
+                    "type": "string",
+                    "description": "Upload session ID to use when polling asynchronous processing status.",
+                    "format": "uuid"
                   },
                   "objectKey": {
                     "type": "string",
@@ -4588,7 +4607,7 @@
         "type": "object",
         "required": ["assetId", "assetType"],
         "properties": {
-          "assetId": { "type": "integer", "minimum": 1 },
+          "assetId": { "type": "string", "format": "uuid" },
           "assetType": { "type": "string", "enum": ["note", "color", "link"] }
         }
       },
@@ -4596,7 +4615,7 @@
         "type": "object",
         "required": ["targets"],
         "properties": {
-          "sourceAssetId": { "type": "integer", "minimum": 1 },
+          "sourceAssetId": { "type": "string", "format": "uuid" },
           "targets": {
             "type": "array",
             "maxItems": 100,
@@ -4665,7 +4684,8 @@
         "required": ["id", "status", "errorMessage"],
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "string",
+            "format": "uuid"
           },
           "status": {
             "type": "string",

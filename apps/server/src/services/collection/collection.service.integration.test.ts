@@ -379,7 +379,7 @@ describe("CollectionService integration", () => {
             frontIndex: collectionNodes.frontIndex,
           })
           .from(collectionNodes)
-          .where(eq(collectionNodes.assetId, Number(directNote.id.slice(5)))),
+          .where(eq(collectionNodes.assetId, directNote.id.slice(5))),
         db
           .select({
             parentFolderId: collectionNodes.parentFolderId,
@@ -389,7 +389,7 @@ describe("CollectionService integration", () => {
             depth: collectionNodes.depth,
           })
           .from(collectionNodes)
-          .where(eq(collectionNodes.assetId, Number(nestedNote.id.slice(5)))),
+          .where(eq(collectionNodes.assetId, nestedNote.id.slice(5))),
       ]);
 
     expect(rootContents.nodes).toEqual(
@@ -543,9 +543,7 @@ describe("CollectionService integration", () => {
           positionY: collectionNodes.positionY,
         })
         .from(collectionNodes)
-        .where(
-          eq(collectionNodes.assetId, Number(note.id.slice("note-".length))),
-        )
+        .where(eq(collectionNodes.assetId, note.id.slice("note-".length)))
         .limit(1),
     ]);
 
@@ -621,17 +619,17 @@ describe("CollectionService integration", () => {
       collection.slug,
       { hex: "#445566" },
     );
-    const oldNoteAssetId = Number(oldNote.id.slice("note-".length));
-    const oldColorAssetId = Number(oldColor.id.slice("color-".length));
+    const oldNoteAssetId = oldNote.id.slice("note-".length);
+    const oldColorAssetId = oldColor.id.slice("color-".length);
     const placementDates = [
       [oldNoteAssetId, new Date("2025-01-01T00:00:00.000Z")],
       [oldColorAssetId, new Date("2025-02-01T00:00:00.000Z")],
       [
-        Number(newerNote.id.slice("note-".length)),
+        newerNote.id.slice("note-".length),
         new Date("2025-03-01T00:00:00.000Z"),
       ],
       [
-        Number(newestColor.id.slice("color-".length)),
+        newestColor.id.slice("color-".length),
         new Date("2025-04-01T00:00:00.000Z"),
       ],
     ] as const;
@@ -741,7 +739,7 @@ describe("CollectionService integration", () => {
       source.slug,
       { content: "Move between collections" },
     );
-    const assetId = Number(note.id.slice("note-".length));
+    const assetId = note.id.slice("note-".length);
     const originalCreatedAt = new Date("2025-01-01T00:00:00.000Z");
 
     await db
@@ -1237,7 +1235,7 @@ describe("CollectionService integration", () => {
           pathFolderSlugs: [targetFolder.slug, movedFolder.slug],
         }),
         expect.objectContaining({
-          assetId: Number(directNote.id.slice("note-".length)),
+          assetId: directNote.id.slice("note-".length),
           parentFolderId: movedFolder.id,
           depth: 2,
           pathFolderIds: [targetFolder.id, movedFolder.id],
@@ -1255,7 +1253,7 @@ describe("CollectionService integration", () => {
           ],
         }),
         expect.objectContaining({
-          assetId: Number(nestedNote.id.slice("note-".length)),
+          assetId: nestedNote.id.slice("note-".length),
           parentFolderId: nestedFolder.id,
           depth: 3,
           pathFolderIds: [targetFolder.id, movedFolder.id, nestedFolder.id],
@@ -1815,7 +1813,7 @@ describe("CollectionService integration", () => {
     const [oldSecondPlacement] = await db
       .select({ id: collectionNodes.id })
       .from(collectionNodes)
-      .where(eq(collectionNodes.assetId, Number(second.id.slice(5))));
+      .where(eq(collectionNodes.assetId, second.id.slice(5)));
 
     const result = await collectionService.moveNodesToFolder(
       fixture.organizationId,
@@ -1847,7 +1845,7 @@ describe("CollectionService integration", () => {
           .from(collectionNodes)
           .where(
             and(
-              eq(collectionNodes.assetId, Number(second.id.slice(5))),
+              eq(collectionNodes.assetId, second.id.slice(5)),
               eq(collectionNodes.collectionId, destination.id),
             ),
           ),
@@ -1939,7 +1937,7 @@ describe("CollectionService integration", () => {
       .where(
         and(
           eq(collectionNodes.collectionId, collection.id),
-          eq(collectionNodes.assetId, Number(secondary.id.split("-")[1])),
+          eq(collectionNodes.assetId, secondary.id.slice("note-".length)),
         ),
       );
 
@@ -1964,7 +1962,7 @@ describe("CollectionService integration", () => {
     const [persistedText] = await db
       .select({ frontIndex: canvasObjects.frontIndex })
       .from(canvasObjects)
-      .where(eq(canvasObjects.id, Number(text.id.split("-")[1])));
+      .where(eq(canvasObjects.id, text.id.slice("text-".length)));
     expect(persistedText?.frontIndex).toBe(2);
   });
 

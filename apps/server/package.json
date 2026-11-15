@@ -4,7 +4,7 @@
     "dev": "bun run src/index.ts",
     "email:dev": "email dev --dir src/emails --port 3010",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "node scripts/migrate.cjs",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --check",
@@ -30,6 +30,7 @@
     "@langchain/core": "^1.3.1",
     "@langchain/google-genai": "^2.3.4",
     "@langchain/langgraph": "^1.5.3",
+    "@mnemee/id-shared": "workspace:*",
     "@mnemee/image-shared": "workspace:*",
     "@mnemee/url-unfurl-shared": "workspace:*",
     "@neondatabase/serverless": "^1.1.0",
@@ -53,6 +54,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@mnemee/oxlint-config": "workspace:*",
     "@types/aws-lambda": "catalog:",
     "@types/node": "catalog:",

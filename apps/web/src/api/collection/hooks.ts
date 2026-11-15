@@ -1,3 +1,4 @@
+import { NOTE_ID_PATTERN, UUID_PATTERN } from "@mnemee/id-shared";
 import React from "react";
 import { toast } from "sonner";
 import {
@@ -599,7 +600,7 @@ function appendNodeToInboxContents(
     (current) => {
       if (!current)
         return {
-          collection: { id: 0, name: "Inbox", slug: "inbox" },
+          collection: { id: "inbox", name: "Inbox", slug: "inbox" },
           breadcrumbs: [],
           nodes: [node],
         };
@@ -1520,7 +1521,7 @@ export function useCreateInboxNote(workspaceSlug: string) {
         if (!current) {
           return {
             collection: {
-              id: 0,
+              id: "inbox",
               name: "Inbox",
               slug: "inbox",
             },
@@ -1549,7 +1550,7 @@ export function useCreateInboxNote(workspaceSlug: string) {
       queryClient.setQueryData(
         context.inboxKey,
         context.previousInbox ?? {
-          collection: { id: 0, name: "Inbox", slug: "inbox" },
+          collection: { id: "inbox", name: "Inbox", slug: "inbox" },
           breadcrumbs: [],
           nodes: [],
         },
@@ -1618,7 +1619,7 @@ export function useCreateInboxColor(workspaceSlug: string) {
       queryClient.setQueryData<InboxContentsResponse>(inboxKey, (current) => {
         if (!current) {
           return {
-            collection: { id: 0, name: "Inbox", slug: "inbox" },
+            collection: { id: "inbox", name: "Inbox", slug: "inbox" },
             breadcrumbs: [],
             nodes: [optimisticColor],
           };
@@ -1642,7 +1643,7 @@ export function useCreateInboxColor(workspaceSlug: string) {
       queryClient.setQueryData(
         context.inboxKey,
         context.previousInbox ?? {
-          collection: { id: 0, name: "Inbox", slug: "inbox" },
+          collection: { id: "inbox", name: "Inbox", slug: "inbox" },
           breadcrumbs: [],
           nodes: [],
         },
@@ -1770,7 +1771,7 @@ function applyNoteDraftToContents(
   };
 }
 
-/** `"color-7"` (client asset id) -> `"color:7"` (markdown destination). */
+/** `color-<uuid>` (client asset ID) -> `color:<uuid>` (Markdown destination). */
 function mentionColorKey(assetId: string) {
   return `color:${assetId.replace(/^color-/, "")}`;
 }
@@ -2068,8 +2069,8 @@ function backlinkTargetIdFromQueryKey(
 }
 
 function noteIdFromAssetId(assetId: string) {
-  const match = /^note-(\d+)$/.exec(assetId);
-  return match?.[1];
+  const match = NOTE_ID_PATTERN.exec(assetId);
+  return match?.[2];
 }
 
 function hasNoteReference(content: string, targetAssetId: string) {
@@ -2079,7 +2080,7 @@ function hasNoteReference(content: string, targetAssetId: string) {
 
 function extractNoteReferenceIds(content: string) {
   const ids = new Set<string>();
-  const pattern = /\]\(note:(\d+)\)/g;
+  const pattern = new RegExp(String.raw`\]\(note:(${UUID_PATTERN})\)`, "g");
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(content))) {
     ids.add(`note-${match[1]}`);
@@ -2949,7 +2950,7 @@ export function useUploadInboxImages(workspaceSlug: string) {
       queryClient.setQueryData<InboxContentsResponse>(inboxKey, (current) => {
         if (!current)
           return {
-            collection: { id: 0, name: "Inbox", slug: "inbox" },
+            collection: { id: "inbox", name: "Inbox", slug: "inbox" },
             breadcrumbs: [],
             nodes: optimisticImages,
           };
@@ -3061,7 +3062,7 @@ export function useUploadInboxImages(workspaceSlug: string) {
         queryClient.setQueryData(
           inboxKey,
           previousInbox ?? {
-            collection: { id: 0, name: "Inbox", slug: "inbox" },
+            collection: { id: "inbox", name: "Inbox", slug: "inbox" },
             breadcrumbs: [],
             nodes: [],
           },

@@ -7,7 +7,10 @@ import {
 
 describe("image variants queue contract", () => {
   it("round-trips a resource media rendition command", () => {
-    const job = resourceMediaRenditionJob(42, 3);
+    const job = resourceMediaRenditionJob(
+      "00000000-0000-4000-8000-00000000002a",
+      3,
+    );
     expect(parseResourceMediaRenditionJob(job)).toEqual(job);
   });
 

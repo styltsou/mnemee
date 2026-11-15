@@ -10,7 +10,7 @@ import {
 describe("canvas arrow paths", () => {
   it("renders clean arrows as straight segments", () => {
     const paths = makeArrowPaths(
-      "arrow-1",
+      "arrow-00000000-0000-4000-8000-000000000001",
       [
         { x: 10, y: 20 },
         { x: 90, y: 70 },
@@ -19,14 +19,19 @@ describe("canvas arrow paths", () => {
       "straight",
     );
     expect(
-      makeArrowPath("arrow-1", { x: 10, y: 20 }, { x: 90, y: 70 }, "clean"),
+      makeArrowPath(
+        "arrow-00000000-0000-4000-8000-000000000001",
+        { x: 10, y: 20 },
+        { x: 90, y: 70 },
+        "clean",
+      ),
     ).toBe("M 10 20 L 90 70");
     expect(paths.segmentAnchors).toEqual([{ x: 50, y: 45 }]);
   });
 
   it("keeps sketch geometry deterministic for a persisted id", () => {
     const first = makeArrowPaths(
-      "arrow-42",
+      "arrow-00000000-0000-4000-8000-00000000002a",
       [
         { x: -10, y: 5 },
         { x: 160, y: 80 },
@@ -36,7 +41,7 @@ describe("canvas arrow paths", () => {
     );
     expect(
       makeArrowPaths(
-        "arrow-42",
+        "arrow-00000000-0000-4000-8000-00000000002a",
         [
           { x: -10, y: 5 },
           { x: 160, y: 80 },
@@ -53,7 +58,7 @@ describe("canvas arrow paths", () => {
     expect(first.secondarySegmentAnchors).toHaveLength(1);
     expect(
       makeArrowPaths(
-        "arrow-43",
+        "arrow-00000000-0000-4000-8000-00000000002b",
         [
           { x: -10, y: 5 },
           { x: 160, y: 80 },
@@ -72,12 +77,22 @@ describe("canvas arrow paths", () => {
       { x: 180, y: 60 },
     ];
 
-    expect(makeArrowPath("arrow-3", points, "clean", "straight")).toBe(
-      "M 0 0 L 40 80 L 120 20 L 180 60",
-    );
-    expect(makeArrowPath("arrow-3", points, "clean", "smooth")).toContain(
-      " C ",
-    );
+    expect(
+      makeArrowPath(
+        "arrow-00000000-0000-4000-8000-000000000003",
+        points,
+        "clean",
+        "straight",
+      ),
+    ).toBe("M 0 0 L 40 80 L 120 20 L 180 60");
+    expect(
+      makeArrowPath(
+        "arrow-00000000-0000-4000-8000-000000000003",
+        points,
+        "clean",
+        "smooth",
+      ),
+    ).toContain(" C ");
   });
 
   it("sketches every straight segment and preserves smooth routing", () => {
@@ -87,8 +102,18 @@ describe("canvas arrow paths", () => {
       { x: 120, y: 20 },
       { x: 180, y: 60 },
     ];
-    const straight = makeArrowPaths("arrow-9", points, "sketch", "straight");
-    const smooth = makeArrowPaths("arrow-9", points, "sketch", "smooth");
+    const straight = makeArrowPaths(
+      "arrow-00000000-0000-4000-8000-000000000009",
+      points,
+      "sketch",
+      "straight",
+    );
+    const smooth = makeArrowPaths(
+      "arrow-00000000-0000-4000-8000-000000000009",
+      points,
+      "sketch",
+      "smooth",
+    );
 
     expect(straight.primary.match(/ Q /g)).toHaveLength(3);
     expect(straight.secondary?.match(/ Q /g)).toHaveLength(3);
@@ -108,7 +133,7 @@ describe("canvas arrow paths", () => {
 
   it("keeps repeated and zero-length points finite", () => {
     const paths = makeArrowPaths(
-      "arrow-11",
+      "arrow-00000000-0000-4000-8000-00000000000b",
       [
         { x: 12, y: 12 },
         { x: 12, y: 12 },
@@ -122,12 +147,28 @@ describe("canvas arrow paths", () => {
   });
 
   it("keeps both arrowhead traces deterministic and independently seeded", () => {
-    const primary = arrowheadSketchJitter("arrow-42", "primary");
-    const secondary = arrowheadSketchJitter("arrow-42", "secondary");
+    const primary = arrowheadSketchJitter(
+      "arrow-00000000-0000-4000-8000-00000000002a",
+      "primary",
+    );
+    const secondary = arrowheadSketchJitter(
+      "arrow-00000000-0000-4000-8000-00000000002a",
+      "secondary",
+    );
 
-    expect(arrowheadSketchJitter("arrow-42", "primary")).toEqual(primary);
+    expect(
+      arrowheadSketchJitter(
+        "arrow-00000000-0000-4000-8000-00000000002a",
+        "primary",
+      ),
+    ).toEqual(primary);
     expect(secondary).not.toEqual(primary);
-    expect(arrowheadSketchJitter("arrow-43", "primary")).not.toEqual(primary);
+    expect(
+      arrowheadSketchJitter(
+        "arrow-00000000-0000-4000-8000-00000000002b",
+        "primary",
+      ),
+    ).not.toEqual(primary);
   });
 
   it("moves only the clean filled marker forward to cover the shaft cap", () => {

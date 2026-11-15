@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mnemee/id-shared": "workspace:*",
     "@sentry/aws-serverless": "^10.69.0"
   },
   "devDependencies": {

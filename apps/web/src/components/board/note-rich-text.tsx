@@ -51,7 +51,7 @@ import {
   AssetMention,
   createMentionsExtension,
   NoteMentionProvider,
-  parseNumericAssetId,
+  parseAssetUuid,
   type OpenNoteMentionTarget,
 } from "@/components/board/note-editor/mentions/note-mentions";
 import { NoteMermaidBlock } from "@/components/board/note-editor/mermaid/note-mermaid-block";
@@ -317,7 +317,7 @@ export const NoteRichText = forwardRef<
   highlightModeRef.current = highlightMode;
   onHighlightModeChangeRef.current = onHighlightModeChange;
   onHighlightSelectionChangeRef.current = onHighlightSelectionChange;
-  const sourceAssetId = parseNumericAssetId(sourceNoteId);
+  const sourceAssetId = parseAssetUuid(sourceNoteId);
   const queryClient = useQueryClient();
   const blockControls = useMemo(createBlockDragHandleExtension, []);
   const noteExtensions = useMemo(

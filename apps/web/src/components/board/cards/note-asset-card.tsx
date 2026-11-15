@@ -1,3 +1,4 @@
+import { MENTION_DESTINATION_PATTERN } from "@mnemee/id-shared";
 import "../note-highlight-colors.css";
 import "../note-rich-text.css";
 import "./note-card-table.css";
@@ -461,7 +462,7 @@ function createMDComponents(
       );
     },
     a: ({ className, href, children, ...props }) => {
-      const mention = /^(note|color|link|image|video):(\d+)$/.exec(href ?? "");
+      const mention = MENTION_DESTINATION_PATTERN.exec(href ?? "");
       if (mention) {
         const assetType = mention[1] as NoteMentionType;
         const visual = mentionColors?.[href!];
@@ -658,7 +659,7 @@ export function NoteMarkdown({
           components={components}
           remarkPlugins={[remarkGfm, remarkHighlight]}
           urlTransform={(url) =>
-            /^(?:note|color|link|image|video):\d+$/.test(url)
+            MENTION_DESTINATION_PATTERN.test(url)
               ? url
               : defaultUrlTransform(url)
           }

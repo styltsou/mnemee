@@ -15,7 +15,7 @@ beforeEach(() => storage.clear());
 
 function setup() {
   const note: NoteAsset = {
-    id: "note-1",
+    id: "note-00000000-0000-4000-8000-000000000001",
     type: "note",
     content: "Original",
     title: "Title",
@@ -145,7 +145,7 @@ describe("saving note edits", () => {
     expect(mutate).not.toHaveBeenCalled();
     save(true);
     expect(options.deleteEmptyNote).toHaveBeenCalledWith(
-      "note-1",
+      "note-00000000-0000-4000-8000-000000000001",
       options.closeWorkspace,
     );
   });

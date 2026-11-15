@@ -26,7 +26,10 @@ describe("visibleCanvasObjects", () => {
     const selectedId = pending.id;
     const pendingArrows = { [selectedId]: { object: pending } };
     const optimistic = { ...pending, end: { position: { x: 120, y: 0 } } };
-    const persisted = { ...optimistic, id: "arrow-42" };
+    const persisted = {
+      ...optimistic,
+      id: "arrow-00000000-0000-4000-8000-00000000002a",
+    };
 
     for (const [cached, expected] of [
       [[], pending],

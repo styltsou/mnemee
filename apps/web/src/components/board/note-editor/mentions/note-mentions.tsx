@@ -1,3 +1,8 @@
+import {
+  MENTION_DESTINATION_PATTERN,
+  ASSET_ID_PATTERN,
+  isUuid,
+} from "@mnemee/id-shared";
 import { searchNoteMentions } from "@/api/note-mentions/fetchers";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 import { Extension, Node, type Editor, type Range } from "@tiptap/core";
@@ -70,7 +75,7 @@ import { FLOATING_GLASS_BACKDROP_CLASS, GLASS_FRAME_CLASS } from "@/lib/glass";
 import { cn } from "@/lib/utils";
 
 export type OpenNoteMentionTarget = (
-  identity: { assetId: number; assetType: NoteMentionType },
+  identity: { assetId: string; assetType: NoteMentionType },
   resolved?: NoteMentionTarget,
 ) => void;
 
@@ -132,9 +137,7 @@ export const AssetMention = Node.create({
     ];
   },
   parseMarkdown(token, helpers) {
-    const match = /^(note|color|link|image|video):(\d+)$/.exec(
-      token.href ?? "",
-    );
+    const match = MENTION_DESTINATION_PATTERN.exec(token.href ?? "");
     if (!match) {
       return helpers.applyMark(
         "link",
@@ -145,7 +148,7 @@ export const AssetMention = Node.create({
     return {
       type: "assetMention",
       attrs: {
-        targetAssetId: Number(match[2]),
+        targetAssetId: match[2]!,
         assetType: match[1],
         fallbackLabel: token.text ?? "",
       },
@@ -163,14 +166,14 @@ export const AssetMention = Node.create({
 export function getMentionTargetSignature(doc: ProseMirrorNode): string {
   const targets = new Map<
     string,
-    { assetId: number; assetType: NoteMentionType }
+    { assetId: string; assetType: NoteMentionType }
   >();
   doc.descendants((node) => {
     if (node.type.name !== "assetMention") return;
-    const assetId = Number(node.attrs.targetAssetId);
+    const assetId = String(node.attrs.targetAssetId);
     const assetType = node.attrs.assetType as NoteMentionType;
     if (
-      Number.isSafeInteger(assetId) &&
+      isUuid(assetId) &&
       (assetType === "note" ||
         assetType === "color" ||
         assetType === "link" ||
@@ -183,7 +186,7 @@ export function getMentionTargetSignature(doc: ProseMirrorNode): string {
   return [...targets.values()]
     .sort(
       (left, right) =>
-        left.assetId - right.assetId ||
+        left.assetId.localeCompare(right.assetId) ||
         left.assetType.localeCompare(right.assetType),
     )
     .map((target) => `${target.assetType}:${target.assetId}`)
@@ -199,7 +202,7 @@ export function NoteMentionProvider({
 }: {
   editor: Editor;
   workspaceSlug?: string;
-  sourceAssetId?: number;
+  sourceAssetId?: string;
   onOpen?: OpenNoteMentionTarget;
   children: ReactNode;
 }) {
@@ -221,7 +224,7 @@ export function NoteMentionProvider({
         .map((value) => {
           const [assetType, id] = value.split(":");
           return {
-            assetId: Number(id),
+            assetId: id!,
             assetType: assetType as NoteMentionType,
           };
         }),
@@ -281,7 +284,7 @@ function NoteMentionPreviewCard() {
 
 function NoteMentionChip({ node, selected }: ReactNodeViewProps) {
   const { targets, resolutionComplete, onOpen } = useContext(MentionContext);
-  const assetId = Number(node.attrs.targetAssetId);
+  const assetId = String(node.attrs.targetAssetId);
   const assetType = node.attrs.assetType as NoteMentionType;
   const fallbackLabel = String(node.attrs.fallbackLabel ?? "Untitled");
   const resolved = targets.get(`${assetType}:${assetId}`);
@@ -496,14 +499,14 @@ type MentionMenuProps = SuggestionProps<
   NoteMentionTarget
 > & {
   workspaceSlug: string;
-  sourceAssetId?: number;
+  sourceAssetId?: string;
   queryClient: QueryClient;
 };
 
 export function getMentionSearchFallback(
   queryClient: QueryClient,
   workspaceSlug: string,
-  sourceAssetId: number | undefined,
+  sourceAssetId: string | undefined,
   parsed: { scope?: NoteMentionType; search: string },
 ): NoteMentionTargetsResponse | undefined {
   const available = new Map<string, NoteMentionTarget>();
@@ -1083,7 +1086,7 @@ export function createMentionsExtension({
   queryClient,
 }: {
   workspaceSlug: string;
-  sourceAssetId?: number;
+  sourceAssetId?: string;
   queryClient?: QueryClient;
 }) {
   const mentionQueryClient = queryClient ?? new QueryClient();
@@ -1205,10 +1208,10 @@ export function createMentionScopeQuery(
   return `@${scope ? `${scope}:` : ""}${search}`;
 }
 
-export function parseNumericAssetId(assetId?: string): number | undefined {
+export function parseAssetUuid(assetId?: string): string | undefined {
   if (!assetId) return undefined;
-  const match = /^(?:note|color|link|image|video)-(\d+)$/.exec(assetId);
-  return match ? Number(match[1]) : undefined;
+  const match = ASSET_ID_PATTERN.exec(assetId);
+  return match?.[2];
 }
 
 function escapeMentionLabel(label: string) {

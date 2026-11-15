@@ -21,7 +21,7 @@ export const MENTIONED_NOTE_LIMIT = 200_000;
 /** Asset types the agent can be given as context. */
 export const MENTIONABLE_TYPES = ["note", "link", "color", "image"] as const;
 export type MentionableType = (typeof MENTIONABLE_TYPES)[number];
-export type Mention = { assetId: number; type: MentionableType };
+export type Mention = { assetId: string; type: MentionableType };
 
 /** Images the model sees per request; the rest are described as text only. */
 export const MAX_ATTACHED_IMAGES = 2;
@@ -45,7 +45,7 @@ type Gradient = {
 };
 
 export type MentionRow = {
-  id: number;
+  id: string;
   type: string;
   title: string | null;
   noteMarkdown: string | null;

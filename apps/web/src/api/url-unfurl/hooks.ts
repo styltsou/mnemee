@@ -300,7 +300,7 @@ export function useCreateInboxLink(workspaceSlug: string) {
         current
           ? { ...current, nodes: [link, ...current.nodes] }
           : {
-              collection: { id: 0, name: "Inbox", slug: "inbox" },
+              collection: { id: "inbox", name: "Inbox", slug: "inbox" },
               breadcrumbs: [],
               nodes: [link],
             },
@@ -323,7 +323,7 @@ export function useCreateInboxLink(workspaceSlug: string) {
         queryClient.setQueryData(
           context.key,
           context.previous ?? {
-            collection: { id: 0, name: "Inbox", slug: "inbox" },
+            collection: { id: "inbox", name: "Inbox", slug: "inbox" },
             breadcrumbs: [],
             nodes: [],
           },

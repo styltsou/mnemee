@@ -40,7 +40,7 @@ describe("LoggerService", () => {
 
     logger.runWithContext({ requestId: "req_123" }, () =>
       logger.info("Upload created", {
-        uploadId: 42,
+        uploadId: "00000000-0000-4000-8000-00000000002a",
         authorization: "Bearer should-not-appear",
         nested: { apiKey: "should-not-appear" },
       }),
@@ -63,13 +63,16 @@ describe("LoggerService", () => {
       deployment_environment: "test",
     });
     expect(record.attributes).toMatchObject({
-      uploadId: 42,
+      uploadId: "00000000-0000-4000-8000-00000000002a",
       authorization: "[REDACTED]",
       nested: { apiKey: "[REDACTED]" },
     });
     expect(Sentry.logger.info).toHaveBeenCalledWith(
       "Upload created",
-      expect.objectContaining({ request_id: "req_123", uploadId: 42 }),
+      expect.objectContaining({
+        request_id: "req_123",
+        uploadId: "00000000-0000-4000-8000-00000000002a",
+      }),
     );
   });
 

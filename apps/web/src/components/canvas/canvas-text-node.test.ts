@@ -60,11 +60,14 @@ describe("insertCanvasPlainText", () => {
 
 describe("resolveCanvasTextHandoff", () => {
   it("shows appended text as soon as the editor closes", () => {
-    const node = textNode("text-1", "Before");
+    const node = textNode(
+      "text-00000000-0000-4000-8000-000000000001",
+      "Before",
+    );
     const displayed = resolveCanvasTextHandoff(
       node,
       undefined,
-      new Map([["text-1", "Before after"]]),
+      new Map([["text-00000000-0000-4000-8000-000000000001", "Before after"]]),
     );
 
     expect(displayed.data.editing).toBe(false);
@@ -73,7 +76,11 @@ describe("resolveCanvasTextHandoff", () => {
   });
 
   it("keeps draft content visible when the server assigns a new id", () => {
-    const node = textNode("text-2", "", "text-draft-1");
+    const node = textNode(
+      "text-00000000-0000-4000-8000-000000000002",
+      "",
+      "text-draft-1",
+    );
     const displayed = resolveCanvasTextHandoff(
       node,
       undefined,

@@ -10,7 +10,7 @@ import {
 } from "./link-asset-card";
 
 const asset: LinkAsset = {
-  id: "link-7",
+  id: "link-00000000-0000-4000-8000-000000000007",
   type: "link",
   originalUrl: "https://youtu.be/dQw4w9WgXcQ",
   canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -327,7 +327,7 @@ describe("LinkCardPreview", () => {
       <LinkCardPreview
         preview={{
           type: "link",
-          assetId: "link-7",
+          assetId: "link-00000000-0000-4000-8000-000000000007",
           hostname: "www.youtube.com",
           title: "A video",
           videoId: "dQw4w9WgXcQ",
@@ -371,7 +371,7 @@ describe("LinkCardPreview", () => {
       <LinkCardPreview
         preview={{
           type: "link",
-          assetId: "link-8",
+          assetId: "link-00000000-0000-4000-8000-000000000008",
           hostname: "example.com",
           title: "An article",
           description: "A thorough writeup about the topic.",
@@ -415,7 +415,7 @@ describe("LinkCardPreview", () => {
       <LinkCardPreview
         preview={{
           type: "link",
-          assetId: "link-9",
+          assetId: "link-00000000-0000-4000-8000-000000000009",
           hostname: "example.com",
         }}
       />,

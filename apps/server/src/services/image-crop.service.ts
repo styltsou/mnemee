@@ -1,3 +1,4 @@
+import { isUuid } from "@mnemee/id-shared";
 import { and, desc, eq, sql } from "drizzle-orm";
 import sharp from "sharp";
 
@@ -221,7 +222,7 @@ export class ImageCropService implements IImageCropService {
     assertCropInSource(crop, width, height);
   }
 
-  private async getImage(orgId: string, assetId: number, client: QueryClient) {
+  private async getImage(orgId: string, assetId: string, client: QueryClient) {
     const row = first(
       await client
         .select({
@@ -249,7 +250,7 @@ export class ImageCropService implements IImageCropService {
   }
 
   private async toImage(row: {
-    id: number;
+    id: string;
     title: string | null;
     width: number;
     height: number;
@@ -275,9 +276,9 @@ export class ImageCropService implements IImageCropService {
   }
 }
 
-function imageAssetId(id: string): number {
-  const value = Number(id.replace(/^image-/, ""));
-  if (!Number.isSafeInteger(value) || value < 1) {
+function imageAssetId(id: string): string {
+  const value = id.slice("image-".length);
+  if (!id.startsWith("image-") || !isUuid(value)) {
     throw new AppError(ErrorCode.VALIDATION_ERROR, "Invalid image asset id");
   }
   return value;

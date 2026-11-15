@@ -9,7 +9,7 @@ import {
 } from "./mentioned-assets";
 
 const empty: MentionRow = {
-  id: 1,
+  id: "00000000-0000-4000-8000-000000000001",
   type: "note",
   title: null,
   noteMarkdown: null,
@@ -105,7 +105,7 @@ const variant = (contentType: string, sizeBytes = 100_000) => ({
 
 const imageRow: MentionRow = {
   ...empty,
-  id: 7,
+  id: "00000000-0000-4000-8000-000000000007",
   type: "image",
   title: "Moodboard",
   imageWidth: 3000,
@@ -143,7 +143,11 @@ describe("images", () => {
   });
 
   it("attaches at most two images and falls back to text when a fetch fails", async () => {
-    const rows = [1, 2, 3].map((id) => ({ ...imageRow, id }));
+    const rows = [
+      "00000000-0000-4000-8000-000000000001",
+      "00000000-0000-4000-8000-000000000002",
+      "00000000-0000-4000-8000-000000000003",
+    ].map((id) => ({ ...imageRow, id }));
     const mentioned = rows.map((row) => ({
       row,
       reference: referenceFromRow(row)!,

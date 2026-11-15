@@ -13,7 +13,7 @@ export type NoteAgentRequest = {
   workspaceSlug?: string;
   /** Items @-mentioned in the prompt; the server loads them by ID. */
   mentions?: Array<{
-    assetId: number;
+    assetId: string;
     type: "note" | "link" | "color" | "image";
   }>;
   /** A mechanical edit (fix grammar, shorter, longer): never looks anything up. */

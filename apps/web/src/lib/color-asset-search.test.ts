@@ -6,7 +6,7 @@ describe("colorAssetToSearchColors", () => {
   it("creates one fully weighted query color for a solid color", () => {
     expect(
       colorAssetToSearchColors({
-        id: "color-1",
+        id: "color-00000000-0000-4000-8000-000000000001",
         type: "color",
         hex: "#cc3366",
       }),
@@ -15,7 +15,7 @@ describe("colorAssetToSearchColors", () => {
 
   it("preserves all distinct gradient stops and normalizes their span weights", () => {
     const colors = colorAssetToSearchColors({
-      id: "color-1",
+      id: "color-00000000-0000-4000-8000-000000000001",
       type: "color",
       hex: "#ff0000",
       gradient: {

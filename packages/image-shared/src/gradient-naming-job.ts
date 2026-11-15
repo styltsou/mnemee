@@ -1,7 +1,8 @@
+import { isUuid } from "@mnemee/id-shared";
 export type GradientNamingJob = {
   version: 1;
   kind: "gradient.name";
-  assetId: number;
+  assetId: string;
   fingerprint: string;
   expectedTitle: string;
   expectedManual: boolean;
@@ -20,7 +21,7 @@ export function parseGradientNamingJob(value: unknown): GradientNamingJob {
   if (
     job.version !== 1 ||
     job.kind !== "gradient.name" ||
-    !Number.isSafeInteger(job.assetId) ||
+    !isUuid(job.assetId) ||
     typeof job.fingerprint !== "string" ||
     !/^[a-f0-9]{64}$/.test(job.fingerprint) ||
     typeof job.expectedTitle !== "string" ||

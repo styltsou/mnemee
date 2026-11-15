@@ -11,6 +11,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@mnemee/id-shared": "workspace:*",
     "ipaddr.js": "^2.2.0"
   },
   "devDependencies": {

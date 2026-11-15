@@ -1,12 +1,13 @@
+import { isUuid } from "@mnemee/id-shared";
 export type UrlResolutionJob = {
   version: 1;
   kind: "external-resource.resolve";
-  attemptId: number;
+  attemptId: string;
   generation: number;
 };
 
 export function urlResolutionJob(
-  attemptId: number,
+  attemptId: string,
   generation: number,
 ): UrlResolutionJob {
   return {
@@ -24,7 +25,7 @@ export function parseUrlResolutionJob(value: unknown): UrlResolutionJob {
   if (
     candidate.version !== 1 ||
     candidate.kind !== "external-resource.resolve" ||
-    !Number.isSafeInteger(candidate.attemptId) ||
+    !isUuid(candidate.attemptId) ||
     !Number.isSafeInteger(candidate.generation)
   )
     throw new Error("Invalid URL resolution job");

@@ -4,7 +4,7 @@ import { findMinimumCostColorAssignment } from "./color-assignment";
 
 const palette = [
   {
-    id: 1,
+    id: "00000000-0000-4000-8000-000000000001",
     hex: "#d94732",
     oklabL: 0.628,
     oklabA: 0.225,
@@ -14,7 +14,7 @@ const palette = [
     isAccent: false,
   },
   {
-    id: 2,
+    id: "00000000-0000-4000-8000-000000000002",
     hex: "#75c56a",
     oklabL: 0.728,
     oklabA: -0.171,
@@ -37,7 +37,8 @@ describe("findMinimumCostColorAssignment", () => {
     );
 
     expect(assignment?.matches.map((match) => match.paletteColor.id)).toEqual([
-      1, 2,
+      "00000000-0000-4000-8000-000000000001",
+      "00000000-0000-4000-8000-000000000002",
     ]);
   });
 
@@ -61,7 +62,7 @@ describe("findMinimumCostColorAssignment", () => {
         { ...palette[0]!, coverage: 0, salience: 0 },
         {
           ...palette[1]!,
-          id: 3,
+          id: "00000000-0000-4000-8000-000000000003",
           oklabL: 0.64,
           oklabA: 0.225,
           oklabB: 0.126,
@@ -72,6 +73,8 @@ describe("findMinimumCostColorAssignment", () => {
       0.16,
     );
 
-    expect(assignment?.matches[0]?.paletteColor.id).toBe(1);
+    expect(assignment?.matches[0]?.paletteColor.id).toBe(
+      "00000000-0000-4000-8000-000000000001",
+    );
   });
 });

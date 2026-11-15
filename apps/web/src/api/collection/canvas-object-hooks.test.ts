@@ -18,11 +18,15 @@ import {
 } from "./canvas-object-hooks";
 
 const contents: CollectionContentsResponse = {
-  collection: { id: 1, name: "Ideas", slug: "ideas" },
+  collection: {
+    id: "00000000-0000-4000-8000-000000000001",
+    name: "Ideas",
+    slug: "ideas",
+  },
   breadcrumbs: [],
   nodes: [
     {
-      id: "note-1",
+      id: "note-00000000-0000-4000-8000-000000000001",
       type: "note",
       content: "Card",
       isFavorite: false,
@@ -35,7 +39,7 @@ const contents: CollectionContentsResponse = {
   ],
   canvasObjects: [
     {
-      id: "text-2",
+      id: "text-00000000-0000-4000-8000-000000000002",
       type: "text",
       content: "Label",
       position: { x: 10, y: 10 },
@@ -47,7 +51,7 @@ const contents: CollectionContentsResponse = {
       updatedAt: "2026-09-15T00:00:00.000Z",
     },
     {
-      id: "arrow-3",
+      id: "arrow-00000000-0000-4000-8000-000000000003",
       type: "arrow",
       start: { position: { x: 0, y: 0 } },
       end: { position: { x: 20, y: 20 } },
@@ -113,21 +117,28 @@ describe("canvas front order saves", () => {
         expectedParentFolderNodeId: null,
         optimisticItems: [{ id, frontIndex }],
       });
-    const a = promote("note-1", 1);
-    const b = promote("text-2", 2);
-    const c = promote("note-1", 3);
+    const a = promote("note-00000000-0000-4000-8000-000000000001", 1);
+    const b = promote("text-00000000-0000-4000-8000-000000000002", 2);
+    const c = promote("note-00000000-0000-4000-8000-000000000001", 3);
     expect(save).toHaveBeenCalledTimes(1);
-    first.resolve({ items: [{ id: "note-1", frontIndex: 1 }] });
+    first.resolve({
+      items: [
+        { id: "note-00000000-0000-4000-8000-000000000001", frontIndex: 1 },
+      ],
+    });
     await a;
     expect(
       client.getQueryData<CollectionContentsResponse>(contentsKey)?.nodes[0]
         ?.frontIndex,
     ).toBe(3);
-    expect(save.mock.calls[1]?.[0].itemIds).toEqual(["text-2", "note-1"]);
+    expect(save.mock.calls[1]?.[0].itemIds).toEqual([
+      "text-00000000-0000-4000-8000-000000000002",
+      "note-00000000-0000-4000-8000-000000000001",
+    ]);
     last.resolve({
       items: [
-        { id: "text-2", frontIndex: 2 },
-        { id: "note-1", frontIndex: 3 },
+        { id: "text-00000000-0000-4000-8000-000000000002", frontIndex: 2 },
+        { id: "note-00000000-0000-4000-8000-000000000001", frontIndex: 3 },
       ],
     });
     await Promise.all([b, c]);
@@ -144,9 +155,11 @@ describe("canvas front order saves", () => {
     const save = vi.fn().mockReturnValue(request.promise);
     const queue = createFrontOrderQueue(client, save);
     const result = queue.enqueue({
-      itemIds: ["note-1"],
+      itemIds: ["note-00000000-0000-4000-8000-000000000001"],
       expectedParentFolderNodeId: null,
-      optimisticItems: [{ id: "note-1", frontIndex: 8 }],
+      optimisticItems: [
+        { id: "note-00000000-0000-4000-8000-000000000001", frontIndex: 8 },
+      ],
     });
     client.setQueryData<CollectionContentsResponse>(contentsKey, (current) => ({
       ...current!,
@@ -173,9 +186,13 @@ describe("canvas front order saves", () => {
     const save = vi
       .fn()
       .mockRejectedValueOnce(new ApiError(503, "Unavailable"))
-      .mockResolvedValueOnce({ items: [{ id: "note-1", frontIndex: 5 }] });
+      .mockResolvedValueOnce({
+        items: [
+          { id: "note-00000000-0000-4000-8000-000000000001", frontIndex: 5 },
+        ],
+      });
     await createFrontOrderQueue(client, save).enqueue({
-      itemIds: ["note-1"],
+      itemIds: ["note-00000000-0000-4000-8000-000000000001"],
       expectedParentFolderNodeId: null,
       optimisticItems: [],
     });
@@ -240,9 +257,13 @@ it("preserves a newer layer order when an earlier text edit completes", async ()
   client.setQueryData(contentsKey, contents);
   const request = deferred<CanvasObjectResponse>();
   const queue = createTextUpdateQueue(client, () => request.promise);
-  const result = queue.enqueue("text-2", { color: "violet" });
+  const result = queue.enqueue("text-00000000-0000-4000-8000-000000000002", {
+    color: "violet",
+  });
   client.setQueryData<CollectionContentsResponse>(contentsKey, (current) =>
-    updateFrontIndexesInContents(current, [{ id: "text-2", frontIndex: 20 }]),
+    updateFrontIndexesInContents(current, [
+      { id: "text-00000000-0000-4000-8000-000000000002", frontIndex: 20 },
+    ]),
   );
   request.resolve(textObject({ color: "violet" }));
   await result;
@@ -291,9 +312,9 @@ function createArrowUpdateQueue(
 describe("canvas front-index cache updates", () => {
   it("updates collection nodes and text while leaving arrows untouched", () => {
     const updated = updateFrontIndexesInContents(contents, [
-      { id: "note-1", frontIndex: 4 },
-      { id: "text-2", frontIndex: 5 },
-      { id: "arrow-3", frontIndex: 6 },
+      { id: "note-00000000-0000-4000-8000-000000000001", frontIndex: 4 },
+      { id: "text-00000000-0000-4000-8000-000000000002", frontIndex: 5 },
+      { id: "arrow-00000000-0000-4000-8000-000000000003", frontIndex: 6 },
     ]);
 
     expect(updated?.nodes[0]?.frontIndex).toBe(4);
@@ -321,13 +342,13 @@ describe("optimistic arrow creation", () => {
     };
     const reconciled = reconcileCreatedArrowInContents(
       current,
-      { ...original, id: "arrow-91" },
+      { ...original, id: "arrow-00000000-0000-4000-8000-00000000005b" },
       optimistic.clientId,
     );
 
     expect(reconciled?.canvasObjects).toHaveLength(2);
     expect(reconciled?.canvasObjects[1]).toMatchObject({
-      id: "arrow-91",
+      id: "arrow-00000000-0000-4000-8000-00000000005b",
       clientId: "arrow-draft-client",
       points: [{ x: 10, y: 35 }],
       rotation: Math.PI / 6,
@@ -364,8 +385,14 @@ describe("canvas object update queue", () => {
       routing: "smooth",
     };
 
-    const firstResult = updates.enqueue("arrow-3", resized);
-    const latestResult = updates.enqueue("arrow-3", rotated);
+    const firstResult = updates.enqueue(
+      "arrow-00000000-0000-4000-8000-000000000003",
+      resized,
+    );
+    const latestResult = updates.enqueue(
+      "arrow-00000000-0000-4000-8000-000000000003",
+      rotated,
+    );
 
     expect(
       queryClient.getQueryData<CollectionContentsResponse>(contentsKey)
@@ -379,7 +406,10 @@ describe("canvas object update queue", () => {
       queryClient.getQueryData<CollectionContentsResponse>(contentsKey)
         ?.canvasObjects[1],
     ).toMatchObject(rotated);
-    expect(save).toHaveBeenLastCalledWith("arrow-3", rotated);
+    expect(save).toHaveBeenLastCalledWith(
+      "arrow-00000000-0000-4000-8000-000000000003",
+      rotated,
+    );
 
     latest.resolve(arrowObject(rotated));
     await latestResult;
@@ -419,7 +449,7 @@ describe("canvas object update queue", () => {
       (current) =>
         reconcileCreatedArrowInContents(
           current,
-          { ...source, id: "arrow-91" },
+          { ...source, id: "arrow-00000000-0000-4000-8000-00000000005b" },
           optimistic.clientId,
         ),
     );
@@ -430,7 +460,7 @@ describe("canvas object update queue", () => {
       queryClient.getQueryData<CollectionContentsResponse>(contentsKey)
         ?.canvasObjects[1],
     ).toMatchObject({
-      id: "arrow-91",
+      id: "arrow-00000000-0000-4000-8000-00000000005b",
       clientId: optimistic.clientId,
       points: [],
     });
@@ -452,13 +482,19 @@ describe("canvas object update queue", () => {
       .mockReturnValueOnce(latest.promise);
     const updates = createTextUpdateQueue(queryClient, save);
 
-    const firstResult = updates.enqueue("text-2", {
-      font: "ibm_plex_mono",
-    });
-    const latestResult = updates.enqueue("text-2", {
-      font: "fraunces",
-      color: "violet",
-    });
+    const firstResult = updates.enqueue(
+      "text-00000000-0000-4000-8000-000000000002",
+      {
+        font: "ibm_plex_mono",
+      },
+    );
+    const latestResult = updates.enqueue(
+      "text-00000000-0000-4000-8000-000000000002",
+      {
+        font: "fraunces",
+        color: "violet",
+      },
+    );
 
     expect(
       queryClient.getQueryData<CollectionContentsResponse>(contentsKey)
@@ -472,10 +508,13 @@ describe("canvas object update queue", () => {
       queryClient.getQueryData<CollectionContentsResponse>(contentsKey)
         ?.canvasObjects[0],
     ).toMatchObject({ font: "fraunces", color: "violet" });
-    expect(save).toHaveBeenLastCalledWith("text-2", {
-      font: "fraunces",
-      color: "violet",
-    });
+    expect(save).toHaveBeenLastCalledWith(
+      "text-00000000-0000-4000-8000-000000000002",
+      {
+        font: "fraunces",
+        color: "violet",
+      },
+    );
 
     latest.resolve(textObject({ font: "fraunces", color: "violet" }));
     await latestResult;
@@ -502,8 +541,14 @@ describe("canvas object update queue", () => {
       .mockReturnValueOnce(latest.promise);
     const updates = createTextUpdateQueue(queryClient, save);
 
-    const firstResult = updates.enqueue("text-2", { size: "lg" });
-    const latestResult = updates.enqueue("text-2", { size: "xl" });
+    const firstResult = updates.enqueue(
+      "text-00000000-0000-4000-8000-000000000002",
+      { size: "lg" },
+    );
+    const latestResult = updates.enqueue(
+      "text-00000000-0000-4000-8000-000000000002",
+      { size: "xl" },
+    );
 
     first.resolve(textObject({ size: "lg" }));
     await firstResult;
@@ -522,14 +567,18 @@ describe("canvas object update queue", () => {
     const request = deferred<CanvasObjectResponse>();
     const updates = createTextUpdateQueue(queryClient, () => request.promise);
 
-    const result = updates.enqueue("text-2", { color: "violet" });
+    const result = updates.enqueue(
+      "text-00000000-0000-4000-8000-000000000002",
+      { color: "violet" },
+    );
     queryClient.setQueryData<CollectionContentsResponse>(
       contentsKey,
       (current) =>
         current && {
           ...current,
           canvasObjects: current.canvasObjects.filter(
-            (object) => object.id !== "text-2",
+            (object) =>
+              object.id !== "text-00000000-0000-4000-8000-000000000002",
           ),
         },
     );
@@ -539,7 +588,9 @@ describe("canvas object update queue", () => {
     expect(
       queryClient
         .getQueryData<CollectionContentsResponse>(contentsKey)
-        ?.canvasObjects.some((object) => object.id === "text-2"),
+        ?.canvasObjects.some(
+          (object) => object.id === "text-00000000-0000-4000-8000-000000000002",
+        ),
     ).toBe(false);
   });
 });

@@ -1,3 +1,4 @@
+import { TEXT_ID_PATTERN, ARROW_ID_PATTERN } from "@mnemee/id-shared";
 import {
   applyNodeChanges,
   Panel,
@@ -2034,7 +2035,7 @@ function CanvasSurface({
           if (isPersistedCollectionNodeId(id)) {
             return [{ type: "node" as const, id, position }];
           }
-          if (/^text-\d+$/.test(id)) {
+          if (TEXT_ID_PATTERN.test(id)) {
             return [{ type: "text" as const, id, position }];
           }
           if (id.startsWith("text-draft-")) {
@@ -2047,7 +2048,7 @@ function CanvasSurface({
       );
       const arrowItems: UpdateCanvasItemsGeometryInput["items"] =
         getTranslatedArrowUpdates(canvasObjects, snapshots, movingIds, delta)
-          .filter(({ id }) => /^arrow-\d+$/.test(id))
+          .filter(({ id }) => ARROW_ID_PATTERN.test(id))
           .map(({ id, start, end, points, rotation }) => ({
             type: "arrow",
             id,
@@ -2256,7 +2257,7 @@ function CanvasSurface({
 
   const beginArrowGroupDrag = useCallback(
     (arrowId: string) => {
-      if (!/^arrow-\d+$/.test(arrowId)) {
+      if (!ARROW_ID_PATTERN.test(arrowId)) {
         return false;
       }
       const movingSelection = selectedIdSet.has(arrowId)

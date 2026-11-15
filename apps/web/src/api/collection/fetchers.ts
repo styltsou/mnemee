@@ -267,7 +267,7 @@ export async function createRemoteImage(
 export async function fetchImageUploadStatus(
   workspaceSlug: string,
   collectionSlug: string,
-  uploadId: number,
+  uploadId: string,
 ): Promise<ImageUploadStatusResponse> {
   return apiGet<ImageUploadStatusResponse>(
     `/api/v1/workspace/${workspaceSlug}/collections/${collectionSlug}/images/uploads/${uploadId}`,
@@ -407,7 +407,7 @@ export async function createInboxRemoteImage(
 
 export async function fetchInboxImageUploadStatus(
   workspaceSlug: string,
-  uploadId: number,
+  uploadId: string,
 ): Promise<ImageUploadStatusResponse> {
   return apiGet<ImageUploadStatusResponse>(
     `/api/v1/workspace/${workspaceSlug}/inbox/images/uploads/${uploadId}`,

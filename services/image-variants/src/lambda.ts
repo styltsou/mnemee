@@ -29,13 +29,13 @@ const client = new S3Client({});
 
 type VariantsJob =
   | { kind: "upload"; sources: SourceImage[] }
-  | { kind: "resource-media"; mediaId: number; generation: number };
+  | { kind: "resource-media"; mediaId: string; generation: number };
 
 type ResourceMediaClaim =
   | { ignored: true }
   | {
       ignored: false;
-      mediaId: number;
+      mediaId: string;
       generation: number;
       url: string;
       organizationId: string;
@@ -51,7 +51,7 @@ function parseJob(body: string): VariantsJob {
     return { kind: "upload", sources: sourceImagesFromSqsBody(body) };
   return {
     kind: "resource-media",
-    mediaId: parsed.mediaId as number,
+    mediaId: parsed.mediaId as string,
     generation: parsed.generation as number,
   };
 }

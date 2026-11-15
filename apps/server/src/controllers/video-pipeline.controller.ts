@@ -22,7 +22,7 @@ export const handleVideoPipelineCallback = factory.createHandlers(async (c) => {
 
 export const claimRemoteVideoImport = factory.createHandlers(async (c) => {
   const parsed = z
-    .object({ uploadId: z.number().int().positive() })
+    .object({ uploadId: z.uuidv4() })
     .safeParse(await readSignedPipelineJson(c));
   if (!parsed.success)
     throw new AppError(

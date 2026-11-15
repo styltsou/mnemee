@@ -305,7 +305,7 @@ export class CollectionAssetMoveService {
     }
     const sourcesInLockOrder = [...sources].sort((left, right) =>
       left.source.nodeType === right.source.nodeType
-        ? left.source.entityId - right.source.entityId
+        ? left.source.entityId.localeCompare(right.source.entityId)
         : left.source.nodeType.localeCompare(right.source.nodeType),
     );
     const target = data.targetFolderNodeId
@@ -319,7 +319,7 @@ export class CollectionAssetMoveService {
     return db.transaction(async (tx) => {
       await lockCanvasStack(tx, collection.id, target?.entityId ?? null);
       const movesByNodeId = new Map<string, MoveCollectionNodeParentResult>();
-      const oldToNewNodeIds = new Map<number, number>();
+      const oldToNewNodeIds = new Map<string, string>();
       const targetFolder = target
         ? first(
             await tx
@@ -452,12 +452,12 @@ export class CollectionAssetMoveService {
       const movedCollectionNodeIds = new Set(
         [...sourceRows.values()]
           .map((row) => row.id)
-          .filter((id): id is number => id !== null),
+          .filter((id): id is string => id !== null),
       );
       const movedTextIds = new Set(
         selectedCanvasIds
           .filter((id) => id.startsWith("text-"))
-          .map((id) => Number(id.slice(5))),
+          .map((id) => id.slice(5)),
       );
       const endpointMoves = (
         row: (typeof sourceObjects)[number],
@@ -477,7 +477,7 @@ export class CollectionAssetMoveService {
       const movingArrowIds = new Set(
         selectedCanvasIds
           .filter((id) => id.startsWith("arrow-"))
-          .map((id) => Number(id.slice(6))),
+          .map((id) => id.slice(6)),
       );
       for (const row of sourceObjects) {
         if (
@@ -956,11 +956,11 @@ export class CollectionAssetMoveService {
                   y: point.y + offset.y,
                 })),
                 startCollectionNodeId: preserveStart
-                  ? (oldToNewNodeIds.get(row.startCollectionNodeId ?? -1) ??
+                  ? (oldToNewNodeIds.get(row.startCollectionNodeId ?? "") ??
                     row.startCollectionNodeId)
                   : null,
                 endCollectionNodeId: preserveEnd
-                  ? (oldToNewNodeIds.get(row.endCollectionNodeId ?? -1) ??
+                  ? (oldToNewNodeIds.get(row.endCollectionNodeId ?? "") ??
                     row.endCollectionNodeId)
                   : null,
                 startCanvasObjectId: preserveStart
@@ -992,7 +992,7 @@ export class CollectionAssetMoveService {
           await tx
             .update(canvasObjects)
             .set({ frontIndex })
-            .where(eq(canvasObjects.id, Number(nodeId.slice(5))));
+            .where(eq(canvasObjects.id, nodeId.slice(5)));
         } else {
           const parsed = parseCollectionNodeId(nodeId);
           await tx
@@ -1025,16 +1025,16 @@ export class CollectionAssetMoveService {
 type DatabaseTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type MoveSourceNode = {
-  id: number | null;
-  collectionId: number | null;
+  id: string | null;
+  collectionId: string | null;
   nodeType: "asset" | "folder";
-  assetId: number | null;
-  folderId: number | null;
-  parentFolderId: number | null;
+  assetId: string | null;
+  folderId: string | null;
+  parentFolderId: string | null;
   positionX: number | null;
   positionY: number | null;
   depth: number;
-  pathFolderIds: number[];
+  pathFolderIds: string[];
   pathFolderSlugs: string[];
   pathFolderNames: string[];
   assetType: "image" | "video" | "note" | "link" | "color" | null;
@@ -1151,7 +1151,7 @@ async function getMoveSourceNode(
   };
 }
 
-function hasPathPrefix(path: number[], prefix: number[]): boolean {
+function hasPathPrefix(path: string[], prefix: string[]): boolean {
   return (
     path.length >= prefix.length &&
     prefix.every((folderId, index) => path[index] === folderId)

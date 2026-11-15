@@ -16,7 +16,7 @@ describe("gradient naming watcher", () => {
     vi.stubGlobal("document", { visibilityState: "visible" });
     const queued = {
       asset: {
-        id: "color-1",
+        id: "color-00000000-0000-4000-8000-000000000001",
         type: "color" as const,
         title: "Linear Gradient",
         naming: { state: "queued" as const, fingerprint: "job-1" },
@@ -37,16 +37,34 @@ describe("gradient naming watcher", () => {
       .mockResolvedValueOnce(succeeded as never);
     const client = new QueryClient();
 
-    watchGradientName(client, "studio", "color-1", "Linear Gradient", "job-1");
+    watchGradientName(
+      client,
+      "studio",
+      "color-00000000-0000-4000-8000-000000000001",
+      "Linear Gradient",
+      "job-1",
+    );
     await vi.advanceTimersByTimeAsync(1_000);
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(useGradientNaming.getState().pending["color-1"]).toBe(true);
+    expect(
+      useGradientNaming.getState().pending[
+        "color-00000000-0000-4000-8000-000000000001"
+      ],
+    ).toBe(true);
 
     await vi.advanceTimersByTimeAsync(1_000);
     expect(
-      client.getQueryData(["workspace-asset", "studio", "color-1"]),
+      client.getQueryData([
+        "workspace-asset",
+        "studio",
+        "color-00000000-0000-4000-8000-000000000001",
+      ]),
     ).toEqual(succeeded);
-    expect(useGradientNaming.getState().pending["color-1"]).toBeUndefined();
+    expect(
+      useGradientNaming.getState().pending[
+        "color-00000000-0000-4000-8000-000000000001"
+      ],
+    ).toBeUndefined();
     await vi.advanceTimersByTimeAsync(5_000);
     expect(fetch).toHaveBeenCalledTimes(2);
   });
@@ -56,7 +74,7 @@ describe("gradient naming watcher", () => {
     vi.stubGlobal("document", { visibilityState: "visible" });
     const failed = {
       asset: {
-        id: "color-2",
+        id: "color-00000000-0000-4000-8000-000000000002",
         type: "color" as const,
         title: "Linear Gradient",
         naming: {
@@ -72,11 +90,25 @@ describe("gradient naming watcher", () => {
       .mockResolvedValue(failed as never);
     const client = new QueryClient();
 
-    watchGradientName(client, "studio", "color-2", "Linear Gradient", "job-2");
+    watchGradientName(
+      client,
+      "studio",
+      "color-00000000-0000-4000-8000-000000000002",
+      "Linear Gradient",
+      "job-2",
+    );
     await vi.advanceTimersByTimeAsync(1_000);
-    expect(useGradientNaming.getState().pending["color-2"]).toBeUndefined();
     expect(
-      client.getQueryData(["workspace-asset", "studio", "color-2"]),
+      useGradientNaming.getState().pending[
+        "color-00000000-0000-4000-8000-000000000002"
+      ],
+    ).toBeUndefined();
+    expect(
+      client.getQueryData([
+        "workspace-asset",
+        "studio",
+        "color-00000000-0000-4000-8000-000000000002",
+      ]),
     ).toEqual(failed);
     await vi.advanceTimersByTimeAsync(5_000);
     expect(fetch).toHaveBeenCalledTimes(1);

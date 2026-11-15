@@ -20,7 +20,7 @@ import type {
 } from "./types";
 
 const movedNote: Extract<CollectionNode, { type: "note" }> = {
-  id: "note-1",
+  id: "note-00000000-0000-4000-8000-000000000001",
   type: "note",
   content: "Move this note",
   isFavorite: false,
@@ -33,38 +33,54 @@ const movedNote: Extract<CollectionNode, { type: "note" }> = {
 
 const remainingNote: Extract<CollectionNode, { type: "note" }> = {
   ...movedNote,
-  id: "note-2",
+  id: "note-00000000-0000-4000-8000-000000000002",
   content: "Keep this note",
   position: { x: 400, y: 48 },
 };
 
 const targetFolder: Extract<CollectionNode, { type: "folder" }> = {
-  id: "folder-9",
+  id: "folder-00000000-0000-4000-8000-000000000009",
   type: "folder",
   name: "Archive",
   slug: "archive",
   count: 2,
   folderCount: 1,
-  previews: [{ assetId: "note-7", type: "note", snippet: "Older" }],
+  previews: [
+    {
+      assetId: "note-00000000-0000-4000-8000-000000000007",
+      type: "note",
+      snippet: "Older",
+    },
+  ],
   createdAt: "2026-01-01T00:00:00.000Z",
   position: { x: 720, y: 48 },
 };
 
 const movedFolder: Extract<CollectionNode, { type: "folder" }> = {
-  id: "folder-4",
+  id: "folder-00000000-0000-4000-8000-000000000004",
   type: "folder",
   name: "New",
   slug: "new",
   count: 3,
   folderCount: 0,
-  previews: [{ assetId: "note-8", type: "note", snippet: "Inside New" }],
+  previews: [
+    {
+      assetId: "note-00000000-0000-4000-8000-000000000008",
+      type: "note",
+      snippet: "Inside New",
+    },
+  ],
   createdAt: "2026-01-01T00:00:00.000Z",
   position: { x: 240, y: 48 },
 };
 
 function makeContents(nodes: CollectionNode[]): CollectionContentsResponse {
   return {
-    collection: { id: 1, name: "Reference", slug: "reference" },
+    collection: {
+      id: "00000000-0000-4000-8000-000000000001",
+      name: "Reference",
+      slug: "reference",
+    },
     breadcrumbs: [],
     nodes,
     canvasObjects: [],
@@ -273,7 +289,7 @@ describe("move cache transition", () => {
   it("rebuilds source-folder previews from remaining children and rolls back by asset ID", () => {
     const parent = makeContents([
       {
-        id: "folder-3",
+        id: "folder-00000000-0000-4000-8000-000000000003",
         type: "folder",
         name: "Source",
         slug: "source",
@@ -307,7 +323,7 @@ describe("move cache transition", () => {
     const collections: CollectionsData = {
       collections: [
         {
-          id: 1,
+          id: "00000000-0000-4000-8000-000000000001",
           name: "Reference",
           slug: "reference",
           description: null,

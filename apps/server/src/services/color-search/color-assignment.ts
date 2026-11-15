@@ -5,7 +5,7 @@ export type OklabColor = {
 };
 
 export type SearchPaletteColor = OklabColor & {
-  id: number;
+  id: string;
   hex: string;
   coverage: number;
   salience: number;
@@ -116,7 +116,5 @@ function isBetterAssignment(
 }
 
 function assignmentSignature(assignment: AssignmentState): string {
-  return assignment.matches
-    .map((match) => String(match.paletteColor.id).padStart(10, "0"))
-    .join(":");
+  return assignment.matches.map((match) => match.paletteColor.id).join(":");
 }

@@ -11,9 +11,9 @@ import {
 } from "@mnemee/url-unfurl-shared/youtube-url";
 
 export type LinkProjectionRow = {
-  assetId: number;
+  assetId: string;
   originalUrl: string;
-  resourceId: number;
+  resourceId: string;
   hostname: string;
   canonicalUrl: string | null;
   assetTitle: string | null;
@@ -38,9 +38,9 @@ export type ProjectedMedia = {
 };
 
 export async function getResourceMediaLookup(
-  resourceIds: number[],
+  resourceIds: string[],
   objectStorageService: IObjectStorageService,
-): Promise<Map<number, ProjectedMedia>> {
+): Promise<Map<string, ProjectedMedia>> {
   if (resourceIds.length === 0) return new Map();
   const rows = await db
     .select({
@@ -65,7 +65,7 @@ export async function getResourceMediaLookup(
       .filter((key): key is string => Boolean(key)),
   );
   const signed = await objectStorageService.createPresignedGetUrls(keys);
-  const lookup = new Map<number, ProjectedMedia>();
+  const lookup = new Map<string, ProjectedMedia>();
 
   for (const row of rows) {
     const current = lookup.get(row.resourceId) ?? {

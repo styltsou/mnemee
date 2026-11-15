@@ -29,120 +29,222 @@ afterEach(() => values.clear());
 describe("note edit draft ownership", () => {
   it("restores a draft only for its owning note", () => {
     saveEditDraft(
-      "note-1",
+      "note-00000000-0000-4000-8000-000000000001",
       "First body",
       "First title",
       "Old body",
       "Old title",
     );
-    expect(loadEditDraft("note-1")).toEqual({
+    expect(loadEditDraft("note-00000000-0000-4000-8000-000000000001")).toEqual({
       content: "First body",
       title: "First title",
       baseContent: "Old body",
       baseTitle: "Old title",
     });
-    expect(loadEditDraft("note-2")).toBeUndefined();
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000002"),
+    ).toBeUndefined();
   });
 
   it("does not silently replay an unowned legacy draft", () => {
-    const key = "mnemee.edit-note-draft:note-1";
+    const key =
+      "mnemee.edit-note-draft:note-00000000-0000-4000-8000-000000000001";
     values.set(key, JSON.stringify({ content: "Possibly stale", title: "" }));
-    expect(loadEditDraft("note-1")).toBeUndefined();
-    expect(loadLegacyEditDraft("note-1")?.content).toBe("Possibly stale");
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000001"),
+    ).toBeUndefined();
+    expect(
+      loadLegacyEditDraft("note-00000000-0000-4000-8000-000000000001")?.content,
+    ).toBe("Possibly stale");
     expect(values.get(key)).toContain("Possibly stale");
   });
 
   it("does not replay an owned draft without its original server version", () => {
-    const key = "mnemee.edit-note-draft:note-1";
+    const key =
+      "mnemee.edit-note-draft:note-00000000-0000-4000-8000-000000000001";
     values.set(
       key,
-      JSON.stringify({ noteId: "note-1", content: "Older edit", title: "" }),
+      JSON.stringify({
+        noteId: "note-00000000-0000-4000-8000-000000000001",
+        content: "Older edit",
+        title: "",
+      }),
     );
-    expect(loadEditDraft("note-1")).toBeUndefined();
-    clearEditDraft("note-1");
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000001"),
+    ).toBeUndefined();
+    clearEditDraft("note-00000000-0000-4000-8000-000000000001");
     expect(values.get(key)).toContain("Older edit");
-    saveEditDraft("note-1", "New edit", "", "Server body", null);
-    expect(loadLegacyEditDraft("note-1")?.content).toBe("Older edit");
-    expect(loadEditDraft("note-1")?.content).toBe("New edit");
+    saveEditDraft(
+      "note-00000000-0000-4000-8000-000000000001",
+      "New edit",
+      "",
+      "Server body",
+      null,
+    );
+    expect(
+      loadLegacyEditDraft("note-00000000-0000-4000-8000-000000000001")?.content,
+    ).toBe("Older edit");
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000001")?.content,
+    ).toBe("New edit");
   });
 
   it("clears only the requested note draft", () => {
-    saveEditDraft("note-1", "First", "", "", null);
-    saveEditDraft("note-2", "Second", "", "", null);
-    clearEditDraft("note-1");
-    expect(loadEditDraft("note-1")).toBeUndefined();
-    expect(loadEditDraft("note-2")?.content).toBe("Second");
+    saveEditDraft(
+      "note-00000000-0000-4000-8000-000000000001",
+      "First",
+      "",
+      "",
+      null,
+    );
+    saveEditDraft(
+      "note-00000000-0000-4000-8000-000000000002",
+      "Second",
+      "",
+      "",
+      null,
+    );
+    clearEditDraft("note-00000000-0000-4000-8000-000000000001");
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000001"),
+    ).toBeUndefined();
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000002")?.content,
+    ).toBe("Second");
   });
 
   it("removes an old backup only when its contents were confirmed on the server", () => {
     values.set(
-      "mnemee.edit-note-draft-legacy:note-1",
+      "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000001",
       JSON.stringify({ content: "Older edit", title: "Title" }),
     );
-    saveEditDraft("note-1", "New edit", "Title", "Server body", "Title");
-    clearEditDraft("note-1", { content: "New edit", title: "Title" });
-    expect(loadEditDraft("note-1")).toBeUndefined();
-    expect(loadLegacyEditDraft("note-1")?.content).toBe("Older edit");
+    saveEditDraft(
+      "note-00000000-0000-4000-8000-000000000001",
+      "New edit",
+      "Title",
+      "Server body",
+      "Title",
+    );
+    clearEditDraft("note-00000000-0000-4000-8000-000000000001", {
+      content: "New edit",
+      title: "Title",
+    });
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000001"),
+    ).toBeUndefined();
+    expect(
+      loadLegacyEditDraft("note-00000000-0000-4000-8000-000000000001")?.content,
+    ).toBe("Older edit");
 
-    clearEditDraft("note-1", { content: "Older edit", title: "Title" });
-    expect(loadLegacyEditDraft("note-1")).toBeUndefined();
+    clearEditDraft("note-00000000-0000-4000-8000-000000000001", {
+      content: "Older edit",
+      title: "Title",
+    });
+    expect(
+      loadLegacyEditDraft("note-00000000-0000-4000-8000-000000000001"),
+    ).toBeUndefined();
   });
 
   it("removes a redundant backup when a new draft carries the same text", () => {
     values.set(
-      "mnemee.edit-note-draft:note-1",
+      "mnemee.edit-note-draft:note-00000000-0000-4000-8000-000000000001",
       JSON.stringify({ content: "My edit", title: "Title" }),
     );
-    saveEditDraft("note-1", "My edit", "Title", "Server body", "Title");
-    expect(loadEditDraft("note-1")?.content).toBe("My edit");
-    expect(values.has("mnemee.edit-note-draft-legacy:note-1")).toBe(false);
+    saveEditDraft(
+      "note-00000000-0000-4000-8000-000000000001",
+      "My edit",
+      "Title",
+      "Server body",
+      "Title",
+    );
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000001")?.content,
+    ).toBe("My edit");
+    expect(
+      values.has(
+        "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000001",
+      ),
+    ).toBe(false);
   });
 
   it("drops empty old-format backups", () => {
     values.set(
-      "mnemee.edit-note-draft-legacy:note-1",
+      "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000001",
       JSON.stringify({ content: "", title: "" }),
     );
-    expect(loadLegacyEditDraft("note-1")).toBeUndefined();
-    expect(values.has("mnemee.edit-note-draft-legacy:note-1")).toBe(false);
+    expect(
+      loadLegacyEditDraft("note-00000000-0000-4000-8000-000000000001"),
+    ).toBeUndefined();
+    expect(
+      values.has(
+        "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000001",
+      ),
+    ).toBe(false);
   });
 
   it("prunes redundant backups across notes while preserving distinct drafts", () => {
-    saveEditDraft("note-1", "Unsaved", "", "Server", null);
+    saveEditDraft(
+      "note-00000000-0000-4000-8000-000000000001",
+      "Unsaved",
+      "",
+      "Server",
+      null,
+    );
     values.set(
-      "mnemee.edit-note-draft-legacy:note-1",
+      "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000001",
       JSON.stringify({ content: "Unsaved", title: "" }),
     );
     values.set(
-      "mnemee.edit-note-draft-legacy:note-2",
+      "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000002",
       JSON.stringify({ content: "Different unsaved text", title: "" }),
     );
     values.set(
-      "mnemee.edit-note-draft-legacy:note-3",
+      "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000003",
       JSON.stringify({ content: "", title: "" }),
     );
     values.set("unrelated", "keep");
 
     pruneRedundantEditDrafts();
 
-    expect(values.has("mnemee.edit-note-draft-legacy:note-1")).toBe(false);
-    expect(loadEditDraft("note-1")?.content).toBe("Unsaved");
-    expect(loadLegacyEditDraft("note-2")?.content).toBe(
-      "Different unsaved text",
-    );
-    expect(values.has("mnemee.edit-note-draft-legacy:note-3")).toBe(false);
+    expect(
+      values.has(
+        "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000001",
+      ),
+    ).toBe(false);
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000001")?.content,
+    ).toBe("Unsaved");
+    expect(
+      loadLegacyEditDraft("note-00000000-0000-4000-8000-000000000002")?.content,
+    ).toBe("Different unsaved text");
+    expect(
+      values.has(
+        "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000003",
+      ),
+    ).toBe(false);
     expect(values.get("unrelated")).toBe("keep");
   });
 
   it("clears both drafts after a confirmed deletion", () => {
     values.set(
-      "mnemee.edit-note-draft-legacy:note-1",
+      "mnemee.edit-note-draft-legacy:note-00000000-0000-4000-8000-000000000001",
       JSON.stringify({ content: "Older edit", title: "" }),
     );
-    saveEditDraft("note-1", "Current edit", "", "Server body", null);
-    clearDeletedNoteDrafts("note-1");
-    expect(loadLegacyEditDraft("note-1")).toBeUndefined();
-    expect(loadEditDraft("note-1")).toBeUndefined();
+    saveEditDraft(
+      "note-00000000-0000-4000-8000-000000000001",
+      "Current edit",
+      "",
+      "Server body",
+      null,
+    );
+    clearDeletedNoteDrafts("note-00000000-0000-4000-8000-000000000001");
+    expect(
+      loadLegacyEditDraft("note-00000000-0000-4000-8000-000000000001"),
+    ).toBeUndefined();
+    expect(
+      loadEditDraft("note-00000000-0000-4000-8000-000000000001"),
+    ).toBeUndefined();
   });
 
   it("explains a concurrent edit without implying the draft was saved", () => {

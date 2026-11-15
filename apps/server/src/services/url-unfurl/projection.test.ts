@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { projectLinkNode, type LinkProjectionRow } from "./projection";
 
 const baseRow: LinkProjectionRow = {
-  assetId: 7,
+  assetId: "00000000-0000-4000-8000-000000000007",
   originalUrl: "https://youtu.be/dQw4w9WgXcQ",
-  resourceId: 11,
+  resourceId: "00000000-0000-4000-8000-00000000000b",
   hostname: "youtu.be",
   canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   assetTitle: "A video",
@@ -148,7 +148,11 @@ describe("link projection", () => {
     );
     expect(
       projectLinkNode(
-        { ...baseRow, assetId: 8, note: "Review the editing style" },
+        {
+          ...baseRow,
+          assetId: "00000000-0000-4000-8000-000000000008",
+          note: "Review the editing style",
+        },
         undefined,
         null,
       ).note,

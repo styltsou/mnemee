@@ -41,7 +41,7 @@ function queryWhereReturning<T>(rows: T[]) {
 }
 
 const imageRow = {
-  assetId: 17,
+  assetId: "00000000-0000-4000-8000-000000000011",
   assetType: "image" as const,
   title: "Reference",
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -80,35 +80,35 @@ describe("WorkspaceSearchService", () => {
     const rows = [
       {
         ...imageRow,
-        assetId: 1,
+        assetId: "00000000-0000-4000-8000-000000000001",
         assetType: "note",
         title: "Meeting",
         noteContent: `${"Context ".repeat(30)}needle and more`,
       },
       {
         ...imageRow,
-        assetId: 2,
+        assetId: "00000000-0000-4000-8000-000000000002",
         assetType: "note",
         title: "Needle",
         noteContent: "needle in the content",
       },
       {
         ...imageRow,
-        assetId: 3,
+        assetId: "00000000-0000-4000-8000-000000000003",
         assetType: "link",
         title: "Article",
         linkDescription: "A needle in a description",
       },
       {
         ...imageRow,
-        assetId: 4,
+        assetId: "00000000-0000-4000-8000-000000000004",
         assetType: "image",
         title: "Photo",
         imageAlt: "needle",
       },
       {
         ...imageRow,
-        assetId: 5,
+        assetId: "00000000-0000-4000-8000-000000000005",
         assetType: "link",
         title: "Video",
         linkDescription: "needle",
@@ -117,14 +117,14 @@ describe("WorkspaceSearchService", () => {
       },
       {
         ...imageRow,
-        assetId: 6,
+        assetId: "00000000-0000-4000-8000-000000000006",
         assetType: "link",
         title: "Other",
         linkDescription: "Unrelated description",
       },
       {
         ...imageRow,
-        assetId: 7,
+        assetId: "00000000-0000-4000-8000-000000000007",
         assetType: "note",
         title: "Early match",
         noteContent: `${"Context ".repeat(6)}needle and more`,
@@ -147,14 +147,20 @@ describe("WorkspaceSearchService", () => {
     const snippets = Object.fromEntries(
       results.map((result) => [result.id, result.snippet]),
     );
-    expect(snippets["note-1"]).toContain("needle");
-    expect(snippets["note-1"]).toMatch(/^…/);
-    expect(snippets["note-2"]).toBeNull();
-    expect(snippets["link-3"]).toBe("A needle in a description");
-    expect(snippets["image-4"]).toBeNull();
-    expect(snippets["link-5"]).toBeNull();
-    expect(snippets["link-6"]).toBeNull();
-    expect(snippets["note-7"]).toBe(`${"Context ".repeat(6)}needle and more`);
+    expect(snippets["note-00000000-0000-4000-8000-000000000001"]).toContain(
+      "needle",
+    );
+    expect(snippets["note-00000000-0000-4000-8000-000000000001"]).toMatch(/^…/);
+    expect(snippets["note-00000000-0000-4000-8000-000000000002"]).toBeNull();
+    expect(snippets["link-00000000-0000-4000-8000-000000000003"]).toBe(
+      "A needle in a description",
+    );
+    expect(snippets["image-00000000-0000-4000-8000-000000000004"]).toBeNull();
+    expect(snippets["link-00000000-0000-4000-8000-000000000005"]).toBeNull();
+    expect(snippets["link-00000000-0000-4000-8000-000000000006"]).toBeNull();
+    expect(snippets["note-00000000-0000-4000-8000-000000000007"]).toBe(
+      `${"Context ".repeat(6)}needle and more`,
+    );
   });
 
   it("returns a signed preview URL and keeps blur data as a placeholder", async () => {
@@ -191,7 +197,7 @@ describe("WorkspaceSearchService", () => {
     ]);
     expect(response.results).toMatchObject([
       {
-        id: "image-17",
+        id: "image-00000000-0000-4000-8000-000000000011",
         preview: {
           url: "https://signed.example/17-preview",
           blurDataURL: "data:image/webp;base64,blur",
@@ -257,7 +263,7 @@ describe("WorkspaceSearchService", () => {
       queryReturning([
         {
           ...imageRow,
-          assetId: 23,
+          assetId: "00000000-0000-4000-8000-000000000017",
           assetType: "video" as const,
           title: "Demo video",
           imageAlt: null,
@@ -307,7 +313,7 @@ describe("WorkspaceSearchService", () => {
       "workspace-1/23/poster-preview.webp",
     ]);
     expect(response.results[0]).toMatchObject({
-      id: "video-23",
+      id: "video-00000000-0000-4000-8000-000000000017",
       type: "video",
       preview: { url: "https://signed.example/23-poster" },
     });
@@ -318,7 +324,7 @@ describe("WorkspaceSearchService", () => {
       queryReturning([
         {
           ...imageRow,
-          assetId: 31,
+          assetId: "00000000-0000-4000-8000-00000000001f",
           assetType: "link" as const,
           title: null,
           imageAlt: null,
@@ -326,7 +332,7 @@ describe("WorkspaceSearchService", () => {
           imageBlurDataURL: null,
           imageVariants: null,
           linkOriginalUrl: "https://example.com/article",
-          linkResourceId: 7,
+          linkResourceId: "00000000-0000-4000-8000-000000000007",
           linkHostname: "example.com",
           linkTitle: "Example article",
           linkDescription: null,
@@ -341,7 +347,7 @@ describe("WorkspaceSearchService", () => {
     selectMock.mockImplementationOnce(() =>
       queryWhereReturning([
         {
-          resourceId: 7,
+          resourceId: "00000000-0000-4000-8000-000000000007",
           role: "preview",
           variants: {
             preview: {
@@ -354,7 +360,7 @@ describe("WorkspaceSearchService", () => {
           },
         },
         {
-          resourceId: 7,
+          resourceId: "00000000-0000-4000-8000-000000000007",
           role: "icon",
           variants: {
             preview: {

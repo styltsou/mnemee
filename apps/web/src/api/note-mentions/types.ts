@@ -1,7 +1,7 @@
 export type NoteMentionType = "note" | "color" | "link" | "image" | "video";
 
 export type NoteMentionTarget = {
-  assetId: number;
+  assetId: string;
   assetType: NoteMentionType;
   label: string;
   title: string | null;
@@ -40,10 +40,10 @@ export type MentionSearchInput = {
   q: string;
   types?: readonly NoteMentionType[];
   limit?: number;
-  sourceAssetId?: number;
+  sourceAssetId?: string;
 };
 
 export type MentionResolveInput = {
-  sourceAssetId?: number;
-  targets: Array<{ assetId: number; assetType: NoteMentionType }>;
+  sourceAssetId?: string;
+  targets: Array<{ assetId: string; assetType: NoteMentionType }>;
 };

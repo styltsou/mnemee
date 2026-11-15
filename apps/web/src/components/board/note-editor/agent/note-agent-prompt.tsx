@@ -140,7 +140,7 @@ export function NoteAgentPrompt({
   onResolve?: () => void;
   /** Enables @-mentioning notes in the prompt as context. */
   workspaceSlug?: string;
-  sourceAssetId?: number;
+  sourceAssetId?: string;
 }) {
   const [prompt, setPrompt] = useState("");
   const mentions = useNoteAgentMentions({ workspaceSlug, sourceAssetId });

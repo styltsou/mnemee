@@ -11,7 +11,7 @@ const queryColor = { oklabL: 0.628, oklabA: 0.225, oklabB: 0.126 };
 
 const matchingPalette = [
   {
-    id: 1,
+    id: "00000000-0000-4000-8000-000000000001",
     hex: "#d94732",
     ...queryColor,
     coverage: 0.4,
@@ -34,7 +34,7 @@ describe("color search ranker", () => {
   it("requires every selected color to have a palette assignment", () => {
     expect(
       rankPalette(
-        1,
+        "00000000-0000-4000-8000-000000000001",
         [queryColor, { oklabL: 0.728, oklabA: -0.171, oklabB: 0.091 }],
         matchingPalette,
       ),
@@ -43,7 +43,7 @@ describe("color search ranker", () => {
 
   it("keeps a small high-salience accent searchable", () => {
     const ranked = rankPalette(
-      1,
+      "00000000-0000-4000-8000-000000000001",
       [queryColor],
       [{ ...matchingPalette[0]!, coverage: 0.01, salience: 1, isAccent: true }],
     );
@@ -56,25 +56,33 @@ describe("color search ranker", () => {
       { ...queryColor, weight: 0.8 },
       { oklabL: 0.728, oklabA: -0.171, oklabB: 0.091, weight: 0.2 },
     ];
-    const broad = rankWeightedPalette(1, colors, [
-      matchingPalette[0]!,
-      {
-        ...matchingPalette[0]!,
-        id: 2,
-        hex: "#5aa56b",
-        oklabL: 0.728,
-        oklabA: -0.171,
-        oklabB: 0.091,
-      },
-    ]);
-    const minorOnly = rankWeightedPalette(2, colors, [
-      {
-        ...matchingPalette[0]!,
-        oklabL: 0.728,
-        oklabA: -0.171,
-        oklabB: 0.091,
-      },
-    ]);
+    const broad = rankWeightedPalette(
+      "00000000-0000-4000-8000-000000000001",
+      colors,
+      [
+        matchingPalette[0]!,
+        {
+          ...matchingPalette[0]!,
+          id: "00000000-0000-4000-8000-000000000002",
+          hex: "#5aa56b",
+          oklabL: 0.728,
+          oklabA: -0.171,
+          oklabB: 0.091,
+        },
+      ],
+    );
+    const minorOnly = rankWeightedPalette(
+      "00000000-0000-4000-8000-000000000002",
+      colors,
+      [
+        {
+          ...matchingPalette[0]!,
+          oklabL: 0.728,
+          oklabA: -0.171,
+          oklabB: 0.091,
+        },
+      ],
+    );
 
     expect(broad?.relevance).toBeGreaterThan(minorOnly?.relevance ?? 0);
     expect(minorOnly?.matches).toHaveLength(1);
@@ -82,19 +90,36 @@ describe("color search ranker", () => {
 
   it("orders equal relevance by descending asset id", () => {
     const result = applyAdaptiveCutoff([
-      { assetId: 1, relevance: 0.8, matches: [] },
-      { assetId: 2, relevance: 0.8, matches: [] },
+      {
+        assetId: "00000000-0000-4000-8000-000000000001",
+        relevance: 0.8,
+        matches: [],
+      },
+      {
+        assetId: "00000000-0000-4000-8000-000000000002",
+        relevance: 0.8,
+        matches: [],
+      },
     ]);
 
     expect(result.results.map((candidate) => candidate.assetId)).toEqual([
-      2, 1,
+      "00000000-0000-4000-8000-000000000002",
+      "00000000-0000-4000-8000-000000000001",
     ]);
   });
 
   it("does not weaken the absolute relevance floor for a poor result set", () => {
     const result = applyAdaptiveCutoff([
-      { assetId: 1, relevance: 0.23, matches: [] },
-      { assetId: 2, relevance: 0.2, matches: [] },
+      {
+        assetId: "00000000-0000-4000-8000-000000000001",
+        relevance: 0.23,
+        matches: [],
+      },
+      {
+        assetId: "00000000-0000-4000-8000-000000000002",
+        relevance: 0.2,
+        matches: [],
+      },
     ]);
 
     expect(result.results).toEqual([]);

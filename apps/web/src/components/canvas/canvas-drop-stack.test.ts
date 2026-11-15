@@ -9,14 +9,24 @@ import {
 describe("canvas drop stack", () => {
   it("places the grabbed card on top of the same trailing order shown in flight", () => {
     const origins = new Map([
-      ["image-1", { x: 400, y: 40 }],
-      ["note-2", { x: 100, y: 100 }],
-      ["color-3", { x: -80, y: 250 }],
+      ["image-00000000-0000-4000-8000-000000000001", { x: 400, y: 40 }],
+      ["note-00000000-0000-4000-8000-000000000002", { x: 100, y: 100 }],
+      ["color-00000000-0000-4000-8000-000000000003", { x: -80, y: 250 }],
     ]);
-    const styles = makeCanvasDropStackStyles("note-2", origins);
-    const placementOrder = getCanvasDropStackPlacementOrder("note-2", origins);
+    const styles = makeCanvasDropStackStyles(
+      "note-00000000-0000-4000-8000-000000000002",
+      origins,
+    );
+    const placementOrder = getCanvasDropStackPlacementOrder(
+      "note-00000000-0000-4000-8000-000000000002",
+      origins,
+    );
 
-    expect(placementOrder).toEqual(["color-3", "image-1", "note-2"]);
+    expect(placementOrder).toEqual([
+      "color-00000000-0000-4000-8000-000000000003",
+      "image-00000000-0000-4000-8000-000000000001",
+      "note-00000000-0000-4000-8000-000000000002",
+    ]);
     expect([...placementOrder].reverse()).toEqual(
       [...styles.entries()]
         .sort((left, right) => right[1].stackOrder - left[1].stackOrder)
@@ -26,43 +36,61 @@ describe("canvas drop stack", () => {
 
   it("uses the same back-to-front order for grid moves", () => {
     expect(
-      getDropStackPlacementOrder("note-2", ["image-1", "note-2", "color-3"]),
-    ).toEqual(["color-3", "image-1", "note-2"]);
+      getDropStackPlacementOrder("note-00000000-0000-4000-8000-000000000002", [
+        "image-00000000-0000-4000-8000-000000000001",
+        "note-00000000-0000-4000-8000-000000000002",
+        "color-00000000-0000-4000-8000-000000000003",
+      ]),
+    ).toEqual([
+      "color-00000000-0000-4000-8000-000000000003",
+      "image-00000000-0000-4000-8000-000000000001",
+      "note-00000000-0000-4000-8000-000000000002",
+    ]);
   });
 
   it("keeps the grabbed card fixed and stacks the other cards around it", () => {
     const styles = makeCanvasDropStackStyles(
-      "note-2",
+      "note-00000000-0000-4000-8000-000000000002",
       new Map([
-        ["image-1", { x: 400, y: 40 }],
-        ["note-2", { x: 100, y: 100 }],
-        ["folder-3", { x: -80, y: 250 }],
+        ["image-00000000-0000-4000-8000-000000000001", { x: 400, y: 40 }],
+        ["note-00000000-0000-4000-8000-000000000002", { x: 100, y: 100 }],
+        ["folder-00000000-0000-4000-8000-000000000003", { x: -80, y: 250 }],
       ]),
     );
 
-    expect(styles.get("note-2")).toMatchObject({
+    expect(
+      styles.get("note-00000000-0000-4000-8000-000000000002"),
+    ).toMatchObject({
       translateX: 0,
       translateY: 0,
       rotation: 0,
       scale: 0.72,
     });
-    expect(styles.get("image-1")).toMatchObject({
+    expect(
+      styles.get("image-00000000-0000-4000-8000-000000000001"),
+    ).toMatchObject({
       translateX: -315,
       translateY: 106,
       rotation: -3.5,
       scale: 0.72,
     });
-    expect(styles.get("folder-3")).toMatchObject({
+    expect(
+      styles.get("folder-00000000-0000-4000-8000-000000000003"),
+    ).toMatchObject({
       translateX: 203,
       translateY: -68,
       rotation: 5,
       scale: 0.72,
     });
-    expect(styles.get("note-2")!.stackOrder).toBeGreaterThan(
-      styles.get("image-1")!.stackOrder,
+    expect(
+      styles.get("note-00000000-0000-4000-8000-000000000002")!.stackOrder,
+    ).toBeGreaterThan(
+      styles.get("image-00000000-0000-4000-8000-000000000001")!.stackOrder,
     );
-    expect(styles.get("note-2")!.stackOrder).toBeGreaterThan(
-      styles.get("folder-3")!.stackOrder,
+    expect(
+      styles.get("note-00000000-0000-4000-8000-000000000002")!.stackOrder,
+    ).toBeGreaterThan(
+      styles.get("folder-00000000-0000-4000-8000-000000000003")!.stackOrder,
     );
   });
 
@@ -73,11 +101,14 @@ describe("canvas drop stack", () => {
         { x: index * 100, y: index * 50 },
       ]),
     );
-    const styles = makeCanvasDropStackStyles("note-1", origins);
+    const styles = makeCanvasDropStackStyles(
+      "note-00000000-0000-4000-8000-000000000001",
+      origins,
+    );
     let previousStackedY = 0;
 
     for (const [nodeId, style] of styles) {
-      if (nodeId === "note-1") continue;
+      if (nodeId === "note-00000000-0000-4000-8000-000000000001") continue;
       const origin = origins.get(nodeId)!;
       const stackedX = origin.x + style.translateX;
       const stackedY = origin.y + style.translateY;
@@ -96,11 +127,13 @@ describe("canvas drop stack", () => {
 
   it("compresses a single grabbed card over a folder target", () => {
     const styles = makeCanvasDropStackStyles(
-      "note-1",
-      new Map([["note-1", { x: 0, y: 0 }]]),
+      "note-00000000-0000-4000-8000-000000000001",
+      new Map([["note-00000000-0000-4000-8000-000000000001", { x: 0, y: 0 }]]),
     );
 
-    expect(styles.get("note-1")).toMatchObject({
+    expect(
+      styles.get("note-00000000-0000-4000-8000-000000000001"),
+    ).toMatchObject({
       translateX: 0,
       translateY: 0,
       rotation: 0,
@@ -137,10 +170,10 @@ describe("canvas drop stack", () => {
   it("returns no stack for a missing grabbed card", () => {
     expect(
       makeCanvasDropStackStyles(
-        "note-9",
+        "note-00000000-0000-4000-8000-000000000009",
         new Map([
-          ["note-1", { x: 0, y: 0 }],
-          ["note-2", { x: 100, y: 0 }],
+          ["note-00000000-0000-4000-8000-000000000001", { x: 0, y: 0 }],
+          ["note-00000000-0000-4000-8000-000000000002", { x: 100, y: 0 }],
         ]),
       ),
     ).toEqual(new Map());

@@ -227,7 +227,7 @@ export function useBoardAssetActions({
             current
               ? { ...current, nodes: [...pendingCards, ...current.nodes] }
               : {
-                  collection: { id: 0, name: "Inbox", slug: "inbox" },
+                  collection: { id: "inbox", name: "Inbox", slug: "inbox" },
                   breadcrumbs: [],
                   nodes: pendingCards,
                 },

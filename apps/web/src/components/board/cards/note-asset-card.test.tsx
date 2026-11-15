@@ -158,11 +158,13 @@ describe("NoteMarkdown", () => {
 
   it("renders internal references as visual chips rather than protocol links", () => {
     const html = renderToStaticMarkup(
-      <NoteMarkdown content="See [Project plan](note:12)." />,
+      <NoteMarkdown content="See [Project plan](note:00000000-0000-4000-8000-00000000000c)." />,
     );
 
     expect(html).toContain('data-asset-mention="note"');
-    expect(html).not.toContain('href="note:12"');
+    expect(html).not.toContain(
+      'href="note:00000000-0000-4000-8000-00000000000c"',
+    );
   });
 
   it("renders external note links as styled, non-interactive card text", () => {
@@ -188,7 +190,7 @@ describe("NoteMarkdown", () => {
 
   it("renders a note pill with a leading note icon", () => {
     const html = renderToStaticMarkup(
-      <NoteMarkdown content="See [Project plan](note:12)." />,
+      <NoteMarkdown content="See [Project plan](note:00000000-0000-4000-8000-00000000000c)." />,
     );
 
     expect(html).toContain("<svg");
@@ -197,8 +199,13 @@ describe("NoteMarkdown", () => {
   it("draws a color pill swatch from payload mention colors", () => {
     const html = renderToStaticMarkup(
       <NoteMarkdown
-        content="Use [Ocean](color:7)."
-        mentionColors={{ "color:7": { hex: "#0a5", gradient: null } }}
+        content="Use [Ocean](color:00000000-0000-4000-8000-000000000007)."
+        mentionColors={{
+          "color:00000000-0000-4000-8000-000000000007": {
+            hex: "#0a5",
+            gradient: null,
+          },
+        }}
       />,
     );
 
@@ -209,9 +216,9 @@ describe("NoteMarkdown", () => {
   it("uses the current link title in static mention pills", () => {
     const html = renderToStaticMarkup(
       <NoteMarkdown
-        content="Read [Old link label](link:7)."
+        content="Read [Old link label](link:00000000-0000-4000-8000-000000000007)."
         mentionColors={{
-          "link:7": {
+          "link:00000000-0000-4000-8000-000000000007": {
             hex: null,
             gradient: null,
             label: "Current page title",
@@ -227,9 +234,9 @@ describe("NoteMarkdown", () => {
   it("uses the saved gradient title in static color mention pills", () => {
     const html = renderToStaticMarkup(
       <NoteMarkdown
-        content="Use [First stop](color:7)."
+        content="Use [First stop](color:00000000-0000-4000-8000-000000000007)."
         mentionColors={{
-          "color:7": {
+          "color:00000000-0000-4000-8000-000000000007": {
             gradient: {
               from: "#f43f5e",
               to: "#7c3aed",
@@ -249,8 +256,13 @@ describe("NoteMarkdown", () => {
   it("exposes the payload color as a tint variable", () => {
     const html = renderToStaticMarkup(
       <NoteMarkdown
-        content="Use [Ocean](color:7)."
-        mentionColors={{ "color:7": { hex: "#0a5", gradient: null } }}
+        content="Use [Ocean](color:00000000-0000-4000-8000-000000000007)."
+        mentionColors={{
+          "color:00000000-0000-4000-8000-000000000007": {
+            hex: "#0a5",
+            gradient: null,
+          },
+        }}
       />,
     );
 
@@ -258,11 +270,19 @@ describe("NoteMarkdown", () => {
   });
 
   it("renders static preview pills without hover affordances", () => {
-    for (const content of ["Use [Ocean](color:7).", "See [Other](note:9)."]) {
+    for (const content of [
+      "Use [Ocean](color:00000000-0000-4000-8000-000000000007).",
+      "See [Other](note:00000000-0000-4000-8000-000000000009).",
+    ]) {
       const html = renderToStaticMarkup(
         <NoteMarkdown
           content={content}
-          mentionColors={{ "color:7": { hex: "#0a5", gradient: null } }}
+          mentionColors={{
+            "color:00000000-0000-4000-8000-000000000007": {
+              hex: "#0a5",
+              gradient: null,
+            },
+          }}
         />,
       );
 
@@ -273,9 +293,9 @@ describe("NoteMarkdown", () => {
   it("resolves a gradient mention into both swatch and tint", () => {
     const html = renderToStaticMarkup(
       <NoteMarkdown
-        content="Use [Dusk](color:7)."
+        content="Use [Dusk](color:00000000-0000-4000-8000-000000000007)."
         mentionColors={{
-          "color:7": {
+          "color:00000000-0000-4000-8000-000000000007": {
             hex: null,
             gradient: { from: "#ff0000", to: "#0000ff", angle: 90 },
           },
@@ -289,7 +309,7 @@ describe("NoteMarkdown", () => {
 
   it("omits the swatch for a color pill with no payload data", () => {
     const html = renderToStaticMarkup(
-      <NoteMarkdown content="Use [Ocean](color:7)." />,
+      <NoteMarkdown content="Use [Ocean](color:00000000-0000-4000-8000-000000000007)." />,
     );
 
     expect(html).toContain('data-asset-mention="color"');
@@ -299,8 +319,13 @@ describe("NoteMarkdown", () => {
   it("ignores mention colors belonging to a different asset", () => {
     const html = renderToStaticMarkup(
       <NoteMarkdown
-        content="Use [Ocean](color:7)."
-        mentionColors={{ "color:99": { hex: "#0a5", gradient: null } }}
+        content="Use [Ocean](color:00000000-0000-4000-8000-000000000007)."
+        mentionColors={{
+          "color:00000000-0000-4000-8000-000000000063": {
+            hex: "#0a5",
+            gradient: null,
+          },
+        }}
       />,
     );
 

@@ -1,20 +1,29 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { moveCollectionNodesToFolder } from "./fetchers";
 import {
   adjustCollectionAssetCount,
   getAssetPreview,
+  getMovedFolderPreviews,
   promoteCollectionPreview,
   transitionCachedContentsForMoves,
+  updateTargetFolderForMove,
   type CollectionContentsCacheEntry,
 } from "./move-cache-transition";
 import { collectionQueryKeys } from "./query-keys";
 import { invalidateMentionSuggestionQueries } from "@/api/note-mentions/hooks";
 import type {
   CollectionContentsResponse,
+  CollectionGridResponse,
   CanvasObject,
   CollectionsData,
+  InboxContentsResponse,
+  InboxGridResponse,
   MoveCollectionNodesToFolderInput,
   MoveCollectionNodesToFolderResponse,
 } from "./types";
@@ -23,15 +32,19 @@ import type { WorkspaceData } from "@/api/workspace";
 type MoveContext =
   | { optimistic: false }
   | {
-      optimistic: "canvas";
-      previousContents: CollectionContentsCacheEntry[];
-    }
-  | {
       optimistic: true;
       previousContents: CollectionContentsCacheEntry[];
+      previousGrids: GridCacheEntry[];
+      previousInboxContents: InboxCacheEntry[];
       previousCollections: CollectionsData | undefined;
       previousWorkspace: WorkspaceData | undefined;
     };
+
+type GridCacheEntry = [
+  readonly unknown[],
+  InfiniteData<CollectionGridResponse | InboxGridResponse>,
+];
+type InboxCacheEntry = [readonly unknown[], InboxContentsResponse];
 
 export function useMoveCollectionNodesToFolder(
   workspaceSlug: string,
@@ -54,114 +67,6 @@ export function useMoveCollectionNodesToFolder(
     onMutate: async (variables) => {
       const sourceFolderPath =
         variables.sourceFolderPath ?? variables.folderPath;
-      if (variables.sourceCollectionSlug && variables.arrowSnapshots) {
-        const sourceScope = collectionQueryKeys.contentScope(
-          workspaceSlug,
-          variables.sourceCollectionSlug,
-        );
-        await queryClient.cancelQueries({ queryKey: sourceScope });
-        const previousContents = queryClient
-          .getQueriesData<CollectionContentsResponse>({ queryKey: sourceScope })
-          .filter(
-            (entry): entry is CollectionContentsCacheEntry =>
-              entry[1] !== undefined,
-          );
-        const movedNodes = variables.nodeIds.flatMap((nodeId) => {
-          const node = previousContents
-            .flatMap(([, contents]) => contents.nodes)
-            .find((candidate) => candidate.id === nodeId);
-          return node ? [node] : [];
-        });
-        const sourceEntry = variables.targetFolderNodeId
-          ? findSourceEntry(
-              previousContents,
-              sourceFolderPath,
-              movedNodes.map((node) => node.id),
-              variables.targetFolderNodeId,
-            )
-          : undefined;
-        const targetFolder = sourceEntry?.[1].nodes.find(
-          (node) => node.id === variables.targetFolderNodeId,
-        );
-        const movedNodeIds = new Set(movedNodes.map((node) => node.id));
-        const unfilteredSource = previousContents.find(
-          ([key]) =>
-            isUnfilteredContentsKey(key) &&
-            getFolderPathFromKey(key) === sourceFolderPath,
-        );
-        const contentUpdates =
-          targetFolder?.type === "folder" && variables.targetFolderNodeId
-            ? transitionCachedContentsForMoves(previousContents, {
-                sourceFolderPath,
-                targetFolderPath: joinFolderPath(
-                  sourceFolderPath,
-                  targetFolder.slug,
-                ),
-                sourceParentFolderPath: getParentFolderPath(sourceFolderPath),
-                sourceFolderSlug: getCurrentFolderSlug(sourceFolderPath),
-                targetFolderNodeId: variables.targetFolderNodeId,
-                movedNodes,
-                remainingUnfilteredSourceNodes:
-                  unfilteredSource?.[1].nodes.filter(
-                    (node) => !movedNodeIds.has(node.id),
-                  ),
-              })
-            : [];
-        const updatedByKey = new Map(contentUpdates);
-        const moving = new Set(variables.nodeIds);
-        for (const [, contents] of previousContents) {
-          for (const object of contents.canvasObjects) {
-            if (
-              object.type === "arrow" &&
-              object.start.binding &&
-              object.end.binding &&
-              moving.has(object.start.binding.targetId) &&
-              moving.has(object.end.binding.targetId)
-            ) {
-              moving.add(object.id);
-            }
-          }
-        }
-        const snapshots = new Map(
-          variables.arrowSnapshots.map((snapshot) => [snapshot.id, snapshot]),
-        );
-        for (const [key, contents] of previousContents) {
-          const nextContents = updatedByKey.get(key) ?? contents;
-          if (getFolderPathFromKey(key) !== sourceFolderPath) {
-            if (nextContents !== contents)
-              queryClient.setQueryData(key, nextContents);
-            continue;
-          }
-          queryClient.setQueryData<CollectionContentsResponse>(key, {
-            ...nextContents,
-            nodes: nextContents.nodes.filter((node) => !moving.has(node.id)),
-            canvasObjects: nextContents.canvasObjects.flatMap<CanvasObject>(
-              (object) => {
-                if (moving.has(object.id)) return [];
-                if (object.type !== "arrow") return [object];
-                const snapshot = snapshots.get(object.id);
-                if (!snapshot) return [object];
-                return [
-                  {
-                    ...object,
-                    start:
-                      object.start.binding &&
-                      moving.has(object.start.binding.targetId)
-                        ? { position: snapshot.start }
-                        : object.start,
-                    end:
-                      object.end.binding &&
-                      moving.has(object.end.binding.targetId)
-                        ? { position: snapshot.end }
-                        : object.end,
-                  },
-                ];
-              },
-            ),
-          });
-        }
-        return { optimistic: "canvas", previousContents };
-      }
       const targetScope = collectionQueryKeys.contentScope(
         workspaceSlug,
         collectionSlug,
@@ -185,10 +90,22 @@ export function useMoveCollectionNodesToFolder(
         sourceSlug,
       );
       const collectionsKey = collectionQueryKeys.collections(workspaceSlug);
+      const sourceGridScope = [
+        hasSourceCollection ? "collectionGrid" : "inboxGrid",
+        workspaceSlug,
+        ...(hasSourceCollection ? [sourceSlug] : []),
+      ];
+      const targetGridScope = ["collectionGrid", workspaceSlug, collectionSlug];
+      const inboxScope = collectionQueryKeys.inbox(workspaceSlug);
 
       await Promise.all([
         queryClient.cancelQueries({ queryKey: targetScope }),
         queryClient.cancelQueries({ queryKey: collectionsKey }),
+        queryClient.cancelQueries({ queryKey: sourceGridScope }),
+        queryClient.cancelQueries({ queryKey: targetGridScope }),
+        ...(!hasSourceCollection
+          ? [queryClient.cancelQueries({ queryKey: inboxScope })]
+          : []),
         ...(crossCollectionMove
           ? [queryClient.cancelQueries({ queryKey: sourceScope })]
           : []),
@@ -206,11 +123,36 @@ export function useMoveCollectionNodesToFolder(
         ? collectEntries(sourceScope)
         : [];
       const allEntries = [...previousContents, ...sourceEntries];
+      const collectGrids = (scope: readonly unknown[]) =>
+        queryClient
+          .getQueriesData<
+            InfiniteData<CollectionGridResponse | InboxGridResponse>
+          >({
+            queryKey: scope,
+          })
+          .filter((entry): entry is GridCacheEntry => entry[1] !== undefined);
+      const previousGrids = [
+        ...collectGrids(sourceGridScope),
+        ...(sameCollectionMove ? [] : collectGrids(targetGridScope)),
+      ];
+      const previousInboxContents = hasSourceCollection
+        ? []
+        : queryClient
+            .getQueriesData<InboxContentsResponse>({ queryKey: inboxScope })
+            .filter(
+              (entry): entry is InboxCacheEntry => entry[1] !== undefined,
+            );
 
       const movedNodes = variables.nodeIds.flatMap((nodeId) => {
-        const node = allEntries
-          .flatMap(([, contents]) => contents.nodes)
-          .find((node) => node.id === nodeId);
+        const node = [
+          ...allEntries.flatMap(([, contents]) => contents.nodes),
+          ...previousInboxContents.flatMap(([, contents]) => contents.nodes),
+          ...previousGrids.flatMap(([, grid]) =>
+            grid.pages.flatMap((page) =>
+              "nodes" in page ? page.nodes : [...page.folders, ...page.assets],
+            ),
+          ),
+        ].find((node) => node.id === nodeId);
         return node ? [node] : [];
       });
       const previousCollections =
@@ -275,6 +217,296 @@ export function useMoveCollectionNodesToFolder(
           }
           appliedContent = true;
         }
+      }
+
+      const movedIds = new Set(variables.nodeIds);
+      const targetFolder = [
+        ...allEntries.flatMap(([, contents]) => contents.nodes),
+        ...previousGrids.flatMap(([, grid]) =>
+          grid.pages.flatMap((page) =>
+            "nodes" in page ? page.nodes : page.folders,
+          ),
+        ),
+      ].find(
+        (node) =>
+          node.id === variables.targetFolderNodeId && node.type === "folder",
+      );
+      const targetParentPath = variables.targetFolderNodeId
+        ? ([...previousContents, ...sourceEntries].find(
+            ([key, contents]) =>
+              key[2] === collectionSlug &&
+              contents.nodes.some(
+                (node) => node.id === variables.targetFolderNodeId,
+              ),
+          )?.[0][3] ??
+          previousGrids.find(
+            ([key, grid]) =>
+              key[0] === "collectionGrid" &&
+              key[2] === collectionSlug &&
+              grid.pages.some(
+                (page) =>
+                  "folders" in page &&
+                  page.folders.some(
+                    (node) => node.id === variables.targetFolderNodeId,
+                  ),
+              ),
+          )?.[0][3])
+        : undefined;
+      const targetFolderPath =
+        targetFolder?.type === "folder"
+          ? joinFolderPath(
+              typeof targetParentPath === "string"
+                ? targetParentPath
+                : undefined,
+              targetFolder.slug,
+            )
+          : undefined;
+      const assetDelta = movedNodes.reduce(
+        (sum, node) => sum + (node.type === "folder" ? node.count : 1),
+        0,
+      );
+      const folderDelta = movedNodes.filter(
+        (node) => node.type === "folder",
+      ).length;
+      const sourceFolderSlug = getCurrentFolderSlug(sourceFolderPath);
+      const sourceParentPath = getParentFolderPath(sourceFolderPath);
+      const decrementSourceFolder =
+        sourceFolderSlug !== undefined &&
+        !(
+          sameCollectionMove &&
+          targetFolderPath?.startsWith(`${sourceFolderPath}/`)
+        );
+
+      for (const [key, contents] of allEntries) {
+        const path = getFolderPathFromKey(key);
+        const isSource = key[2] === sourceSlug && path === sourceFolderPath;
+        const isTarget =
+          key[2] === collectionSlug &&
+          path === targetFolderPath &&
+          (variables.targetFolderNodeId === null ||
+            targetFolderPath !== undefined);
+        const hasTargetFolder =
+          !appliedContent &&
+          targetFolder?.type === "folder" &&
+          key[2] === collectionSlug &&
+          path ===
+            (typeof targetParentPath === "string"
+              ? targetParentPath || undefined
+              : undefined) &&
+          contents.nodes.some((node) => node.id === targetFolder.id);
+        const hasSourceFolder =
+          decrementSourceFolder &&
+          key[2] === sourceSlug &&
+          path === sourceParentPath &&
+          contents.nodes.some(
+            (node) => node.type === "folder" && node.slug === sourceFolderSlug,
+          );
+        if (!isSource && !isTarget && !hasTargetFolder && !hasSourceFolder)
+          continue;
+        queryClient.setQueryData<CollectionContentsResponse>(key, (current) => {
+          if (!current) return current;
+          let next = current;
+          if (isSource) {
+            const moving = new Set(movedIds);
+            for (const object of next.canvasObjects) {
+              if (
+                object.type === "arrow" &&
+                object.start.binding &&
+                object.end.binding &&
+                moving.has(object.start.binding.targetId) &&
+                moving.has(object.end.binding.targetId)
+              ) {
+                moving.add(object.id);
+              }
+            }
+            const arrowSnapshots = new Map(
+              variables.arrowSnapshots?.map((snapshot) => [
+                snapshot.id,
+                snapshot,
+              ]),
+            );
+            next = {
+              ...next,
+              nodes: next.nodes.filter((node) => !moving.has(node.id)),
+              canvasObjects: next.canvasObjects.flatMap<CanvasObject>(
+                (object) => {
+                  if (moving.has(object.id)) return [];
+                  if (object.type !== "arrow") return [object];
+                  const snapshot = arrowSnapshots.get(object.id);
+                  if (!snapshot) return [object];
+                  return [
+                    {
+                      ...object,
+                      start:
+                        object.start.binding &&
+                        moving.has(object.start.binding.targetId)
+                          ? { position: snapshot.start }
+                          : object.start,
+                      end:
+                        object.end.binding &&
+                        moving.has(object.end.binding.targetId)
+                          ? { position: snapshot.end }
+                          : object.end,
+                    },
+                  ];
+                },
+              ),
+            };
+          }
+          if (isTarget && movedNodes.length === variables.nodeIds.length) {
+            const allowedTypes =
+              typeof key[4] === "string" ? key[4].split(",") : undefined;
+            const additions = movedNodes.filter(
+              (node) =>
+                (!allowedTypes || allowedTypes.includes(node.type)) &&
+                !next.nodes.some((existing) => existing.id === node.id),
+            );
+            if (additions.length) {
+              next = {
+                ...next,
+                nodes: [
+                  ...next.nodes,
+                  ...additions.map((node) => ({ ...node, position: null })),
+                ],
+              };
+            }
+          }
+          if (hasTargetFolder) {
+            for (const node of movedNodes) {
+              next = updateTargetFolderForMove(
+                next,
+                targetFolder.id,
+                node.type === "folder" ? undefined : getAssetPreview(node),
+                node.type === "folder" ? node.count : 1,
+                node.type === "folder" ? 1 : 0,
+              );
+            }
+          }
+          if (hasSourceFolder) {
+            const folder = next.nodes.find(
+              (node) =>
+                node.type === "folder" && node.slug === sourceFolderSlug,
+            );
+            if (folder) {
+              for (const node of movedNodes) {
+                next = updateTargetFolderForMove(
+                  next,
+                  folder.id,
+                  node.type === "folder" ? undefined : getAssetPreview(node),
+                  -(node.type === "folder" ? node.count : 1),
+                  node.type === "folder" ? -1 : 0,
+                );
+              }
+            }
+          }
+          return next;
+        });
+        appliedContent = true;
+      }
+
+      for (const [key, contents] of previousInboxContents) {
+        queryClient.setQueryData<InboxContentsResponse>(key, {
+          ...contents,
+          nodes: contents.nodes.filter((node) => !movedIds.has(node.id)),
+        });
+        appliedContent = true;
+      }
+      for (const [key, grid] of previousGrids) {
+        const isSource =
+          key[0] === (hasSourceCollection ? "collectionGrid" : "inboxGrid") &&
+          (!hasSourceCollection || key[2] === sourceSlug) &&
+          (!hasSourceCollection ||
+            getFolderPathFromKey(key) === sourceFolderPath);
+        const isTarget =
+          key[0] === "collectionGrid" &&
+          key[2] === collectionSlug &&
+          getFolderPathFromKey(key) === targetFolderPath &&
+          (variables.targetFolderNodeId === null ||
+            targetFolderPath !== undefined);
+        const hasTargetFolder =
+          targetFolder?.type === "folder" &&
+          key[0] === "collectionGrid" &&
+          key[2] === collectionSlug &&
+          getFolderPathFromKey(key) ===
+            (typeof targetParentPath === "string"
+              ? targetParentPath || undefined
+              : undefined);
+        const hasSourceFolder =
+          decrementSourceFolder &&
+          key[0] === "collectionGrid" &&
+          key[2] === sourceSlug &&
+          getFolderPathFromKey(key) === sourceParentPath;
+        if (!isSource && !isTarget && !hasTargetFolder && !hasSourceFolder)
+          continue;
+        queryClient.setQueryData(key, {
+          ...grid,
+          pages: grid.pages.map((page, index) => {
+            if ("nodes" in page) {
+              return isSource
+                ? {
+                    ...page,
+                    nodes: page.nodes.filter((node) => !movedIds.has(node.id)),
+                  }
+                : page;
+            }
+            let folders = isSource
+              ? page.folders.filter((node) => !movedIds.has(node.id))
+              : page.folders;
+            let assets = isSource
+              ? page.assets.filter((node) => !movedIds.has(node.id))
+              : page.assets;
+            if (hasTargetFolder && targetFolder?.type === "folder") {
+              folders = folders.map((node) =>
+                node.id === targetFolder.id && node.type === "folder"
+                  ? {
+                      ...node,
+                      count: node.count + assetDelta,
+                      folderCount: node.folderCount + folderDelta,
+                      previews: getMovedFolderPreviews(
+                        node.previews,
+                        movedNodes,
+                      ),
+                    }
+                  : node,
+              );
+            }
+            if (hasSourceFolder) {
+              folders = folders.map((node) =>
+                node.type === "folder" && node.slug === sourceFolderSlug
+                  ? {
+                      ...node,
+                      count: Math.max(0, node.count - assetDelta),
+                      folderCount: Math.max(0, node.folderCount - folderDelta),
+                      previews: node.previews.filter(
+                        (preview) => !movedIds.has(preview.assetId),
+                      ),
+                    }
+                  : node,
+              );
+            }
+            if (
+              isTarget &&
+              index === 0 &&
+              movedNodes.length === variables.nodeIds.length
+            ) {
+              const allowedTypes = key
+                .slice(4)
+                .filter((type): type is string => typeof type === "string");
+              for (const node of movedNodes) {
+                if (allowedTypes.length && !allowedTypes.includes(node.type))
+                  continue;
+                if (node.type === "folder") {
+                  if (!folders.some((current) => current.id === node.id))
+                    folders = [...folders, { ...node, position: null }];
+                } else if (!assets.some((current) => current.id === node.id)) {
+                  assets = [...assets, { ...node, position: null }];
+                }
+              }
+            }
+            return { ...page, folders, assets };
+          }),
+        });
+        appliedContent = true;
       }
 
       if (changeCollectionCount) {
@@ -353,6 +585,8 @@ export function useMoveCollectionNodesToFolder(
       return {
         optimistic: true,
         previousContents,
+        previousGrids,
+        previousInboxContents,
         previousCollections,
         previousWorkspace,
       };
@@ -363,15 +597,13 @@ export function useMoveCollectionNodesToFolder(
         return;
       }
 
-      if (context.optimistic === "canvas") {
-        for (const [key, contents] of context.previousContents) {
-          queryClient.setQueryData(key, contents);
-        }
-        toast.error(getMoveErrorMessage(variables.nodeIds));
-        return;
-      }
-
       for (const [key, contents] of context.previousContents) {
+        queryClient.setQueryData(key, contents);
+      }
+      for (const [key, grid] of context.previousGrids) {
+        queryClient.setQueryData(key, grid);
+      }
+      for (const [key, contents] of context.previousInboxContents) {
         queryClient.setQueryData(key, contents);
       }
       queryClient.setQueryData<CollectionsData>(
@@ -386,6 +618,12 @@ export function useMoveCollectionNodesToFolder(
     },
     onSettled: (_data, _error, variables) => {
       const invalidations = [
+        queryClient.invalidateQueries({
+          queryKey: ["collectionGrid", workspaceSlug, collectionSlug],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["inboxGrid", workspaceSlug],
+        }),
         queryClient.invalidateQueries({
           queryKey: collectionQueryKeys.contentScope(
             workspaceSlug,
@@ -406,6 +644,15 @@ export function useMoveCollectionNodesToFolder(
         variables.sourceCollectionSlug &&
         variables.sourceCollectionSlug !== collectionSlug
       ) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: [
+              "collectionGrid",
+              workspaceSlug,
+              variables.sourceCollectionSlug,
+            ],
+          }),
+        );
         invalidations.push(
           queryClient.invalidateQueries({
             queryKey: collectionQueryKeys.contentScope(
@@ -444,7 +691,7 @@ function findSourceEntry(
 }
 
 function getFolderPathFromKey(key: readonly unknown[]): string | undefined {
-  return typeof key[3] === "string" ? key[3] : undefined;
+  return typeof key[3] === "string" ? key[3] || undefined : undefined;
 }
 
 function isUnfilteredContentsKey(key: readonly unknown[]): boolean {

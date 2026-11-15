@@ -66,6 +66,7 @@ import { toast } from "sonner";
 import { getPlatformModifier } from "@/lib/platform";
 import { emitOnboardingTourAction } from "@/lib/onboarding-tour";
 import { EmptyStateShortcuts } from "@/components/asset-grid/empty-state-shortcuts";
+import { onMoveExit } from "@/components/asset-grid/move-exit";
 import { cn } from "@/lib/utils";
 import { makeBoardKey } from "./canvas-key";
 import { CanvasBackground } from "./canvas-pattern";
@@ -1638,6 +1639,17 @@ function CanvasSurface({
   }, []);
   presenceCompletionRef.current = completeCardPresence;
   exitStartRef.current = beginCardExit;
+  useEffect(() => {
+    return onMoveExit((move) => {
+      if (
+        move.workspaceSlug !== workspaceSlug ||
+        move.sourceCollectionSlug !== collectionSlug ||
+        move.sourceFolderPath !== folderPath
+      )
+        return;
+      move.nodeIds.forEach(beginCardExit);
+    });
+  }, [beginCardExit, collectionSlug, folderPath, workspaceSlug]);
   const renderedFlowNodes = useMemo(() => {
     const exitingById = new Map(exitingNodes.map((node) => [node.id, node]));
     const liveIds = new Set(flowNodes.map((node) => node.id));

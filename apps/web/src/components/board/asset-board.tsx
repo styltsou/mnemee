@@ -5,6 +5,7 @@ import { MasonryEmptyState } from "@/components/asset-grid/masonry-empty-state";
 import { Masonry } from "@/components/asset-grid/masonry-grid";
 import { MasonryGridSkeleton } from "@/components/asset-grid/masonry-grid-skeleton";
 import { VirtualMasonry } from "@/components/asset-grid/virtual-masonry";
+import { useMoveExitOverlay } from "@/components/asset-grid/move-exit";
 import type { GridDensity } from "@/components/asset-grid/grid-density";
 import type { Asset, ColorAsset, ImageAsset, NoteAsset } from "@/types/asset";
 import { AssetCard } from "./asset-card";
@@ -89,6 +90,16 @@ export function AssetBoard({
   );
   const clearSelection = useTransientStore((state) => state.clearSelection);
   const surfaceRef = useRef<HTMLDivElement>(null);
+  useMoveExitOverlay(
+    surfaceRef,
+    {
+      workspaceSlug:
+        inboxContext?.workspaceSlug ?? deleteContext?.workspaceSlug ?? "",
+      sourceCollectionSlug: deleteContext?.collectionSlug,
+      sourceFolderPath: deleteContext?.folderPath,
+    },
+    "data-asset-card-id",
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadMoreInFlightRef = useRef(false);

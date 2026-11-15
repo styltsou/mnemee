@@ -51,12 +51,8 @@ export function DeleteCollectionDialog({
           </AlertDialogCancel>
           <AlertDialogAction
             disabled={deletion.isPending}
-            onClick={async () => {
-              try {
-                await deletion.mutateAsync(collection.slug);
-              } catch {
-                return; // The mutation reports the failure and leaves the dialog open.
-              }
+            onClick={() => {
+              deletion.mutate(collection.slug);
               onOpenChange(false);
               const collectionPath = `/${workspaceSlug}/collections/${collection.slug}`;
               if (

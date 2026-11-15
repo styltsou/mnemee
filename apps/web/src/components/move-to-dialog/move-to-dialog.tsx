@@ -12,6 +12,7 @@ import {
   useMoveCollectionNodesToFolder,
 } from "@/api/collection";
 import { getFolderChildPosition } from "@/components/canvas/canvas-node-layout";
+import { startMoveExit } from "@/components/asset-grid/move-exit";
 import { CollectionPicker } from "./components/collection-picker";
 import { DestinationDialog } from "./components/destination-dialog";
 import { useFolderDestination } from "./hooks/use-folder-destination";
@@ -129,6 +130,12 @@ export function MoveToDialog({
   function handleMove() {
     if (!canMove) return;
     setError(undefined);
+    startMoveExit({
+      workspaceSlug,
+      sourceCollectionSlug,
+      sourceFolderPath,
+      nodeIds,
+    });
     // Apply the optimistic cache update first so the board shows the items
     // leave, then close the dialog. Failures surface via rollback + toast.
     moveNodes.mutate(

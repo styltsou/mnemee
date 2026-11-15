@@ -3661,12 +3661,15 @@ export function useDeleteCollectionNode(
         workspaceSlug,
         collectionSlug,
       );
-      const contentsKey = collectionQueryKeys.contents(
+      const gridScope = [
+        "collectionGrid",
         workspaceSlug,
         collectionSlug,
-        folderPath,
-      );
-      await queryClient.cancelQueries({ queryKey: contentsScope });
+      ] as const;
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: contentsScope }),
+        queryClient.cancelQueries({ queryKey: gridScope }),
+      ]);
 
       const previousContentsMap = new Map(
         queryClient
@@ -3675,6 +3678,9 @@ export function useDeleteCollectionNode(
           })
           .filter(([, data]) => data != null),
       );
+      const previousGrids = queryClient.getQueriesData<
+        InfiniteData<CollectionGridResponse>
+      >({ queryKey: gridScope });
       const previousCollections = queryClient.getQueryData<CollectionsData>(
         collectionQueryKeys.collections(workspaceSlug),
       );
@@ -3682,17 +3688,39 @@ export function useDeleteCollectionNode(
         "workspace",
         workspaceSlug,
       ]);
-      let removedNode: CollectionNode | undefined;
+      let removedNode: CollectionNode | undefined = previousGrids
+        .filter(([key]) => (key[3] || undefined) === folderPath)
+        .flatMap(
+          ([, grid]) =>
+            grid?.pages.flatMap((page) => [...page.folders, ...page.assets]) ??
+            [],
+        )
+        .find((node) => node.id === nodeId);
 
-      updateCollectionContents(queryClient, contentsKey, (current) => {
-        if (!current) return current;
-
-        removedNode ??= current.nodes.find((node) => node.id === nodeId);
-        return {
-          ...current,
-          nodes: current.nodes.filter((node) => node.id !== nodeId),
-        };
-      });
+      for (const [key, contents] of previousContentsMap) {
+        if (!contents) continue;
+        if ((key[3] || undefined) !== folderPath) continue;
+        removedNode ??= contents.nodes.find((node) => node.id === nodeId);
+        queryClient.setQueryData<CollectionContentsResponse>(key, {
+          ...contents,
+          nodes: contents.nodes.filter((node) => node.id !== nodeId),
+        });
+      }
+      queryClient.setQueriesData<InfiniteData<CollectionGridResponse>>(
+        {
+          queryKey: gridScope,
+          predicate: (query) => (query.queryKey[3] || undefined) === folderPath,
+        },
+        (current) =>
+          current && {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              folders: page.folders.filter((node) => node.id !== nodeId),
+              assets: page.assets.filter((node) => node.id !== nodeId),
+            })),
+          },
+      );
 
       const optimisticDeletedAssetCount = removedNode
         ? removedNode.type === "folder"
@@ -3730,10 +3758,10 @@ export function useDeleteCollectionNode(
       }
 
       return {
-        contentsKey,
         optimisticDeletedAssetCount,
         removedNode,
         previousContentsMap,
+        previousGrids,
         previousCollections,
         previousWorkspace,
       };
@@ -3744,17 +3772,8 @@ export function useDeleteCollectionNode(
       for (const [key, data] of context.previousContentsMap) {
         queryClient.setQueryData(key, data);
       }
-      if (
-        context.removedNode &&
-        !queryClient.getQueryData(context.contentsKey)
-      ) {
-        const removedNode = context.removedNode;
-        updateCollectionContents(
-          queryClient,
-          context.contentsKey,
-          (current) =>
-            current && { ...current, nodes: [...current.nodes, removedNode] },
-        );
+      for (const [key, data] of context.previousGrids) {
+        queryClient.setQueryData(key, data);
       }
       queryClient.setQueryData(
         collectionQueryKeys.collections(workspaceSlug),
@@ -3783,49 +3802,67 @@ export function useDeleteCollectionNode(
         });
       }
       reconcileCollectionCaches(queryClient, workspaceSlug, collectionSlug);
+      void queryClient.invalidateQueries({
+        queryKey: ["collectionGrid", workspaceSlug, collectionSlug],
+      });
     },
   });
 }
 
 export function useDeleteCollection(workspaceSlug: string) {
   const queryClient = useQueryClient();
+  const collectionsKey = collectionQueryKeys.collections(workspaceSlug);
+  const workspaceKey = ["workspace", workspaceSlug] as const;
 
   return useMutation({
     mutationFn: (collectionSlug: string) =>
       deleteCollection(workspaceSlug, collectionSlug),
-    onError: () => {
+    onMutate: (collectionSlug) => {
+      void queryClient.cancelQueries({ queryKey: collectionsKey });
+      void queryClient.cancelQueries({ queryKey: workspaceKey });
+      const previousCollections =
+        queryClient.getQueryData<CollectionsData>(collectionsKey);
+      const previousWorkspace =
+        queryClient.getQueryData<WorkspaceData>(workspaceKey);
+      queryClient.setQueryData<CollectionsData>(collectionsKey, (current) =>
+        current
+          ? {
+              collections: current.collections.filter(
+                (collection) => collection.slug !== collectionSlug,
+              ),
+            }
+          : current,
+      );
+      queryClient.setQueryData<WorkspaceData>(workspaceKey, (current) =>
+        current
+          ? {
+              ...current,
+              collections: current.collections.filter(
+                (collection) => collection.slug !== collectionSlug,
+              ),
+            }
+          : current,
+      );
+      return { previousCollections, previousWorkspace };
+    },
+    onError: (_error, _collectionSlug, context) => {
+      if (context) {
+        queryClient.setQueryData(collectionsKey, context.previousCollections);
+        queryClient.setQueryData(workspaceKey, context.previousWorkspace);
+      }
       toast.error("Failed to delete collection");
     },
-    onSuccess: (data, collectionSlug) => {
-      queryClient.setQueryData<CollectionsData>(
-        collectionQueryKeys.collections(workspaceSlug),
-        (current) =>
-          current
-            ? {
-                collections: current.collections.filter(
-                  (collection) => collection.slug !== collectionSlug,
-                ),
-              }
-            : current,
-      );
-      queryClient.setQueryData<WorkspaceData>(
-        ["workspace", workspaceSlug],
-        (current) =>
-          current
-            ? {
-                ...current,
-                collections: current.collections.filter(
-                  (collection) => collection.slug !== collectionSlug,
-                ),
-              }
-            : current,
-      );
+    onSuccess: (data) => {
       queryClient.removeQueries({
-        queryKey: collectionQueryKeys.contents(
+        queryKey: collectionQueryKeys.contentScope(
           workspaceSlug,
           data.deletedCollectionSlug,
         ),
       });
+      queryClient.removeQueries({
+        queryKey: ["collectionGrid", workspaceSlug, data.deletedCollectionSlug],
+      });
+      reconcileCollectionMetadata(queryClient, workspaceSlug);
       if (data.deletedAssetCount > 0) {
         void invalidateMentionSuggestionQueries(queryClient, workspaceSlug);
         void queryClient.invalidateQueries({

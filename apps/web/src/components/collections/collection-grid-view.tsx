@@ -31,6 +31,7 @@ import {
   useMarqueeSelection,
 } from "@/components/board/use-marquee-selection";
 import { VirtualMasonry } from "@/components/asset-grid/virtual-masonry";
+import { useMoveExitOverlay } from "@/components/asset-grid/move-exit";
 import { EmptyStateShortcuts } from "@/components/asset-grid/empty-state-shortcuts";
 import { GridDensityControl } from "@/components/asset-grid/grid-density-control";
 import {
@@ -142,6 +143,15 @@ const CollectionGridContent = memo(function CollectionGridContent({
 }: CollectionGridViewProps & { density: GridDensity }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
+  useMoveExitOverlay(
+    surfaceRef,
+    {
+      workspaceSlug,
+      sourceCollectionSlug: collectionSlug,
+      sourceFolderPath: folderPath,
+    },
+    "data-grid-node-id",
+  );
   const { ref: overflowRef, overflowing } = useGridOverflowPadding();
   const setSurfaceRef = useCallback(
     (surface: HTMLDivElement | null) => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { migratePersistedAppStore } from "./persisted-store-migration";
 
 describe("persisted app store migration", () => {
-  it("preserves an enabled dock and migrates current tab view choices", () => {
+  it("removes unscoped dock preferences and migrates current tab view choices", () => {
     expect(
       migratePersistedAppStore(
         {
@@ -14,12 +14,12 @@ describe("persisted app store migration", () => {
       ),
     ).toEqual({
       open: false,
-      boardActionRailVisible: true,
+      boardActionRailVisibilityByUser: {},
       collectionViews: { "studio:references": "grid" },
     });
   });
 
-  it("keeps newer preferences and handles malformed legacy values", () => {
+  it("removes unscoped preferences and handles malformed legacy values", () => {
     expect(
       migratePersistedAppStore(
         {
@@ -30,11 +30,11 @@ describe("persisted app store migration", () => {
         { "studio:ideas": "grid" },
       ),
     ).toEqual({
-      boardActionRailVisible: false,
+      boardActionRailVisibilityByUser: {},
       collectionViews: { "studio:ideas": "canvas" },
     });
     expect(
       migratePersistedAppStore({ workspaceBoardActionRails: null }),
-    ).toEqual({ boardActionRailVisible: false, collectionViews: {} });
+    ).toEqual({ boardActionRailVisibilityByUser: {}, collectionViews: {} });
   });
 });

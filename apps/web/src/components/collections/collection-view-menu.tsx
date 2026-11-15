@@ -1,3 +1,4 @@
+import { useBoardActionRailVisibility } from "@/hooks/use-board-action-rail-visibility";
 import {
   ChevronDownIcon,
   LayoutGridIcon,
@@ -62,12 +63,8 @@ export function CollectionViewMenu({
   const setWorkspaceAlignmentGuides = usePersistedStore(
     (state) => state.setWorkspaceAlignmentGuides,
   );
-  const isBoardActionRailVisible = usePersistedStore(
-    (state) => state.boardActionRailVisible,
-  );
-  const setBoardActionRailVisible = usePersistedStore(
-    (state) => state.setBoardActionRailVisible,
-  );
+  const [isBoardActionRailVisible, setBoardActionRailVisible] =
+    useBoardActionRailVisibility();
   const zoom = usePersistedStore(
     (state) => state.boardViewports[boardKey]?.zoom ?? 1.1,
   );

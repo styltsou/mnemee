@@ -1,3 +1,4 @@
+import { useBoardActionRailVisibility } from "@/hooks/use-board-action-rail-visibility";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ScanIcon } from "lucide-react";
@@ -84,12 +85,8 @@ export function BoardContextMenu({
   const setWorkspaceAlignmentGuides = usePersistedStore(
     (state) => state.setWorkspaceAlignmentGuides,
   );
-  const isBoardActionRailVisible = usePersistedStore(
-    (state) => state.boardActionRailVisible,
-  );
-  const setBoardActionRailVisible = usePersistedStore(
-    (state) => state.setBoardActionRailVisible,
-  );
+  const [isBoardActionRailVisible, setBoardActionRailVisible] =
+    useBoardActionRailVisibility();
 
   useEffect(() => {
     if (previousViewportActivityRef.current === viewportActivity) return;

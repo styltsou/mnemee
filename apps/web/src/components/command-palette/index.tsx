@@ -1,3 +1,4 @@
+import { useBoardActionRailVisibility } from "@/hooks/use-board-action-rail-visibility";
 import {
   AlignCenterHorizontalIcon,
   ArrowDownIcon,
@@ -263,12 +264,8 @@ export function CommandPalette() {
   const [workspaceSlug, view, ...viewPath] = pathname
     .split("/")
     .filter(Boolean);
-  const isBoardActionRailVisible = usePersistedStore(
-    (state) => state.boardActionRailVisible,
-  );
-  const setBoardActionRailVisible = usePersistedStore(
-    (state) => state.setBoardActionRailVisible,
-  );
+  const [isBoardActionRailVisible, setBoardActionRailVisible] =
+    useBoardActionRailVisibility();
   const openScratchpad = useTransientStore((state) => state.openScratchpad);
   const setCanvasTool = useTransientStore((state) => state.setCanvasTool);
   const openPexelsBrowser = useSessionStore(

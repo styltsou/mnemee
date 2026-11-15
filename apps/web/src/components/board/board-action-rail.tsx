@@ -1,3 +1,4 @@
+import { useBoardActionRailVisibility } from "@/hooks/use-board-action-rail-visibility";
 import {
   ArrowUpRightIcon,
   FileTextIcon,
@@ -29,7 +30,6 @@ import { cn } from "@/lib/utils";
 import { makeBoardKey, useBoardInsertionPlacement } from "@/components/canvas";
 import {
   getPexelsBrowserScope,
-  usePersistedStore,
   useSessionStore,
   useTransientStore,
 } from "@/store";
@@ -86,9 +86,7 @@ export function BoardActionRail({
   const pexelsBrowserOpen = useSessionStore(
     (state) => state.pexelsBrowserByScope[pexelsScope]?.open ?? false,
   );
-  const isRailVisible = usePersistedStore(
-    (state) => state.boardActionRailVisible,
-  );
+  const [isRailVisible] = useBoardActionRailVisibility();
   const onboardingRailVisible = useTransientStore(
     (state) => state.onboardingRailBoardKey === boardKey,
   );

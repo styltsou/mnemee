@@ -495,15 +495,13 @@ export function YouTubeVideoViewer({
         />
         <DialogBody
           className={cn(
-            "min-h-0 flex-1 overflow-hidden border-t border-b-0 bg-background p-0 transition-[border-radius] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            "min-h-0 flex-1 overflow-hidden border-b-0 bg-background p-0 transition-[border-radius] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
             assetModalId
               ? expanded
                 ? "duration-[250ms]"
                 : "duration-[200ms]"
               : "duration-[180ms]",
-            workspace
-              ? "rounded-none border-transparent"
-              : "rounded-t-xl rounded-b-none border-foreground/10",
+            workspace ? "rounded-none" : "rounded-t-xl rounded-b-none",
           )}
         >
           {displayedAsset ? (

@@ -313,16 +313,14 @@ export function VideoAssetViewer({
         />
         <DialogBody
           className={cn(
-            "relative flex min-h-0 overflow-hidden border-t border-b-0 bg-background p-0 transition-[border-radius] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            "relative flex min-h-0 overflow-hidden border-b-0 bg-background p-0 transition-[border-radius] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
             expanded ? "flex-1" : "w-full flex-none",
             assetModalId
               ? expanded
                 ? "duration-[250ms]"
                 : "duration-[200ms]"
               : "duration-[180ms]",
-            expanded
-              ? "rounded-none border-transparent"
-              : "rounded-t-xl rounded-b-none border-foreground/10",
+            expanded ? "rounded-none" : "rounded-t-xl rounded-b-none",
           )}
           style={expanded ? undefined : { aspectRatio: `${videoRatio}` }}
         >

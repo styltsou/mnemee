@@ -495,7 +495,7 @@ export function YouTubeVideoViewer({
         />
         <DialogBody
           className={cn(
-            "min-h-0 flex-1 overflow-hidden border-t border-b-0 bg-background p-0 transition-[border-color,border-radius] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            "min-h-0 flex-1 overflow-hidden border-t border-b-0 bg-background p-0 transition-[border-radius] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
             assetModalId
               ? expanded
                 ? "duration-[250ms]"
@@ -514,6 +514,7 @@ export function YouTubeVideoViewer({
               workspaceSlug={workspaceSlug}
               workspace={workspace}
               animateLayout={!sharedMorphing && !assetModalId}
+              animateMediaSize={Boolean(assetModalId) && !sharedMorphing}
               layoutDependency={presentation}
               largeMetadata={presentation === "fullscreen"}
               notesOpen={notesOpen}
@@ -784,6 +785,7 @@ export function YouTubeVideoContent({
   compact = false,
   workspace = false,
   animateLayout = false,
+  animateMediaSize = false,
   layoutDependency,
   largeMetadata = false,
   viewer = false,
@@ -797,6 +799,7 @@ export function YouTubeVideoContent({
   compact?: boolean;
   workspace?: boolean;
   animateLayout?: boolean;
+  animateMediaSize?: boolean;
   layoutDependency?: string;
   largeMetadata?: boolean;
   viewer?: boolean;
@@ -899,9 +902,13 @@ export function YouTubeVideoContent({
   const media = (
     <motion.div
       data-asset-modal-hero={viewer || undefined}
-      layout={animateLayout}
+      layout={animateMediaSize ? "size" : animateLayout}
       layoutDependency={layoutDependency ?? workspace}
-      transition={{ layout: layoutTransition }}
+      transition={{
+        layout: animateMediaSize
+          ? { ...layoutTransition, duration: 0.25 }
+          : layoutTransition,
+      }}
       className={cn(
         "relative isolate aspect-video shrink-0 overflow-hidden rounded-md bg-background",
         viewer ? "w-full max-w-[calc((100dvh-5rem)*16/9)]" : "m-2 sm:m-3",

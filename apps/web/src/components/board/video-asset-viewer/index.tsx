@@ -313,7 +313,7 @@ export function VideoAssetViewer({
         />
         <DialogBody
           className={cn(
-            "relative flex min-h-0 overflow-hidden border-t border-b-0 bg-background p-0 transition-[border-color,border-radius] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            "relative flex min-h-0 overflow-hidden border-t border-b-0 bg-background p-0 transition-[border-radius] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
             expanded ? "flex-1" : "w-full flex-none",
             assetModalId
               ? expanded
@@ -334,6 +334,7 @@ export function VideoAssetViewer({
               workspaceSlug={workspaceSlug}
               workspace={expanded}
               animateLayout={!sharedMorphing && !assetModalId}
+              animateMediaSize={Boolean(assetModalId) && !sharedMorphing}
               layoutDependency={presentation}
               initialPlaybackTime={initialPlaybackTime}
               notesOpen={notesOpen}
@@ -547,6 +548,7 @@ function NativeVideoContent({
   workspaceSlug,
   workspace = false,
   animateLayout = false,
+  animateMediaSize = false,
   layoutDependency,
   initialPlaybackTime,
   notesOpen,
@@ -559,6 +561,7 @@ function NativeVideoContent({
   workspaceSlug: string;
   workspace?: boolean;
   animateLayout?: boolean;
+  animateMediaSize?: boolean;
   layoutDependency?: string;
   initialPlaybackTime?: number;
   notesOpen: boolean;
@@ -711,9 +714,13 @@ function NativeVideoContent({
   const media = (
     <motion.div
       data-asset-modal-hero={viewer || undefined}
-      layout={animateLayout}
+      layout={animateMediaSize ? "size" : animateLayout}
       layoutDependency={layoutDependency ?? workspace}
-      transition={{ layout: layoutTransition }}
+      transition={{
+        layout: animateMediaSize
+          ? { ...layoutTransition, duration: 0.25 }
+          : layoutTransition,
+      }}
       className={cn(
         "relative isolate flex w-full shrink-0 items-center justify-center overflow-hidden bg-black",
         viewer && !workspace
@@ -780,40 +787,38 @@ function NativeVideoContent({
   );
 
   if (viewer) {
-    if (!workspace) {
-      return (
-        <motion.div
-          layout={animateLayout}
-          layoutDependency={layoutDependency ?? workspace}
-          transition={{ layout: layoutTransition }}
-          className="absolute inset-0 overflow-hidden bg-black"
-        >
-          {media}
-          <AssetNotesPanel
-            open={notesOpen}
-            expanded={false}
-            onClose={onCloseNotes}
-          >
-            {notesEditor}
-          </AssetNotesPanel>
-        </motion.div>
-      );
-    }
-
     return (
       <motion.div
         layout={animateLayout}
         layoutDependency={layoutDependency ?? workspace}
         transition={{ layout: layoutTransition }}
-        className="relative flex h-full min-h-0 flex-1 overflow-hidden"
+        className={cn(
+          "relative flex h-full min-h-0 flex-1 overflow-hidden",
+          !workspace && "absolute inset-0 bg-black",
+        )}
       >
         <ScrollArea className="h-full min-h-0 min-w-0 flex-1 [&_[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:w-3 [&_[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:p-1 [&_[data-slot=scroll-area-thumb]]:w-1.5">
-          <div className="min-h-full bg-background">
-            <div className="mx-auto w-full max-w-[76rem] px-5">
-              <div className="flex items-center justify-center pt-4 pb-8">
+          <div
+            className={cn(
+              "min-h-full bg-background",
+              !workspace && "absolute inset-0",
+            )}
+          >
+            <div
+              className={cn(
+                "mx-auto w-full max-w-[76rem] px-5",
+                !workspace && "absolute inset-0 max-w-none p-0",
+              )}
+            >
+              <div
+                className={cn(
+                  "flex items-center justify-center pt-4 pb-8",
+                  !workspace && "absolute inset-0 p-0",
+                )}
+              >
                 {media}
               </div>
-              <div className="pb-5">{metadata}</div>
+              {workspace ? <div className="pb-5">{metadata}</div> : null}
             </div>
           </div>
         </ScrollArea>

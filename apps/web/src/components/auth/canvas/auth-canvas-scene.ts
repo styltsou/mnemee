@@ -45,7 +45,16 @@ function image(
   width: number,
   height: number,
 ): ImageAsset {
-  return { id, type: "image", url: photo(photoId), width, height, alt: "" };
+  const title = id.replace(/^auth-/, "").replaceAll("-", " ");
+  return {
+    id,
+    type: "image",
+    url: photo(photoId),
+    width,
+    height,
+    alt: "",
+    title,
+  };
 }
 
 export const IMAGES = {

@@ -1056,7 +1056,10 @@ function SearchResultPreview({ result }: { result: WorkspaceSearchResult }) {
     );
   }
 
-  if (result.type === "image" && result.preview?.blurDataURL) {
+  if (
+    (result.type === "image" || result.type === "video") &&
+    result.preview?.blurDataURL
+  ) {
     return (
       <span
         aria-hidden="true"
@@ -1067,6 +1070,7 @@ function SearchResultPreview({ result }: { result: WorkspaceSearchResult }) {
           alt=""
           className="absolute -inset-px size-[calc(100%+2px)] max-w-none scale-[1.06] object-cover blur-[0.75px]"
         />
+        {result.type === "video" ? <VideoThumbnailPlayOverlay /> : null}
       </span>
     );
   }

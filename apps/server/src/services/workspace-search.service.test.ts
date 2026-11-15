@@ -271,6 +271,7 @@ describe("WorkspaceSearchService", () => {
           imageBlurDataURL: null,
           imageVariants: null,
           videoPoster: {
+            blurDataURL: "data:image/webp;base64,poster-blur",
             preview: {
               objectKey: "workspace-1/23/poster-preview.webp",
               width: 320,
@@ -315,7 +316,10 @@ describe("WorkspaceSearchService", () => {
     expect(response.results[0]).toMatchObject({
       id: "video-00000000-0000-4000-8000-000000000017",
       type: "video",
-      preview: { url: "https://signed.example/23-poster" },
+      preview: {
+        url: "https://signed.example/23-poster",
+        blurDataURL: "data:image/webp;base64,poster-blur",
+      },
     });
   });
 

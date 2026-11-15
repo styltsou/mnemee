@@ -328,8 +328,14 @@ async function searchAssets(
                   ? { blurDataURL: row.imageBlurDataURL }
                   : {}),
               }
-            : type === "video" && videoPosterUrl
-              ? { url: videoPosterUrl }
+            : type === "video" &&
+                (videoPosterUrl || row.videoPoster?.blurDataURL)
+              ? {
+                  ...(videoPosterUrl ? { url: videoPosterUrl } : {}),
+                  ...(row.videoPoster?.blurDataURL
+                    ? { blurDataURL: row.videoPoster.blurDataURL }
+                    : {}),
+                }
               : type === "link" && row.linkHostname
                 ? {
                     ...(previewUrl ? { url: previewUrl } : {}),

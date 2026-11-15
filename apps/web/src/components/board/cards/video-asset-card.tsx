@@ -4,10 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import type { VideoAsset } from "@/types/asset";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
-import {
-  formatVideoDuration,
-  VIDEO_CARD_TIME_BADGE_CLASS,
-} from "@/components/board/video-card-control-styles";
+import { formatVideoDuration } from "@/components/board/video-card-control-styles";
 import { hasSelectionModifier } from "@/lib/selection";
 import { recordVideoPlaybackPosition } from "@/lib/video-playback-position";
 import { useVideoUploadPreview } from "@/lib/video-upload-preview";
@@ -72,7 +69,15 @@ export function VideoAssetCard({
       asset={asset}
       canvas={canvas}
       hideName={!ready || uploadPreview?.status === "uploading"}
-      hasDuration={Boolean(asset.durationSeconds)}
+      durationLabel={
+        ready && asset.durationSeconds
+          ? formatVideoDuration(
+              previewing
+                ? Math.max(0, asset.durationSeconds - previewTime)
+                : asset.durationSeconds,
+            )
+          : undefined
+      }
       onOpen={
         ready
           ? () => {
@@ -188,20 +193,6 @@ export function VideoAssetCard({
             />
           ) : null}
         </div>
-        {ready && asset.durationSeconds ? (
-          <span
-            className={cn(
-              "absolute right-2 bottom-2",
-              VIDEO_CARD_TIME_BADGE_CLASS,
-            )}
-          >
-            {formatVideoDuration(
-              previewing
-                ? Math.max(0, asset.durationSeconds - previewTime)
-                : asset.durationSeconds,
-            )}
-          </span>
-        ) : null}
         {!ready && asset.processingStatus === "failed" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center">
             <AlertCircleIcon className="size-5 text-destructive" />

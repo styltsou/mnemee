@@ -6,19 +6,22 @@ import {
 import { cn } from "@/lib/utils";
 import { hasSelectionModifier } from "@/lib/selection";
 
+export const MEDIA_CARD_PILL_CLASS =
+  "rounded-lg border border-sidebar-foreground/10 bg-sidebar/60 px-3 py-1.5 text-xs font-medium text-sidebar-foreground backdrop-blur-sm";
+
 export function MediaAssetFrame({
   asset,
   children,
   canvas = false,
   hideName = false,
-  hasDuration = false,
+  durationLabel,
   onOpen,
 }: {
   asset: { type: "image" | "video"; title?: string | null };
   children: ReactNode;
   canvas?: boolean;
   hideName?: boolean;
-  hasDuration?: boolean;
+  durationLabel?: string;
   onOpen?: () => void;
 }) {
   const { alwaysVisible, position: savedPosition } = useAssetNamePreferences();
@@ -43,8 +46,34 @@ export function MediaAssetFrame({
         !canvas && outside && (position === "above" ? "pt-8" : "pb-8"),
       )}
     >
-      {children}
-      {!hideName ? (
+      <div className="relative min-w-0">
+        {children}
+        {durationLabel ? (
+          <div className="pointer-events-none absolute inset-x-2.5 bottom-2.5 z-10 flex min-w-0 items-center justify-end gap-2.5">
+            {!hideName && position === "inside-bottom" ? (
+              <span
+                data-asset-morph-omit
+                data-asset-name
+                title={name}
+                className={cn(
+                  "min-w-0 truncate",
+                  MEDIA_CARD_PILL_CLASS,
+                  !alwaysVisible &&
+                    "opacity-0 group-hover/media-name:opacity-100 group-focus-within/media-name:opacity-100 [@media(hover:none)]:opacity-100",
+                )}
+              >
+                {name}
+              </span>
+            ) : null}
+            <span
+              className={cn("shrink-0 tabular-nums", MEDIA_CARD_PILL_CLASS)}
+            >
+              {durationLabel}
+            </span>
+          </div>
+        ) : null}
+      </div>
+      {!hideName && !(durationLabel && position === "inside-bottom") ? (
         <div
           data-asset-morph-omit
           data-asset-name
@@ -55,7 +84,6 @@ export function MediaAssetFrame({
             position === "inside-bottom" && "bottom-2.5",
             position === "above" && (canvas ? "bottom-full" : "top-0"),
             position === "below" && (canvas ? "top-full" : "bottom-0"),
-            !outside && position === "inside-bottom" && hasDuration && "pr-14",
             !alwaysVisible &&
               "opacity-0 group-hover/media-name:opacity-100 group-focus-within/media-name:opacity-100 [@media(hover:none)]:opacity-100",
           )}
@@ -64,9 +92,7 @@ export function MediaAssetFrame({
             title={name}
             className={cn(
               "max-w-full min-w-0 truncate text-xs font-medium",
-              outside
-                ? "text-sidebar-foreground/80"
-                : "rounded-lg border border-sidebar-foreground/10 bg-sidebar/60 px-3 py-1.5 text-sidebar-foreground backdrop-blur-sm",
+              outside ? "text-sidebar-foreground/80" : MEDIA_CARD_PILL_CLASS,
             )}
           >
             {name}

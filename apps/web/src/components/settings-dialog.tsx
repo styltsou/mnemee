@@ -259,6 +259,33 @@ function CanvasPatternPreview({ pattern }: { pattern: CanvasPattern }) {
           <rect width="64" height="48" fill={`url(#${patternId})`} />
         </>
       )}
+      <rect
+        x="21"
+        y="13"
+        width="24"
+        height="20"
+        rx="2"
+        fill="var(--card)"
+        stroke="var(--border)"
+        strokeWidth=".75"
+      />
+      <clipPath id={`${patternId}-image`}>
+        <rect x="23" y="15" width="20" height="13" rx="1" />
+      </clipPath>
+      <g clipPath={`url(#${patternId}-image)`}>
+        <rect x="23" y="15" width="20" height="13" fill="#bcc7bb" />
+        <circle cx="38" cy="18" r="1.6" fill="#ead3b2" />
+        <path d="M23 27l6-7 5 5 3-3 6 6H23z" fill="#667f77" />
+      </g>
+      <rect
+        x="25"
+        y="30"
+        width="11"
+        height="1"
+        rx=".5"
+        fill="var(--foreground)"
+        opacity=".4"
+      />
     </svg>
   );
 }
@@ -390,8 +417,8 @@ function AppearanceSection() {
             ))}
           </div>
         </div>
+        <AssetNameSettings />
       </div>
-      <AssetNameSettings />
     </section>
   );
 }

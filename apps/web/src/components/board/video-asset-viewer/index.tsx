@@ -731,6 +731,7 @@ function NativeVideoContent({
           continuePlaying={initialPlaybackTime !== undefined}
           fit={viewer && !workspace ? "cover" : "contain"}
           focusRef={playerFocusRef}
+          notesOpen={notesOpen}
         />
       ) : asset.processingStatus === "failed" ? (
         <div className="px-6 text-center text-sm text-white/70">

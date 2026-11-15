@@ -1,4 +1,6 @@
 import {
+  ChevronsLeftIcon,
+  ChevronsRightIcon,
   LoaderCircleIcon,
   MaximizeIcon,
   MinimizeIcon,
@@ -13,7 +15,6 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   type ChangeEvent,
-  type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
   type RefObject,
@@ -24,6 +25,7 @@ import {
 } from "react";
 
 import { StateIcon } from "@/components/ui/state-icon";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
@@ -36,12 +38,23 @@ import { createVideoVisibilityPlayback } from "./video-visibility-playback";
 const CONTROL_HIDE_DELAY_MS = 1_800;
 const BUFFERING_SPINNER_DELAY_MS = 180;
 const SEEK_STEP_SECONDS = 10;
+const ARROW_SEEK_STEP_SECONDS = 5;
+const SEEK_FEEDBACK_MS = 420;
+const VOLUME_FEEDBACK_MS = 1_400;
 const CENTER_PLAY_BUTTON_TRANSITION = {
-  duration: 0.15,
+  duration: 0.18,
   ease: [0.22, 1, 0.36, 1] as const,
 };
 const CENTER_PLAY_BUTTON_EXIT_TRANSITION = {
-  duration: 0.22,
+  duration: 0.12,
+  ease: [0.22, 1, 0.36, 1] as const,
+};
+const SEEK_FEEDBACK_TRANSITION = {
+  duration: 0.16,
+  ease: [0.22, 1, 0.36, 1] as const,
+};
+const SEEK_FEEDBACK_EXIT_TRANSITION = {
+  duration: 0.1,
   ease: [0.22, 1, 0.36, 1] as const,
 };
 const VIDEO_PLAYER_RAIL_CLASS = "bg-white/20";
@@ -132,6 +145,7 @@ export function NativeVideoPlayer({
   continuePlaying = false,
   fit = "contain",
   focusRef,
+  notesOpen = false,
 }: {
   src: string;
   poster?: string;
@@ -141,14 +155,18 @@ export function NativeVideoPlayer({
   continuePlaying?: boolean;
   fit?: "contain" | "cover";
   focusRef?: RefObject<HTMLDivElement | null>;
+  notesOpen?: boolean;
 }) {
   const [initialPlayerPreferences] = useState(readVideoPlayerPreferences);
   const reduceMotion = useReducedMotion();
   const playerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
+  const volumeGroupRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<number | undefined>(undefined);
   const waitingTimerRef = useRef<number | undefined>(undefined);
+  const seekFeedbackTimerRef = useRef<number | undefined>(undefined);
+  const volumeFeedbackTimerRef = useRef<number | undefined>(undefined);
   const handoffAppliedRef = useRef(false);
   const visibilityPlaybackRef = useRef<ReturnType<
     typeof createVideoVisibilityPlayback
@@ -172,6 +190,20 @@ export function NativeVideoPlayer({
     initialPlayerPreferences.showRemainingTime,
   );
   const [hover, setHover] = useState<{ seconds: number; percent: number }>();
+  const [seekFeedback, setSeekFeedback] = useState<{
+    direction: "back" | "forward";
+    seconds: number;
+  } | null>(null);
+
+  useEffect(
+    () => () => {
+      if (seekFeedbackTimerRef.current !== undefined)
+        window.clearTimeout(seekFeedbackTimerRef.current);
+      if (volumeFeedbackTimerRef.current !== undefined)
+        window.clearTimeout(volumeFeedbackTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const focusPlayer = () => {
@@ -239,6 +271,19 @@ export function NativeVideoPlayer({
     setControlsVisible(true);
     scheduleControlsHide();
   }, [scheduleControlsHide]);
+
+  const showVolumeFeedback = useCallback(() => {
+    revealControls();
+    setVolumeSliderExpanded(true);
+    if (volumeFeedbackTimerRef.current !== undefined)
+      window.clearTimeout(volumeFeedbackTimerRef.current);
+    volumeFeedbackTimerRef.current = window.setTimeout(() => {
+      const group = volumeGroupRef.current;
+      if (!group?.matches(":hover") && !group?.contains(document.activeElement))
+        setVolumeSliderExpanded(false);
+      volumeFeedbackTimerRef.current = undefined;
+    }, VOLUME_FEEDBACK_MS);
+  }, [revealControls]);
 
   useEffect(() => clearHideTimer, [clearHideTimer]);
 
@@ -311,6 +356,25 @@ export function NativeVideoPlayer({
     setEnded(next >= video.duration);
   }, []);
 
+  const seekBy = useCallback(
+    (seconds: number) => {
+      const video = videoRef.current;
+      if (!video || !Number.isFinite(video.duration)) return;
+      seekTo(video.currentTime + seconds);
+      setSeekFeedback({
+        direction: seconds < 0 ? "back" : "forward",
+        seconds: Math.abs(seconds),
+      });
+      if (seekFeedbackTimerRef.current !== undefined)
+        window.clearTimeout(seekFeedbackTimerRef.current);
+      seekFeedbackTimerRef.current = window.setTimeout(() => {
+        setSeekFeedback(null);
+        seekFeedbackTimerRef.current = undefined;
+      }, SEEK_FEEDBACK_MS);
+    },
+    [seekTo],
+  );
+
   const handleProgressChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       seekTo(Number(event.currentTarget.value));
@@ -353,6 +417,27 @@ export function NativeVideoPlayer({
     });
   }, [showRemainingTime]);
 
+  const adjustVolumeBy = useCallback(
+    (steps: number) => {
+      const video = videoRef.current;
+      if (!video) return;
+      if (video.muted && steps < 0) return;
+      const current = video.muted ? 0 : video.volume;
+      const next = clamp(Math.round(current * 20 + steps) / 20, 0, 1);
+      if (next === current) return;
+      video.volume = next;
+      video.muted = next === 0;
+      setVolume(next);
+      setMuted(next === 0);
+      saveVideoPlayerPreferences({
+        volume: next,
+        muted: next === 0,
+        showRemainingTime,
+      });
+    },
+    [showRemainingTime],
+  );
+
   const togglePlayerFullscreen = useCallback(() => {
     const player = playerRef.current;
     if (!player) return;
@@ -393,32 +478,71 @@ export function NativeVideoPlayer({
     setBufferedTime(video.buffered.end(video.buffered.length - 1));
   }, []);
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      const target = event.target;
+  useEffect(() => {
+    if (notesOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLButtonElement
-      ) {
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.defaultPrevented
+      )
         return;
-      }
+      const target = event.target;
+      const player = playerRef.current;
+      const viewer = player?.closest(
+        '[data-slot="dialog-content"], [data-slot="drawer-popup"]',
+      );
+      if (
+        !(target instanceof Element) ||
+        (!viewer?.contains(target) && target !== document.body)
+      )
+        return;
+      const key = event.key.toLowerCase();
+      if (
+        (target instanceof HTMLElement && target.isContentEditable) ||
+        target.closest(
+          'input, textarea, select, [contenteditable="true"], [role="textbox"]',
+        ) ||
+        (target.closest("button") && (key === " " || key === "enter"))
+      )
+        return;
 
-      if (event.key === " " || event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        togglePlayback();
-      } else if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        seekTo(currentTime - SEEK_STEP_SECONDS);
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        seekTo(currentTime + SEEK_STEP_SECONDS);
-      } else if (event.key.toLowerCase() === "m") {
-        event.preventDefault();
+      if (key === " " || key === "k") togglePlayback();
+      else if (key === "j") seekBy(-SEEK_STEP_SECONDS);
+      else if (key === "l") seekBy(SEEK_STEP_SECONDS);
+      else if (key === "arrowleft") seekBy(-ARROW_SEEK_STEP_SECONDS);
+      else if (key === "arrowright") seekBy(ARROW_SEEK_STEP_SECONDS);
+      else if (key === "home" || key === "0") seekTo(0);
+      else if (key === "end") seekTo(videoRef.current?.duration ?? 0);
+      else if (/^[1-9]$/.test(key))
+        seekTo(((videoRef.current?.duration ?? 0) * Number(key)) / 10);
+      else if (key === "m") {
         toggleMuted();
-      }
-    },
-    [currentTime, seekTo, toggleMuted, togglePlayback],
-  );
+        showVolumeFeedback();
+      } else if (key === "arrowup") {
+        adjustVolumeBy(1);
+        showVolumeFeedback();
+      } else if (key === "arrowdown") {
+        adjustVolumeBy(-1);
+        showVolumeFeedback();
+      } else if (key === "f") togglePlayerFullscreen();
+      else return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [
+    notesOpen,
+    adjustVolumeBy,
+    seekBy,
+    seekTo,
+    showVolumeFeedback,
+    toggleMuted,
+    togglePlayback,
+    togglePlayerFullscreen,
+  ]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const buffered = duration > 0 ? (bufferedTime / duration) * 100 : 0;
@@ -438,7 +562,7 @@ export function NativeVideoPlayer({
     "inline-flex size-8 shrink-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-white/85 shadow-none outline-none transition-colors duration-150 hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/60 active:bg-white/15";
 
   return (
-    // Keyboard-shortcut surface for the player (handleKeyDown); user media has no caption tracks.
+    // Keyboard focus surface for the player; user media has no caption tracks.
     // oxlint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       ref={(node) => {
@@ -446,10 +570,9 @@ export function NativeVideoPlayer({
         if (focusRef) focusRef.current = node;
       }}
       className="group/player absolute inset-0 overflow-hidden bg-black outline-none"
-      // Keyboard-shortcut surface for the player (handleKeyDown); user media has no caption tracks.
+      // Keyboard focus surface for the player; user media has no caption tracks.
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
-      onKeyDown={handleKeyDown}
       onPointerMove={revealControls}
       onPointerLeave={() => {
         const controlsHaveFocus = controlsRef.current?.contains(
@@ -545,14 +668,14 @@ export function NativeVideoPlayer({
               {!playing ? (
                 <motion.span
                   key="idle"
-                  initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
+                  initial={reduceMotion ? false : { opacity: 0, scale: 0.92 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={
                     reduceMotion
                       ? undefined
                       : {
                           opacity: 0,
-                          scale: 0.9,
+                          scale: 0.94,
                           transition: CENTER_PLAY_BUTTON_EXIT_TRANSITION,
                         }
                   }
@@ -585,6 +708,51 @@ export function NativeVideoPlayer({
           <LoaderCircleIcon className="size-10 animate-spin stroke-[1.5] text-white" />
         </div>
       ) : null}
+
+      <AnimatePresence initial={false}>
+        {seekFeedback ? (
+          <motion.div
+            key={seekFeedback.direction}
+            aria-hidden="true"
+            initial={
+              reduceMotion
+                ? { opacity: 0 }
+                : {
+                    opacity: 0,
+                    scale: 0.93,
+                    x: seekFeedback.direction === "back" ? 8 : -8,
+                  }
+            }
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={
+              reduceMotion
+                ? { opacity: 0 }
+                : {
+                    opacity: 0,
+                    scale: 0.98,
+                    x: seekFeedback.direction === "back" ? -8 : 8,
+                    transition: SEEK_FEEDBACK_EXIT_TRANSITION,
+                  }
+            }
+            transition={
+              reduceMotion ? { duration: 0.1 } : SEEK_FEEDBACK_TRANSITION
+            }
+            className={cn(
+              "pointer-events-none absolute top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-1 rounded-full bg-black/45 px-5 py-4 text-white shadow-lg backdrop-blur-sm",
+              seekFeedback.direction === "back" ? "left-[12%]" : "right-[12%]",
+            )}
+          >
+            {seekFeedback.direction === "back" ? (
+              <ChevronsLeftIcon className="size-7" />
+            ) : (
+              <ChevronsRightIcon className="size-7" />
+            )}
+            <span className="text-xs font-medium tabular-nums">
+              {seekFeedback.seconds}s
+            </span>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {failed ? (
         <div className="absolute inset-0 z-20 flex items-center justify-center px-6 text-center text-sm text-white/75">
@@ -710,20 +878,24 @@ export function NativeVideoPlayer({
             <div className="flex min-w-0 items-center gap-0.5">
               <div className="flex shrink-0 items-center gap-0.5">
                 <PlayerControlButton
-                  label={`Back ${SEEK_STEP_SECONDS} seconds`}
-                  onClick={() => seekTo(currentTime - SEEK_STEP_SECONDS)}
+                  label={`−${SEEK_STEP_SECONDS}s`}
+                  ariaLabel={`Back ${SEEK_STEP_SECONDS} seconds`}
+                  shortcut="J"
+                  onClick={() => seekBy(-SEEK_STEP_SECONDS)}
                   className={controlButtonClass}
                 >
                   <SkipBackIcon className="size-4 fill-current" />
                 </PlayerControlButton>
                 <PlayerControlButton
-                  label={
+                  label={ended ? "Replay" : playing ? "Pause" : "Play"}
+                  ariaLabel={
                     ended
                       ? "Replay video"
                       : playing
                         ? "Pause video"
                         : "Play video"
                   }
+                  shortcut="K / Space"
                   onClick={togglePlayback}
                   className={controlButtonClass}
                 >
@@ -734,8 +906,10 @@ export function NativeVideoPlayer({
                   />
                 </PlayerControlButton>
                 <PlayerControlButton
-                  label={`Forward ${SEEK_STEP_SECONDS} seconds`}
-                  onClick={() => seekTo(currentTime + SEEK_STEP_SECONDS)}
+                  label={`+${SEEK_STEP_SECONDS}s`}
+                  ariaLabel={`Forward ${SEEK_STEP_SECONDS} seconds`}
+                  shortcut="L"
+                  onClick={() => seekBy(SEEK_STEP_SECONDS)}
                   className={controlButtonClass}
                 >
                   <SkipForwardIcon className="size-4 fill-current" />
@@ -743,9 +917,18 @@ export function NativeVideoPlayer({
               </div>
 
               <div
+                ref={volumeGroupRef}
                 className="group/volume flex items-center rounded-md transition-colors duration-150 focus-within:bg-white/10 hover:bg-white/10"
                 onPointerEnter={() => setVolumeSliderExpanded(true)}
                 onFocusCapture={() => setVolumeSliderExpanded(true)}
+                onBlurCapture={(event) => {
+                  if (
+                    !event.currentTarget.contains(event.relatedTarget) &&
+                    !event.currentTarget.matches(":hover") &&
+                    volumeFeedbackTimerRef.current === undefined
+                  )
+                    setVolumeSliderExpanded(false);
+                }}
               >
                 <Tooltip>
                   <TooltipTrigger
@@ -771,12 +954,16 @@ export function NativeVideoPlayer({
                     />
                   </TooltipTrigger>
                   <TooltipContent side="top">
-                    {muted || volume === 0 ? "Unmute video" : "Mute video"}
+                    {muted || volume === 0 ? "Unmute" : "Mute"}
+                    <Kbd className="h-4 min-w-4 px-1 text-[10px]">M</Kbd>
+                    <span aria-hidden="true">/</span>
+                    <span>Volume</span>
+                    <Kbd className="h-4 min-w-4 px-1 text-[10px]">↑/↓</Kbd>
                   </TooltipContent>
                 </Tooltip>
                 <div
                   className={cn(
-                    "relative h-8 overflow-hidden transition-[width,opacity] duration-200 ease-out group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 motion-reduce:transition-none",
+                    "relative h-8 overflow-hidden transition-[width,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 motion-reduce:transition-none",
                     volumeSliderExpanded ? "w-20 opacity-100" : "w-0 opacity-0",
                   )}
                 >
@@ -788,7 +975,7 @@ export function NativeVideoPlayer({
                       )}
                     >
                       <span
-                        className="absolute inset-y-0 left-0 bg-white"
+                        className="absolute inset-y-0 left-0 rounded-full bg-white"
                         style={{ width: `${volumePercent}%` }}
                       />
                     </div>
@@ -816,36 +1003,50 @@ export function NativeVideoPlayer({
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="relative top-px inline-flex h-8 shrink-0 cursor-pointer items-center rounded-md px-2 text-xs font-medium text-white/80 tabular-nums transition-colors duration-150 hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none active:bg-white/15 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-white/80"
-                aria-label="Toggle between elapsed and remaining video time"
-                title="Toggle elapsed/remaining time"
-                disabled={duration <= 0}
-                onClick={() => {
-                  const next = !showRemainingTime;
-                  setShowRemainingTime(next);
-                  saveVideoPlayerPreferences({
-                    volume,
-                    muted,
-                    showRemainingTime: next,
-                  });
-                  scheduleControlsHide();
-                }}
-              >
-                {showRemainingTime
-                  ? `-${formatTime(Math.max(0, duration - currentTime))}`
-                  : formatTime(currentTime)}
-                {` / ${formatTime(duration)}`}
-              </button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      className="relative top-px inline-flex h-8 shrink-0 cursor-pointer items-center rounded-md px-2 text-xs font-medium text-white/80 tabular-nums transition-colors duration-150 hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none active:bg-white/15 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-white/80"
+                      aria-label={
+                        showRemainingTime
+                          ? "Show elapsed video time"
+                          : "Show remaining video time"
+                      }
+                      disabled={duration <= 0}
+                      onClick={() => {
+                        const next = !showRemainingTime;
+                        setShowRemainingTime(next);
+                        saveVideoPlayerPreferences({
+                          volume,
+                          muted,
+                          showRemainingTime: next,
+                        });
+                        scheduleControlsHide();
+                      }}
+                    />
+                  }
+                >
+                  {showRemainingTime
+                    ? `-${formatTime(Math.max(0, duration - currentTime))}`
+                    : formatTime(currentTime)}
+                  {` / ${formatTime(duration)}`}
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {showRemainingTime ? "Show elapsed" : "Show remaining"}
+                </TooltipContent>
+              </Tooltip>
             </div>
             <div className="flex shrink-0 items-center gap-0.5">
               <PlayerControlButton
-                label={
+                label={playerFullscreen ? "Exit full screen" : "Full screen"}
+                ariaLabel={
                   playerFullscreen
                     ? "Exit player full screen"
                     : "Full screen player"
                 }
+                shortcut="F"
                 onClick={togglePlayerFullscreen}
                 className={controlButtonClass}
               >
@@ -865,11 +1066,15 @@ export function NativeVideoPlayer({
 
 function PlayerControlButton({
   label,
+  ariaLabel = label,
+  shortcut,
   onClick,
   className,
   children,
 }: {
   label: string;
+  ariaLabel?: string;
+  shortcut?: string;
   onClick: () => void;
   className: string;
   children: ReactNode;
@@ -881,14 +1086,19 @@ function PlayerControlButton({
           <button
             type="button"
             className={className}
-            aria-label={label}
+            aria-label={ariaLabel}
             onClick={onClick}
           />
         }
       >
         {children}
       </TooltipTrigger>
-      <TooltipContent side="top">{label}</TooltipContent>
+      <TooltipContent side="top">
+        {label}
+        {shortcut ? (
+          <Kbd className="h-4 min-w-4 px-1 text-[10px]">{shortcut}</Kbd>
+        ) : null}
+      </TooltipContent>
     </Tooltip>
   );
 }

@@ -114,7 +114,7 @@ export function ColorAssetCard({
           className={cn(
             "truncate font-medium",
             naming && GRADIENT_NAME_SHIMMER,
-            name
+            name || naming
               ? "text-base"
               : hex
                 ? "font-mono text-lg font-semibold tracking-tight"

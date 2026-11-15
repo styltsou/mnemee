@@ -1,7 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { ColorAssetCard } from "./color-asset-card";
+
+const namingState = vi.hoisted(() => ({
+  pending: {} as Record<string, boolean>,
+}));
+vi.mock("@/lib/gradient-naming", () => ({
+  useGradientNaming: (selector: (state: typeof namingState) => boolean) =>
+    selector(namingState),
+}));
 
 describe("ColorAssetCard", () => {
   it("stacks a square swatch above the card surface", () => {
@@ -46,6 +54,30 @@ describe("ColorAssetCard", () => {
 
     expect(html.match(/#1A2B3C/g)).toHaveLength(1);
     expect(html).toContain("font-mono text-lg font-semibold");
+  });
+
+  it("uses title typography for the shimmering fallback while naming", () => {
+    const id = "color-00000000-0000-4000-8000-000000000002";
+    namingState.pending[id] = true;
+    try {
+      const html = renderToStaticMarkup(
+        <ColorAssetCard
+          asset={{
+            id,
+            type: "color",
+            hex: "#1a2b3c",
+            title: null,
+            isFavorite: false,
+          }}
+        />,
+      );
+
+      expect(html).toContain("animate-gradient-name-sweep");
+      expect(html).toContain("text-base");
+      expect(html).not.toContain("font-mono text-lg font-semibold");
+    } finally {
+      delete namingState.pending[id];
+    }
   });
 
   it("uses the saved gradient title instead of its first stop", () => {

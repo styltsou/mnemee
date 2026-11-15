@@ -5,6 +5,7 @@ import { InlineAssetTitle } from "@/components/board/inline-asset-title";
 import { getUserFacingApiErrorMessage } from "@/lib/api";
 import { GRADIENT_NAME_SHIMMER } from "@/lib/gradient-name-shimmer";
 import { useGradientNaming } from "@/lib/gradient-naming";
+import { cn } from "@/lib/utils";
 import type { ColorAsset } from "@/types/asset";
 
 export function ColorAssetTitle({
@@ -45,7 +46,7 @@ export function ColorAssetTitle({
           : undefined
       }
       disabled={updateColor.isPending}
-      titleClassName={naming ? GRADIENT_NAME_SHIMMER : undefined}
+      titleClassName={cn("[font:inherit]", naming && GRADIENT_NAME_SHIMMER)}
     />
   );
 }

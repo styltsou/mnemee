@@ -13,6 +13,9 @@ vi.mock("@/lib/gradient-naming", () => ({
 vi.mock("@/api/collection", () => ({
   useUpdateColor: () => ({ mutate: vi.fn(), isPending: false }),
 }));
+vi.mock("@/lib/color-name-pending", () => ({
+  useSolidNamePending: () => false,
+}));
 
 describe("ColorAssetTitle", () => {
   it("keeps the view's inherited typography while its title shimmers", () => {

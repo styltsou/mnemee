@@ -7,6 +7,7 @@ import { hasSelectionModifier } from "@/lib/selection";
 import type { ColorAsset } from "@/types/asset";
 import { useGradientNaming } from "@/lib/gradient-naming";
 import { GRADIENT_NAME_SHIMMER } from "@/lib/gradient-name-shimmer";
+import { useSolidNamePending } from "@/lib/color-name-pending";
 
 export function ColorAssetCard({
   asset,
@@ -20,7 +21,11 @@ export function ColorAssetCard({
   selected?: boolean;
 }) {
   const [surfaceHovered, setSurfaceHovered] = useState(false);
-  const naming = useGradientNaming((state) => Boolean(state.pending[asset.id]));
+  const gradientNaming = useGradientNaming((state) =>
+    Boolean(state.pending[asset.id]),
+  );
+  const solidNaming = useSolidNamePending(asset);
+  const naming = gradientNaming || solidNaming;
   const hasAlpha = Boolean(
     asset.hex?.length === 9 && !asset.hex.endsWith("ff"),
   );

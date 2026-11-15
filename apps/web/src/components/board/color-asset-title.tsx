@@ -3,6 +3,7 @@ import { useUpdateColor } from "@/api/collection";
 import type { UpdateColorInput } from "@/api/collection/types";
 import { InlineAssetTitle } from "@/components/board/inline-asset-title";
 import { getUserFacingApiErrorMessage } from "@/lib/api";
+import { useSolidNamePending } from "@/lib/color-name-pending";
 import { GRADIENT_NAME_SHIMMER } from "@/lib/gradient-name-shimmer";
 import { useGradientNaming } from "@/lib/gradient-naming";
 import { cn } from "@/lib/utils";
@@ -16,7 +17,11 @@ export function ColorAssetTitle({
   workspaceSlug: string;
 }) {
   const updateColor = useUpdateColor(workspaceSlug);
-  const naming = useGradientNaming((state) => Boolean(state.pending[color.id]));
+  const gradientNaming = useGradientNaming((state) =>
+    Boolean(state.pending[color.id]),
+  );
+  const solidNaming = useSolidNamePending(color);
+  const naming = gradientNaming || solidNaming;
 
   function saveTitle(data: UpdateColorInput) {
     updateColor.mutate(

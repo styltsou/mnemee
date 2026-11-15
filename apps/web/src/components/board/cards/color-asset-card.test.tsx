@@ -10,6 +10,9 @@ vi.mock("@/lib/gradient-naming", () => ({
   useGradientNaming: (selector: (state: typeof namingState) => boolean) =>
     selector(namingState),
 }));
+vi.mock("@/lib/color-name-pending", () => ({
+  useSolidNamePending: () => false,
+}));
 
 describe("ColorAssetCard", () => {
   it("stacks a square swatch above the card surface", () => {

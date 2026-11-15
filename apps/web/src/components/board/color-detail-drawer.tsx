@@ -341,6 +341,17 @@ export function ColorDetailDrawer({
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
+              {onEdit ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Edit color"
+                  onClick={onEdit}
+                >
+                  <PencilIcon className="size-4" />
+                </Button>
+              ) : null}
               <AssetNotesButton
                 open={notesOpen}
                 onClick={() => setNotesOpen((current) => !current)}
@@ -390,17 +401,6 @@ export function ColorDetailDrawer({
                   </TooltipTrigger>
                   <TooltipContent>Show in board</TooltipContent>
                 </Tooltip>
-              ) : null}
-              {onEdit ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Edit color"
-                  onClick={onEdit}
-                >
-                  <PencilIcon className="size-4" />
-                </Button>
               ) : null}
               <AssetTimestampCard
                 createdAt={displayedColor.createdAt}
@@ -797,18 +797,12 @@ function ColorDetailModal({
               aria-hidden="true"
             />
           )}
-          <AssetNotesButton
-            disabled={!color}
-            open={notesOpen}
-            onClick={() => onNotesOpenChange(!notesOpen)}
-            className="ml-auto"
-          />
           {onEdit ? (
             <Button
               variant="ghost"
               size="icon"
               className={cn(
-                "size-8 rounded-lg",
+                "ml-auto size-8 rounded-lg",
                 ASSET_VIEWER_HEADER_ICON_BUTTON_CLASS,
               )}
               aria-label="Edit color"
@@ -818,6 +812,12 @@ function ColorDetailModal({
               <PencilIcon className="size-4" />
             </Button>
           ) : null}
+          <AssetNotesButton
+            disabled={!color}
+            open={notesOpen}
+            onClick={() => onNotesOpenChange(!notesOpen)}
+            className={onEdit ? undefined : "ml-auto"}
+          />
           <AssetTimestampCard
             createdAt={color?.createdAt}
             updatedAt={color?.updatedAt}

@@ -1,5 +1,5 @@
 import { reserveCanvasFrontIndex } from "@/services/collection/canvas-stacking.service";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, arrayContains, eq, isNull } from "drizzle-orm";
 import slugify from "slugify";
 
 import { db } from "@/db";
@@ -120,6 +120,71 @@ export class CollectionMutationService {
     }
 
     return inserted;
+  }
+
+  async renameFolder(
+    orgId: string,
+    userId: string,
+    collectionSlug: string,
+    nodeId: string,
+    data: RenameCollectionInput,
+  ): Promise<void> {
+    const collection = await getCollectionBySlug(orgId, collectionSlug);
+    const target = parseCollectionNodeId(nodeId);
+    if (target.nodeType !== "folder")
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "Invalid folder id");
+    await db.transaction(async (tx) => {
+      const [node] = await tx
+        .select({ pathFolderIds: collectionNodes.pathFolderIds })
+        .from(collectionNodes)
+        .where(
+          and(
+            eq(collectionNodes.organizationId, orgId),
+            eq(collectionNodes.collectionId, collection.id),
+            eq(collectionNodes.folderId, target.entityId),
+          ),
+        )
+        .limit(1)
+        .for("update");
+      if (!node) throw new AppError(ErrorCode.NOT_FOUND, "Folder not found");
+      const prefix = node.pathFolderIds;
+      const descendants = await tx
+        .select({
+          id: collectionNodes.id,
+          pathFolderIds: collectionNodes.pathFolderIds,
+          pathFolderNames: collectionNodes.pathFolderNames,
+        })
+        .from(collectionNodes)
+        .where(
+          and(
+            eq(collectionNodes.organizationId, orgId),
+            eq(collectionNodes.collectionId, collection.id),
+            arrayContains(collectionNodes.pathFolderIds, prefix),
+          ),
+        )
+        .for("update");
+      await tx
+        .update(folders)
+        .set({ name: data.name, updatedByUserId: userId })
+        .where(
+          and(
+            eq(folders.organizationId, orgId),
+            eq(folders.id, target.entityId),
+          ),
+        );
+      for (const descendant of descendants) {
+        if (
+          !prefix.every((id, index) => descendant.pathFolderIds[index] === id)
+        )
+          continue;
+        const names = [...descendant.pathFolderNames];
+        names[prefix.length - 1] = data.name;
+        await tx
+          .update(collectionNodes)
+          .set({ pathFolderNames: names })
+          .where(eq(collectionNodes.id, descendant.id));
+      }
+    });
   }
 
   async createFolder(

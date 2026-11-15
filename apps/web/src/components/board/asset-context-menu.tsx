@@ -59,9 +59,14 @@ import {
   isDeleteShortcut,
   isDeleteSurfaceBlocked,
 } from "@/lib/delete-shortcut";
-import { isPersistedSelectableAsset } from "@/lib/selection";
+import { isPersistedSelectableAsset, makeInboxKey } from "@/lib/selection";
 import { useTransientStore } from "@/store";
 import { isMoveShortcut } from "@/lib/move-shortcut";
+import { isRenameShortcut } from "@/lib/rename-shortcut";
+import { isPeekAssetPaneActive } from "@/lib/asset-pane-focus";
+import { makeBoardKey } from "@/components/canvas/canvas-key";
+import { RenameFolderDialog } from "./rename-folder-dialog";
+import { RenameColorDialog } from "./rename-color-dialog";
 
 function PeekShortcut() {
   return (
@@ -186,10 +191,6 @@ function colorActions(
   );
 }
 
-function folderActions() {
-  return <ContextMenuItem>Rename folder</ContextMenuItem>;
-}
-
 export function shouldShowLinkPreviewRefresh(asset: LinkAsset): boolean {
   const active =
     asset.resolutionStatus === "queued" ||
@@ -271,7 +272,26 @@ export function AssetContextMenu({
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+  const workspaceSlug =
+    inboxContext?.workspaceSlug ?? deleteContext?.workspaceSlug;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const selectedRenamable = useTransientStore(
+    (state) =>
+      ((asset.type === "folder" && !!deleteContext) ||
+        asset.type === "color") &&
+      !!workspaceSlug &&
+      state.selection.scopeKey ===
+        (deleteContext
+          ? makeBoardKey(
+              deleteContext.workspaceSlug,
+              deleteContext.collectionSlug,
+              deleteContext.folderPath,
+            )
+          : makeInboxKey(workspaceSlug!)) &&
+      state.selection.nodeIds.length === 1 &&
+      state.selection.nodeIds[0] === asset.id,
+  );
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [colorEditorOpen, setColorEditorOpen] = useState(false);
   const [colorPreview, setColorPreview] = useState<Pick<
@@ -284,8 +304,6 @@ export function AssetContextMenu({
     unmount: () => void;
   } | null>(null);
   const previousDismissVersionRef = useRef(dismissVersion);
-  const workspaceSlug =
-    inboxContext?.workspaceSlug ?? deleteContext?.workspaceSlug;
   const isFavorite = asset.isFavorite ?? false;
   const showRefreshPreview =
     asset.type === "link" && shouldShowLinkPreviewRefresh(asset);
@@ -401,6 +419,23 @@ export function AssetContextMenu({
     previousDismissVersionRef.current = dismissVersion;
     contextMenuActionsRef.current?.close();
   }, [dismissVersion]);
+
+  useEffect(() => {
+    if (!selectedRenamable) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        !isRenameShortcut(event) ||
+        isDeleteSurfaceBlocked(event.target, "board") ||
+        isPeekAssetPaneActive()
+      )
+        return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setRenameDialogOpen(true);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedRenamable]);
 
   function cancelImagePrefetch() {
     const prefetch = imagePrefetchRef.current;
@@ -519,12 +554,44 @@ export function AssetContextMenu({
 
   return (
     <>
+      {asset.type === "folder" && deleteContext ? (
+        <RenameFolderDialog
+          open={renameDialogOpen}
+          onOpenChange={setRenameDialogOpen}
+          folder={asset}
+          workspaceSlug={deleteContext.workspaceSlug}
+          collectionSlug={deleteContext.collectionSlug}
+        />
+      ) : null}
+      {asset.type === "color" && workspaceSlug ? (
+        <RenameColorDialog
+          color={asset}
+          workspaceSlug={workspaceSlug}
+          open={renameDialogOpen}
+          onOpenChange={setRenameDialogOpen}
+        />
+      ) : null}
       <ContextMenu
         actionsRef={contextMenuActionsRef}
         onOpenChange={handleContextMenuOpenChange}
       >
         <ContextMenuTrigger
           onKeyDown={(event) => {
+            if (
+              event.currentTarget.contains(event.target as Node) &&
+              isRenameShortcut(event.nativeEvent) &&
+              ((asset.type === "folder" && deleteContext) ||
+                asset.type === "color") &&
+              workspaceSlug &&
+              isPersistedSelectableAsset(asset) &&
+              !isDeleteSurfaceBlocked(event.target, "board") &&
+              useTransientStore.getState().selection.nodeIds.length === 0
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              setRenameDialogOpen(true);
+              return;
+            }
             if (
               event.currentTarget.contains(event.target as Node) &&
               isMoveShortcut(event.nativeEvent) &&
@@ -596,6 +663,22 @@ export function AssetContextMenu({
         <ContextMenuContent
           data-canvas-menu={canvasBoardKey}
           onKeyDown={(event) => {
+            const selection = useTransientStore.getState().selection.nodeIds;
+            if (
+              isRenameShortcut(event.nativeEvent) &&
+              ((asset.type === "folder" && deleteContext) ||
+                asset.type === "color") &&
+              workspaceSlug &&
+              isPersistedSelectableAsset(asset) &&
+              (selection.length === 0 ||
+                (selection.length === 1 && selection[0] === asset.id))
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              contextMenuActionsRef.current?.close();
+              setRenameDialogOpen(true);
+              return;
+            }
             if (
               isMoveShortcut(event.nativeEvent) &&
               moveSource &&
@@ -620,7 +703,11 @@ export function AssetContextMenu({
         >
           {asset.type === "folder" ? (
             <>
-              {folderActions()}
+              {deleteContext && isPersistedSelectableAsset(asset) ? (
+                <ContextMenuItem onClick={() => setRenameDialogOpen(true)}>
+                  Rename folder <ContextMenuShortcut>R</ContextMenuShortcut>
+                </ContextMenuItem>
+              ) : null}
               {deleteContext ? (
                 <ContextMenuItem onClick={handleFlatten}>
                   Flatten folder
@@ -638,6 +725,9 @@ export function AssetContextMenu({
             </>
           ) : asset.type === "color" ? (
             <>
+              <ContextMenuItem onClick={() => setRenameDialogOpen(true)}>
+                Rename color <ContextMenuShortcut>R</ContextMenuShortcut>
+              </ContextMenuItem>
               {colorActions(
                 asset,
                 () => setColorEditorOpen(true),

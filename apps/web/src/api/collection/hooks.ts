@@ -13,6 +13,7 @@ import {
   fetchCollections,
   createCollection,
   renameCollection,
+  renameFolder,
   createInboxImageUpload,
   createInboxNote,
   createInboxRemoteImage,
@@ -764,6 +765,28 @@ export function useCollections(workspaceSlug: string) {
   return useQuery<CollectionsData>({
     ...collectionsQueryOptions(workspaceSlug),
     enabled: !!workspaceSlug,
+  });
+}
+
+export function useRenameFolder(workspaceSlug: string, collectionSlug: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ nodeId, name }: { nodeId: string; name: string }) =>
+      renameFolder(workspaceSlug, collectionSlug, nodeId, name),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: collectionQueryKeys.contentScope(
+          workspaceSlug,
+          collectionSlug,
+        ),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["collectionGrid", workspaceSlug, collectionSlug],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: collectionQueryKeys.collections(workspaceSlug),
+      });
+    },
   });
 }
 
@@ -2336,6 +2359,19 @@ export function useUpdateColor(workspaceSlug: string) {
         contentsFilter,
         (current) => applyUpdatedColorToContents(current, color),
       );
+      queryClient.setQueryData<PeekableAssetResponse>(
+        ["workspace-asset", workspaceSlug, color.id],
+        (current) =>
+          current?.asset.type === "color"
+            ? { ...current, asset: { ...current.asset, ...color } }
+            : current,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: ["collectionGrid", workspaceSlug],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["inboxGrid", workspaceSlug],
+      });
       void queryClient.invalidateQueries({
         queryKey: ["workspace-asset", workspaceSlug, color.id],
         exact: true,

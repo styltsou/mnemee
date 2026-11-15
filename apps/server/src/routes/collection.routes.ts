@@ -16,6 +16,7 @@ import {
   getCollectionProperties,
   getWorkspaceWithCollections,
   renameCollection,
+  renameFolder,
   moveCollectionNodesToFolder,
   updateCollectionNodePosition,
   updateCollectionNodePositions,
@@ -38,6 +39,10 @@ const collectionRoutes = factory
   .patch(
     "/workspace/:workspaceSlug/collections/:collectionSlug",
     ...renameCollection,
+  )
+  .patch(
+    "/workspace/:workspaceSlug/collections/:collectionSlug/folders/:nodeId",
+    ...renameFolder,
   )
   .post(
     "/workspace/:workspaceSlug/collections/:collectionSlug/folders",

@@ -71,6 +71,13 @@ export interface ICollectionService {
     userId: string,
     data: CreateCollectionInput,
   ): Promise<CreatedCollectionRow>;
+  renameFolder(
+    orgId: string,
+    userId: string,
+    collectionSlug: string,
+    nodeId: string,
+    data: RenameCollectionInput,
+  ): Promise<void>;
   createFolder(
     orgId: string,
     userId: string,
@@ -255,6 +262,22 @@ export class CollectionService implements ICollectionService {
     data: CreateCollectionInput,
   ): Promise<CreatedCollectionRow> {
     return this.mutations.createCollection(orgId, userId, data);
+  }
+
+  renameFolder(
+    orgId: string,
+    userId: string,
+    collectionSlug: string,
+    nodeId: string,
+    data: RenameCollectionInput,
+  ): Promise<void> {
+    return this.mutations.renameFolder(
+      orgId,
+      userId,
+      collectionSlug,
+      nodeId,
+      data,
+    );
   }
 
   createFolder(

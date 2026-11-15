@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useEffectEvent, useRef, type ReactNode } from "react";
 import { NotebookPenIcon, XIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { isDeleteSurfaceBlocked } from "@/lib/delete-shortcut";
+import { isPeekAssetPaneActive } from "@/lib/asset-pane-focus";
+import { Kbd } from "@/components/ui/kbd";
 
 export function AssetNotesButton({
   open,
@@ -23,11 +26,41 @@ export function AssetNotesButton({
   className?: string;
   disabled?: boolean;
 }) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const toggleNotes = useEffectEvent(onClick);
+  useEffect(() => {
+    if (disabled) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const button = buttonRef.current;
+      if (
+        event.key.toLowerCase() !== "n" ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        event.shiftKey ||
+        event.repeat ||
+        event.isComposing ||
+        event.defaultPrevented ||
+        !button ||
+        button.getClientRects().length === 0 ||
+        button.closest("[inert], [aria-hidden='true']") ||
+        isPeekAssetPaneActive() ||
+        isDeleteSurfaceBlocked(event.target, "asset")
+      )
+        return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      toggleNotes();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [disabled]);
   return (
     <Tooltip>
       <TooltipTrigger
         render={
           <Button
+            ref={buttonRef}
             type="button"
             variant="ghost"
             size="icon"
@@ -39,6 +72,7 @@ export function AssetNotesButton({
             aria-label={open ? "Close notes" : "Open notes"}
             aria-haspopup="true"
             aria-expanded={open}
+            aria-keyshortcuts="N"
             onClick={onClick}
             disabled={disabled}
           />
@@ -48,6 +82,9 @@ export function AssetNotesButton({
       </TooltipTrigger>
       <TooltipContent side="bottom">
         {open ? "Close notes" : "Open notes"}
+        {!disabled ? (
+          <Kbd className="ml-2 h-4 min-w-4 px-0.5 text-[10px]">N</Kbd>
+        ) : null}
       </TooltipContent>
     </Tooltip>
   );

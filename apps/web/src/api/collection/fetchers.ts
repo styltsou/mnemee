@@ -157,6 +157,18 @@ export async function renameCollection(
   );
 }
 
+export async function renameFolder(
+  workspaceSlug: string,
+  collectionSlug: string,
+  nodeId: string,
+  name: string,
+): Promise<{ renamed: boolean }> {
+  return apiPatch(
+    `/api/v1/workspace/${encodeURIComponent(workspaceSlug)}/collections/${encodeURIComponent(collectionSlug)}/folders/${encodeURIComponent(nodeId)}`,
+    { name },
+  );
+}
+
 export async function createFolder(
   workspaceSlug: string,
   collectionSlug: string,

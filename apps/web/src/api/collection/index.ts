@@ -3,6 +3,7 @@ export {
   useCollections,
   useCreateCollection,
   useRenameCollection,
+  useRenameFolder,
   useCreateFolder,
   useCreateInboxNote,
   useCreateInboxRemoteImage,

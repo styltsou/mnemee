@@ -63,6 +63,8 @@ function withCheckerboardBackground(backgroundImage: string) {
   return {
     backgroundImage: `${backgroundImage}, ${CHECKERBOARD_BACKGROUND}`,
     backgroundSize: CHECKERBOARD_BACKGROUND_SIZE,
+    backgroundRepeat: "no-repeat, repeat",
+    backgroundOrigin: "border-box, border-box",
   };
 }
 
@@ -147,6 +149,8 @@ export function ColorEditorDialog({
   open: controlledOpen,
   onOpenChange,
   onPreviewChange,
+  onSaveStart,
+  onSaveComplete,
   placement,
 }: {
   workspaceSlug: string;
@@ -159,6 +163,8 @@ export function ColorEditorDialog({
   onPreviewChange?: (
     preview: Pick<ColorAsset, "hex" | "gradient"> | null,
   ) => void;
+  onSaveStart?: (preview: Pick<ColorAsset, "hex" | "gradient">) => void;
+  onSaveComplete?: () => void;
   placement?: BoardInsertionPlacement;
 }) {
   const [collectionSlug = "", ...folderSegments] = (collectionPath ?? "")
@@ -377,6 +383,7 @@ export function ColorEditorDialog({
 
     try {
       if (color) {
+        onSaveStart?.({ hex: draftColorHex, gradient });
         updateColor.mutate(
           {
             assetId: color.id,
@@ -387,13 +394,18 @@ export function ColorEditorDialog({
               : { title: draftTitle.trim() || null }),
           },
           {
-            onSuccess: () => toast.success("Color updated."),
-            onError: (error) =>
+            onSuccess: () => {
+              onSaveComplete?.();
+              toast.success("Color updated.");
+            },
+            onError: (error) => {
+              onSaveComplete?.();
               toast.error(
                 error instanceof Error
                   ? error.message
                   : "Unable to save color.",
-              ),
+              );
+            },
           },
         );
         handleOpenChange(false);
@@ -609,7 +621,7 @@ export function ColorEditorDialog({
                     </div>
                     <div className="order-3 grid h-44 w-full grid-cols-[minmax(0,1fr)_4.5rem] gap-3">
                       <div
-                        className="group/gradient-preview relative min-h-0 overflow-hidden rounded-xl border border-border shadow-inner"
+                        className="group/gradient-preview relative min-h-0 overflow-hidden rounded-xl border border-border"
                         style={withCheckerboardBackground(gradientCss)}
                         aria-label="Gradient preview"
                       >

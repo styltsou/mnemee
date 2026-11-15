@@ -168,6 +168,28 @@ export const createCollection = factory.createHandlers(
   },
 );
 
+export const renameFolder = factory.createHandlers(
+  authMiddleware,
+  validate.param(FolderNodePathParamSchema),
+  validate.body(RenameCollectionSchema),
+  async (c) => {
+    const { workspaceSlug, collectionSlug, nodeId } = c.req.valid("param");
+    const userId = c.get("userId");
+    const workspace = await collectionService.getWorkspaceBySlug(
+      workspaceSlug,
+      userId,
+    );
+    await collectionService.renameFolder(
+      workspace.id,
+      userId,
+      collectionSlug,
+      nodeId,
+      c.req.valid("json"),
+    );
+    return c.json(success({ renamed: true }));
+  },
+);
+
 export const createFolder = factory.createHandlers(
   authMiddleware,
   validate.param(CollectionPathParamSchema),

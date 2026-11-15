@@ -24,9 +24,12 @@ import {
 import { fetchPeekableAsset } from "@/api/collection/fetchers";
 import type { PeekableAssetResponse } from "@/api/collection/types";
 import { ColorDetailDrawer } from "@/components/board/color-detail-drawer";
+import { RenameColorDialog } from "@/components/board/rename-color-dialog";
 import { AssetDeleteShortcut } from "@/components/board/asset-delete-shortcut";
 import { AssetMoveShortcut } from "@/components/board/asset-move-shortcut";
 import { isPeekAssetPaneActive } from "@/lib/asset-pane-focus";
+import { isRenameShortcut } from "@/lib/rename-shortcut";
+import { isDeleteSurfaceBlocked } from "@/lib/delete-shortcut";
 import { NoteDetailDrawer } from "@/components/board/note-detail-drawer";
 import { ImageAssetViewer } from "@/components/board/image-asset-viewer";
 import { YouTubeVideoViewer } from "@/components/board/video-asset-viewer/youtube-video-viewer";
@@ -42,7 +45,7 @@ import {
 import { readOverlayTrail } from "@/lib/workspace-overlay-history";
 import { openMainAssetSearchPatch } from "@/lib/workspace-overlay-search";
 import { recordRecentWorkspaceAsset } from "@/lib/workspace-recent-assets";
-import type { ImageAsset } from "@/types/asset";
+import type { ColorAsset, ImageAsset } from "@/types/asset";
 import {
   getAssetLocationScopeKey,
   getCurrentBoardScopeKey,
@@ -664,6 +667,15 @@ function WorkspaceAssetViewController({
   const queryClient = useQueryClient();
   const { showAssetInBoard } = useWorkspacePeek();
   const [colorEditorOpen, setColorEditorOpen] = useState(false);
+  const [colorRenameOpen, setColorRenameOpen] = useState(false);
+  const [colorPreview, setColorPreview] = useState<Pick<
+    ColorAsset,
+    "hex" | "gradient"
+  > | null>(null);
+  const [savingColorPreview, setSavingColorPreview] = useState<{
+    assetId: string;
+    preview: Pick<ColorAsset, "hex" | "gradient">;
+  } | null>(null);
   const unavailableAssetRef = useRef<string | undefined>(undefined);
   const assetQuery = useQuery({
     queryKey: workspaceAssetQueryKey(workspaceSlug, assetId ?? ""),
@@ -704,6 +716,28 @@ function WorkspaceAssetViewController({
     [response],
   );
   const requestedType = asset?.type ?? assetId?.split("-", 1)[0];
+  useEffect(() => {
+    if (
+      requestedType !== "color" ||
+      !presentation?.open ||
+      colorEditorOpen ||
+      colorRenameOpen
+    )
+      return;
+    const handleRename = (event: KeyboardEvent) => {
+      if (
+        !isRenameShortcut(event) ||
+        isDeleteSurfaceBlocked(event.target, "asset") ||
+        isPeekAssetPaneActive()
+      )
+        return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setColorRenameOpen(true);
+    };
+    window.addEventListener("keydown", handleRename);
+    return () => window.removeEventListener("keydown", handleRename);
+  }, [requestedType, presentation?.open, colorEditorOpen, colorRenameOpen]);
 
   useEffect(() => {
     if (!assetId || asset?.type !== "link" || asset.video) return;
@@ -884,7 +918,17 @@ function WorkspaceAssetViewController({
           assetModalId={assetId}
           sharedEntry={sharedEntryAssetId === assetId}
           sharedMorphing={morphingAssetId === assetId}
-          color={asset?.type === "color" ? asset : undefined}
+          color={
+            asset?.type === "color"
+              ? {
+                  ...asset,
+                  ...(colorPreview ??
+                    (savingColorPreview?.assetId === asset.id
+                      ? savingColorPreview.preview
+                      : null)),
+                }
+              : undefined
+          }
           open={presentation.open}
           loading={loading}
           workspaceSlug={workspaceSlug}
@@ -951,6 +995,11 @@ function WorkspaceAssetViewController({
           collectionPath={collectionPath}
           color={asset}
           open={colorEditorOpen}
+          onPreviewChange={setColorPreview}
+          onSaveStart={(preview) =>
+            setSavingColorPreview({ assetId: asset.id, preview })
+          }
+          onSaveComplete={() => setSavingColorPreview(null)}
           onOpenChange={(open) => {
             setColorEditorOpen(open);
             if (!open) {
@@ -959,6 +1008,14 @@ function WorkspaceAssetViewController({
               });
             }
           }}
+        />
+      ) : null}
+      {asset?.type === "color" ? (
+        <RenameColorDialog
+          color={asset}
+          workspaceSlug={workspaceSlug}
+          open={colorRenameOpen}
+          onOpenChange={setColorRenameOpen}
         />
       ) : null}
     </>

@@ -12,6 +12,7 @@ import { FolderOpenIcon, MoreHorizontalIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { cn } from "@/lib/utils";
+import { isRenameShortcut } from "@/lib/rename-shortcut";
 import { LinkCardPreview } from "../board/cards/link-asset-card";
 import {
   usePreviewStackLayout,
@@ -81,6 +82,7 @@ export function CollectionCard({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const pointerExitTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dismissingMenuWithCardPress = useRef(false);
+  const menuCloseReason = useRef<string | undefined>(undefined);
   const previews = collection.previews.slice(0, MAX_VISIBLE_PREVIEWS);
   const active = pointerOver || focused || actionsOpen || contextMenuOpen;
   const { containerRef, poses } = usePreviewStackLayout(
@@ -98,15 +100,19 @@ export function CollectionCard({
   ];
   function handleDeleteKey(event: ReactKeyboardEvent) {
     if (
-      !isDeleteShortcut(event.nativeEvent) ||
+      (!isDeleteShortcut(event.nativeEvent) &&
+        !isRenameShortcut(event.nativeEvent)) ||
       isDeleteTargetEditable(event.target)
     )
       return;
+    const rename = isRenameShortcut(event.nativeEvent);
     event.preventDefault();
     event.stopPropagation();
+    menuCloseReason.current = "item-press";
     setActionsOpen(false);
     setContextMenuOpen(false);
-    setDeleteDialogOpen(true);
+    if (rename) setRenameDialogOpen(true);
+    else setDeleteDialogOpen(true);
   }
   const destructiveClass =
     "text-red-600! hover:bg-red-500/20! focus:bg-red-500/20! data-highlighted:bg-red-500/20! dark:text-red-400! dark:hover:bg-red-500/30! dark:focus:bg-red-500/30! dark:data-highlighted:bg-red-500/30!";
@@ -117,6 +123,50 @@ export function CollectionCard({
     },
     [],
   );
+
+  useEffect(() => {
+    if (!actionsOpen && !contextMenuOpen) return;
+
+    const handleOutsideCardPress = (event: PointerEvent) => {
+      if (
+        (event.button !== 0 && event.button !== 1) ||
+        !(event.target instanceof Element)
+      )
+        return;
+      const link = event.target.closest("[data-collection-link]");
+      if (!link) return;
+
+      // The menu closes on pointerdown, before the browser dispatches click.
+      // Consume that click even if it lands on a different collection card.
+      const cleanup = () => {
+        document.removeEventListener("click", handleClick, true);
+        document.removeEventListener("auxclick", handleClick, true);
+        window.removeEventListener("pointerup", handlePointerUp, true);
+        window.removeEventListener("pointercancel", cleanup, true);
+        window.removeEventListener("blur", cleanup);
+      };
+      const handleClick = (click: MouseEvent) => {
+        if (click.target instanceof Node && link.contains(click.target)) {
+          click.preventDefault();
+          click.stopPropagation();
+          if (link instanceof HTMLElement && document.activeElement === link) {
+            link.blur();
+          }
+        }
+        cleanup();
+      };
+      const handlePointerUp = () => window.setTimeout(cleanup, 0);
+      document.addEventListener("click", handleClick, true);
+      document.addEventListener("auxclick", handleClick, true);
+      window.addEventListener("pointerup", handlePointerUp, true);
+      window.addEventListener("pointercancel", cleanup, true);
+      window.addEventListener("blur", cleanup);
+    };
+
+    window.addEventListener("pointerdown", handleOutsideCardPress, true);
+    return () =>
+      window.removeEventListener("pointerdown", handleOutsideCardPress, true);
+  }, [actionsOpen, contextMenuOpen]);
 
   const handleHoverTargetEnter = () => {
     setStackInteracted(true);
@@ -129,7 +179,10 @@ export function CollectionCard({
     const nextTarget = event.relatedTarget;
     if (
       nextTarget instanceof Element &&
-      nextTarget.closest("[data-collection-hover-target]")
+      nextTarget.closest("[data-collection-hover-target]") &&
+      event.currentTarget
+        .closest("[data-collection-card]")
+        ?.contains(nextTarget)
     ) {
       return;
     }
@@ -143,20 +196,33 @@ export function CollectionCard({
 
   return (
     <>
-      <ContextMenu open={contextMenuOpen} onOpenChange={setContextMenuOpen}>
+      <ContextMenu
+        open={contextMenuOpen}
+        onOpenChange={(open, details) => {
+          if (!open) menuCloseReason.current = details.reason;
+          setContextMenuOpen(open);
+        }}
+      >
         <ContextMenuTrigger
+          data-collection-card
           data-delete-shortcut-local
           onKeyDown={(event) => {
             if (
               !(event.target instanceof Node) ||
               !event.currentTarget.contains(event.target) ||
-              !isDeleteShortcut(event.nativeEvent) ||
-              isDeleteTargetEditable(event.target)
+              (!isDeleteShortcut(event.nativeEvent) &&
+                !isRenameShortcut(event.nativeEvent)) ||
+              isDeleteTargetEditable(event.target) ||
+              renameDialogOpen ||
+              propertiesDialogOpen ||
+              deleteDialogOpen
             )
               return;
+            const rename = isRenameShortcut(event.nativeEvent);
             event.preventDefault();
             event.stopPropagation();
-            setDeleteDialogOpen(true);
+            if (rename) setRenameDialogOpen(true);
+            else setDeleteDialogOpen(true);
           }}
           render={
             <div className="relative flex w-full min-w-0 flex-col items-center gap-2.5 rounded-xl p-1.5 text-sidebar-foreground" />
@@ -242,7 +308,7 @@ export function CollectionCard({
                 params={{ workspaceSlug, _splat: collection.slug }}
                 data-collection-link
                 data-collection-hover-target
-                aria-keyshortcuts="Delete"
+                aria-keyshortcuts="Delete R"
                 data-active={active}
                 onPointerEnter={handleHoverTargetEnter}
                 onPointerLeave={handleHoverTargetLeave}
@@ -276,7 +342,13 @@ export function CollectionCard({
               data-active={active}
               className="pointer-events-none absolute left-full ml-1.5 origin-left data-[active=true]:pointer-events-auto"
             >
-              <DropdownMenu open={actionsOpen} onOpenChange={setActionsOpen}>
+              <DropdownMenu
+                open={actionsOpen}
+                onOpenChange={(open, details) => {
+                  if (!open) menuCloseReason.current = details.reason;
+                  setActionsOpen(open);
+                }}
+              >
                 <DropdownMenuTrigger
                   render={
                     <Button
@@ -301,6 +373,11 @@ export function CollectionCard({
                   side="bottom"
                   className="w-40"
                   onKeyDown={handleDeleteKey}
+                  finalFocus={(interaction) =>
+                    interaction === "keyboard" &&
+                    menuCloseReason.current !== "item-press" &&
+                    menuCloseReason.current !== "focus-out"
+                  }
                 >
                   {collectionActions.map((action, index) => (
                     <Fragment key={action.label}>
@@ -310,9 +387,9 @@ export function CollectionCard({
                         onClick={action.onClick}
                       >
                         {action.label}
-                        {index === 2 ? (
+                        {index === 0 || index === 2 ? (
                           <span className="ml-auto text-xs text-muted-foreground">
-                            Del
+                            {index === 0 ? "R" : "Del"}
                           </span>
                         ) : null}
                       </DropdownMenuItem>
@@ -323,7 +400,15 @@ export function CollectionCard({
             </motion.div>
           </div>
         </ContextMenuTrigger>
-        <ContextMenuContent className="w-40" onKeyDown={handleDeleteKey}>
+        <ContextMenuContent
+          className="w-40"
+          onKeyDown={handleDeleteKey}
+          finalFocus={(interaction) =>
+            interaction === "keyboard" &&
+            menuCloseReason.current !== "item-press" &&
+            menuCloseReason.current !== "focus-out"
+          }
+        >
           {collectionActions.map((action, index) => (
             <Fragment key={action.label}>
               {index === 2 ? <ContextMenuSeparator /> : null}
@@ -332,9 +417,9 @@ export function CollectionCard({
                 onClick={action.onClick}
               >
                 {action.label}
-                {index === 2 ? (
+                {index === 0 || index === 2 ? (
                   <span className="ml-auto text-xs text-muted-foreground">
-                    Del
+                    {index === 0 ? "R" : "Del"}
                   </span>
                 ) : null}
               </ContextMenuItem>

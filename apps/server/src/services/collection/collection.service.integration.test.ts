@@ -180,6 +180,55 @@ describe("CollectionService integration", () => {
     });
   });
 
+  it("renames a folder and updates descendant names without changing paths", async () => {
+    const collection = await collectionService.createCollection(
+      fixture.organizationId,
+      fixture.userId,
+      { name: "Folder Rename" },
+    );
+    const folder = await collectionService.createFolder(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      { name: "Original" },
+    );
+    await collectionService.createFolder(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      { name: "Nested", parentFolderPath: folder.path },
+    );
+    await collectionService.createNote(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      { content: "A note", parentFolderPath: folder.path + "/nested" },
+    );
+    await collectionService.renameFolder(
+      fixture.organizationId,
+      fixture.userId,
+      collection.slug,
+      `folder-${folder.id}`,
+      { name: "Renamed" },
+    );
+    const contents = await collectionService.getCollectionContents(
+      fixture.organizationId,
+      collection.slug,
+      folder.path + "/nested",
+    );
+    expect(contents.breadcrumbs.map((item) => item.name)).toEqual(
+      expect.arrayContaining(["Renamed", "Nested"]),
+    );
+    expect(contents.nodes).toHaveLength(1);
+    const rows = await db
+      .select({ pathFolderNames: collectionNodes.pathFolderNames })
+      .from(collectionNodes)
+      .where(eq(collectionNodes.collectionId, collection.id));
+    expect(rows.every((row) => row.pathFolderNames[0] === "Renamed")).toBe(
+      true,
+    );
+  });
+
   it("updates a note and recalculates its metrics", async () => {
     const note = await assetService.createInboxNote(
       fixture.organizationId,

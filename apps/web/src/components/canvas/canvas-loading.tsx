@@ -1,19 +1,24 @@
-import { ReactFlow, ReactFlowProvider, type Viewport } from "@xyflow/react";
+import { ReactFlow } from "@xyflow/react";
 import { useRef, useState } from "react";
 
 import { NoteCardSkeleton } from "@/components/asset-grid/asset-card-skeleton";
 import { FolderCardSkeleton } from "@/components/asset-grid/preview-stack-skeleton";
+import { useTheme } from "@/components/theme-provider";
 import { ImageSkeleton } from "@/components/ui/image-skeleton";
 import { usePersistedStore } from "@/store";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect";
 import { makeBoardKey } from "./canvas-key";
 import { CanvasBackground } from "./canvas-pattern";
+import {
+  CANVAS_MAX_ZOOM,
+  CANVAS_MIN_ZOOM,
+  DEFAULT_CANVAS_VIEWPORT,
+} from "./canvas-viewport";
 
 const CARD_WIDTH = 280;
 const CARD_GAP = 32;
 const GRID_COLUMNS = 5;
 const ROW_HEIGHT = 400;
-const DEFAULT_VIEWPORT: Viewport = { x: 40, y: 40, zoom: 1.1 };
 const FALLBACK_SURFACE = { width: 1200, height: 800 };
 
 const LOADING_CARDS = [
@@ -30,8 +35,8 @@ const LOADING_CARDS = [
 ] as const;
 
 type CanvasLoadingProps = {
-  workspaceSlug?: string;
-  collectionSlug?: string;
+  workspaceSlug: string;
+  collectionSlug: string;
   folderPath?: string;
 };
 
@@ -40,14 +45,11 @@ export function CanvasLoading({
   collectionSlug,
   folderPath,
 }: CanvasLoadingProps) {
-  const boardKey =
-    workspaceSlug && collectionSlug
-      ? makeBoardKey(workspaceSlug, collectionSlug, folderPath)
-      : undefined;
-  const storedViewport = usePersistedStore((state) =>
-    boardKey ? state.boardViewports[boardKey] : undefined,
+  const boardKey = makeBoardKey(workspaceSlug, collectionSlug, folderPath);
+  const { theme } = useTheme();
+  const viewport = usePersistedStore(
+    (state) => state.boardViewports[boardKey] ?? DEFAULT_CANVAS_VIEWPORT,
   );
-  const viewport = storedViewport ?? DEFAULT_VIEWPORT;
   const surfaceRef = useRef<HTMLDivElement>(null);
   const [surface, setSurface] = useState(FALLBACK_SURFACE);
 
@@ -71,66 +73,65 @@ export function CanvasLoading({
     (surface.height / 2 - viewport.y) / viewport.zoom - gridHeight / 2;
 
   return (
-    <ReactFlowProvider>
-      <div
-        ref={surfaceRef}
-        className="relative h-full min-h-0 w-full bg-transparent"
-        role="status"
-        aria-label="Loading collection canvas"
+    <div
+      ref={surfaceRef}
+      className="relative h-full min-h-0 w-full bg-transparent"
+      role="status"
+      aria-label="Loading collection canvas"
+    >
+      <span className="sr-only">Loading collection canvas</span>
+      <ReactFlow
+        className="mnemee-flow pointer-events-none"
+        colorMode={theme}
+        nodes={[]}
+        defaultViewport={viewport}
+        viewport={viewport}
+        minZoom={CANVAS_MIN_ZOOM}
+        maxZoom={CANVAS_MAX_ZOOM}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        nodesFocusable={false}
+        edgesFocusable={false}
+        panOnDrag={false}
+        panOnScroll={false}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
+        zoomOnDoubleClick={false}
+        proOptions={{ hideAttribution: true }}
       >
-        <span className="sr-only">Loading collection canvas</span>
-        <ReactFlow
-          className="mnemee-flow"
-          nodes={[]}
-          minZoom={1}
-          maxZoom={1}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          nodesFocusable={false}
-          edgesFocusable={false}
-          panOnDrag={false}
-          panOnScroll={false}
-          zoomOnScroll={false}
-          zoomOnPinch={false}
-          zoomOnDoubleClick={false}
-          proOptions={{ hideAttribution: true }}
-        >
-          <CanvasBackground />
-        </ReactFlow>
-        <div
-          className="pointer-events-none absolute top-0 left-0"
-          style={{
-            transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
-            transformOrigin: "top left",
-          }}
-        >
-          <div className="relative">
-            {LOADING_CARDS.map((card, index) => {
-              const column = index % GRID_COLUMNS;
-              const row = Math.floor(index / GRID_COLUMNS);
-              return (
-                <div
-                  key={card.id}
-                  className="absolute"
-                  style={{
-                    left:
-                      gridLeft +
-                      column * (CARD_WIDTH + CARD_GAP) +
-                      card.jitter[0] / viewport.zoom,
-                    top:
-                      gridTop +
-                      row * ROW_HEIGHT +
-                      card.jitter[1] / viewport.zoom,
-                  }}
-                >
-                  <LoadingCard {...card} />
-                </div>
-              );
-            })}
-          </div>
+        <CanvasBackground />
+      </ReactFlow>
+      <div
+        className="pointer-events-none absolute top-0 left-0"
+        style={{
+          transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+          transformOrigin: "top left",
+        }}
+      >
+        <div className="relative">
+          {LOADING_CARDS.map((card, index) => {
+            const column = index % GRID_COLUMNS;
+            const row = Math.floor(index / GRID_COLUMNS);
+            return (
+              <div
+                key={card.id}
+                className="absolute"
+                style={{
+                  left:
+                    gridLeft +
+                    column * (CARD_WIDTH + CARD_GAP) +
+                    card.jitter[0] / viewport.zoom,
+                  top:
+                    gridTop + row * ROW_HEIGHT + card.jitter[1] / viewport.zoom,
+                }}
+              >
+                <LoadingCard {...card} />
+              </div>
+            );
+          })}
         </div>
       </div>
-    </ReactFlowProvider>
+    </div>
   );
 }
 

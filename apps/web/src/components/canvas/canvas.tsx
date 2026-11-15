@@ -86,6 +86,7 @@ import {
   CANVAS_FIT_VIEW_PADDING,
   CANVAS_MAX_ZOOM,
   CANVAS_MIN_ZOOM,
+  DEFAULT_CANVAS_VIEWPORT,
 } from "./canvas-viewport";
 import { activeCanvasObjectFocus } from "./canvas-object-focus";
 import { useCanvasActions } from "./canvas-actions-context";
@@ -157,7 +158,6 @@ import {
   type CanvasInspectorTarget,
 } from "./canvas-object-inspector";
 
-const DEFAULT_VIEWPORT = { x: 40, y: 40, zoom: 1.1 };
 const VIEWPORT_ANIMATION_DURATION = 150;
 type CanvasFlowNode = CanvasNode | CanvasTextFlowNode;
 const nodeTypes: NodeTypes = { asset: CanvasCard, text: CanvasTextNode };
@@ -2504,7 +2504,7 @@ function CanvasSurface({
         nodes={renderedFlowNodes}
         nodeTypes={nodeTypes}
         onNodesChange={handleNodesChange}
-        defaultViewport={storedViewport ?? DEFAULT_VIEWPORT}
+        defaultViewport={storedViewport ?? DEFAULT_CANVAS_VIEWPORT}
         minZoom={CANVAS_MIN_ZOOM}
         maxZoom={CANVAS_MAX_ZOOM}
         colorMode={theme}

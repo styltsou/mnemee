@@ -1,5 +1,7 @@
 import { Background, BackgroundVariant } from "@xyflow/react";
-import { useCallback, useSyncExternalStore } from "react";
+import { useId } from "react";
+import { changeAppearance, useAppearance } from "@/lib/appearance";
+import type { Appearance } from "@/lib/appearance-cache";
 
 export const CANVAS_PATTERNS = [
   { value: "none", label: "None" },
@@ -8,7 +10,7 @@ export const CANVAS_PATTERNS = [
   { value: "cross", label: "Cross" },
 ] as const;
 
-export type CanvasPattern = (typeof CANVAS_PATTERNS)[number]["value"];
+export type CanvasPattern = Appearance["canvasPattern"];
 
 type CanvasPatternStyle = {
   gap: number;
@@ -19,10 +21,6 @@ type CanvasPatternStyle = {
 };
 
 export type CanvasPatternPreviewKind = "placement" | "thumbnail";
-
-const DEFAULT_CANVAS_PATTERN: CanvasPattern = "dots";
-const STORAGE_KEY = "mnemee:canvas-pattern";
-const CHANGE_EVENT = "mnemee:canvas-pattern-change";
 
 const CANVAS_PATTERN_STYLES: Record<
   Exclude<CanvasPattern, "none">,
@@ -66,45 +64,19 @@ const CANVAS_PATTERN_PREVIEWS: Record<
 
 const PLACEMENT_PREVIEW_ZOOM = 0.75;
 
-function isCanvasPattern(value: string | null): value is CanvasPattern {
-  return CANVAS_PATTERNS.some((pattern) => pattern.value === value);
-}
-
-export function getSavedCanvasPattern(): CanvasPattern {
-  if (typeof window === "undefined") return DEFAULT_CANVAS_PATTERN;
-
-  const saved = window.localStorage.getItem(STORAGE_KEY);
-  return isCanvasPattern(saved) ? saved : DEFAULT_CANVAS_PATTERN;
-}
-
-function subscribeToCanvasPattern(onChange: () => void) {
-  window.addEventListener(CHANGE_EVENT, onChange);
-  window.addEventListener("storage", onChange);
-
-  return () => {
-    window.removeEventListener(CHANGE_EVENT, onChange);
-    window.removeEventListener("storage", onChange);
-  };
+function setPattern(canvasPattern: CanvasPattern) {
+  changeAppearance({ canvasPattern });
 }
 
 export function useCanvasPattern() {
-  const pattern = useSyncExternalStore<CanvasPattern>(
-    subscribeToCanvasPattern,
-    getSavedCanvasPattern,
-    () => DEFAULT_CANVAS_PATTERN,
-  );
-
-  const setPattern = useCallback((next: CanvasPattern) => {
-    window.localStorage.setItem(STORAGE_KEY, next);
-    window.dispatchEvent(new Event(CHANGE_EVENT));
-  }, []);
-
+  const pattern = useAppearance((state) => state.canvasPattern);
   return { pattern, setPattern };
 }
 
 export function CanvasBackground() {
+  const id = useId();
   const { pattern } = useCanvasPattern();
-  return <CanvasPatternBackground pattern={pattern} />;
+  return <CanvasPatternBackground id={id} pattern={pattern} />;
 }
 
 export function CanvasPatternBackground({

@@ -63,14 +63,11 @@ export const Route = createFileRoute("/$workspaceSlug/collections/$")({
     meta: [{ title: "Collection | Mnemee" }],
   }),
   component: CollectionPage,
-  pendingComponent: CanvasLoading,
+  pendingComponent: CollectionPending,
 });
 
-function CollectionPage() {
+function useCollectionRoute() {
   const { workspaceSlug, _splat } = Route.useParams();
-  const navigateOverlay = useWorkspaceOverlayNavigation();
-  const { showRequest, consumeShowRequest } = useWorkspacePeek();
-  const { openAsset } = useWorkspaceAssetView();
   const collectionPath = parseWorkspaceAssetPath(
     `/${workspaceSlug}/collections/${_splat ?? ""}`,
   ).boardPathname.slice(`/${workspaceSlug}/collections/`.length);
@@ -85,6 +82,41 @@ function CollectionPage() {
   const boardView = usePersistedStore(
     (state) => state.collectionViews[collectionViewScope] ?? "canvas",
   );
+
+  return {
+    workspaceSlug,
+    collectionSlug,
+    collectionPath,
+    folderPath,
+    boardView,
+  };
+}
+
+function CollectionPending() {
+  const { workspaceSlug, collectionSlug, folderPath, boardView } =
+    useCollectionRoute();
+  return boardView === "canvas" ? (
+    <CanvasLoading
+      workspaceSlug={workspaceSlug}
+      collectionSlug={collectionSlug}
+      folderPath={folderPath || undefined}
+    />
+  ) : (
+    <GridViewLoading />
+  );
+}
+
+function CollectionPage() {
+  const {
+    workspaceSlug,
+    collectionSlug,
+    collectionPath,
+    folderPath,
+    boardView,
+  } = useCollectionRoute();
+  const navigateOverlay = useWorkspaceOverlayNavigation();
+  const { showRequest, consumeShowRequest } = useWorkspacePeek();
+  const { openAsset } = useWorkspaceAssetView();
   const queryClient = useQueryClient();
   const [focusedShowRequest, setFocusedShowRequest] =
     useState<BoardShowRequest>();

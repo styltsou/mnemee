@@ -2332,29 +2332,136 @@ export function useUpdateColor(workspaceSlug: string) {
   };
 
   return useMutation({
+    mutationKey: ["update-color", workspaceSlug],
+    scope: { id: `update-color:${workspaceSlug}` },
     mutationFn: ({
       assetId,
       ...data
     }: UpdateColorInput & { assetId: string }) =>
       updateColor(workspaceSlug, assetId, data),
     onMutate: async (draft) => {
-      await queryClient.cancelQueries(contentsFilter);
+      const assetKey = [
+        "workspace-asset",
+        workspaceSlug,
+        draft.assetId,
+      ] as const;
+      const gridFilter = {
+        predicate: ({ queryKey }: { queryKey: readonly unknown[] }) =>
+          (queryKey[0] === "collectionGrid" || queryKey[0] === "inboxGrid") &&
+          queryKey[1] === workspaceSlug,
+      };
+      const collectionsKey = collectionQueryKeys.collections(workspaceSlug);
+      await Promise.all([
+        queryClient.cancelQueries(contentsFilter),
+        queryClient.cancelQueries(gridFilter),
+        queryClient.cancelQueries({ queryKey: assetKey, exact: true }),
+        queryClient.cancelQueries({ queryKey: collectionsKey, exact: true }),
+      ]);
+
       const previousContents =
         queryClient.getQueriesData<CollectionContentsResponse>(contentsFilter);
+      const previousGrids =
+        queryClient.getQueriesData<
+          InfiniteData<CollectionGridResponse | InboxGridResponse>
+        >(gridFilter);
+      const previousAsset =
+        queryClient.getQueryData<PeekableAssetResponse>(assetKey);
+      const previousCollections =
+        queryClient.getQueryData<CollectionsData>(collectionsKey);
 
       queryClient.setQueriesData<CollectionContentsResponse>(
         contentsFilter,
         (current) => applyColorDraftToContents(current, draft),
       );
-
-      return { previousContents };
+      queryClient.setQueriesData<
+        InfiniteData<CollectionGridResponse | InboxGridResponse>
+      >(
+        gridFilter,
+        (current) =>
+          current && {
+            ...current,
+            pages: current.pages.map((page) => {
+              const updateNodes = (nodes: CollectionNode[]) =>
+                applyColorDraftToContents(
+                  { nodes } as CollectionContentsResponse,
+                  draft,
+                )!.nodes;
+              return "nodes" in page
+                ? { ...page, nodes: updateNodes(page.nodes) }
+                : {
+                    ...page,
+                    folders: updateNodes(page.folders),
+                    assets: updateNodes(page.assets),
+                  };
+            }),
+          },
+      );
+      queryClient.setQueryData<PeekableAssetResponse>(assetKey, (current) => {
+        if (current?.asset.type !== "color") return current;
+        const updated = applyColorDraftToContents(
+          { nodes: [current.asset] } as CollectionContentsResponse,
+          draft,
+        )!.nodes[0];
+        return updated?.type === "color"
+          ? { ...current, asset: updated }
+          : current;
+      });
+      queryClient.setQueryData<CollectionsData>(
+        collectionsKey,
+        (current) =>
+          current && {
+            ...current,
+            collections: current.collections.map((collection) => ({
+              ...collection,
+              previews: collection.previews.map((preview) =>
+                applyColorDraftToPreview(preview, draft),
+              ),
+            })),
+          },
+      );
+      const snapshots = [
+        ...previousContents,
+        ...previousGrids,
+        [assetKey, previousAsset] as const,
+        [collectionsKey, previousCollections] as const,
+      ].map(([key, previous]) => ({
+        key,
+        previous,
+        optimistic: queryClient.getQueryData(key),
+      }));
+      return { snapshots };
     },
-    onError: (_error, _draft, context) => {
-      context?.previousContents.forEach(([queryKey, contents]) => {
-        queryClient.setQueryData(queryKey, contents);
+    onError: (_error, draft, context) => {
+      const snapshots = context?.snapshots ?? [];
+      const hasNewerUpdate =
+        queryClient.isMutating({
+          mutationKey: ["update-color", workspaceSlug],
+          exact: true,
+          predicate: (mutation) =>
+            (mutation.state.variables as { assetId?: string } | undefined)
+              ?.assetId === draft.assetId,
+        }) > 1;
+      const canRestore = snapshots.map(
+        ({ key, optimistic }) => queryClient.getQueryData(key) === optimistic,
+      );
+      snapshots.forEach(({ key, previous }, index) => {
+        if (!canRestore[index]) {
+          if (!hasNewerUpdate)
+            void queryClient.invalidateQueries({ queryKey: key, exact: true });
+        } else if (previous !== undefined) {
+          queryClient.setQueryData(key, previous);
+        }
       });
     },
     onSuccess: ({ color }) => {
+      const pendingForColor = queryClient.isMutating({
+        mutationKey: ["update-color", workspaceSlug],
+        exact: true,
+        predicate: (mutation) =>
+          (mutation.state.variables as { assetId?: string } | undefined)
+            ?.assetId === color.id,
+      });
+      if (pendingForColor > 1) return;
       queryClient.setQueriesData<CollectionContentsResponse>(
         contentsFilter,
         (current) => applyUpdatedColorToContents(current, color),

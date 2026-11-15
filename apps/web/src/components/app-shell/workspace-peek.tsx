@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AssetDeleteShortcut } from "@/components/board/asset-delete-shortcut";
 import { AssetMoveShortcut } from "@/components/board/asset-move-shortcut";
 import {
@@ -54,6 +55,7 @@ import {
   type AssetLocation,
 } from "@/api/collection";
 import { fetchPeekableAsset } from "@/api/collection/fetchers";
+import type { PeekableAssetResponse } from "@/api/collection/types";
 import type { NoteMentionTarget } from "@/api/note-mentions/types";
 import { resolveGradientCss } from "@/lib/color-gradient";
 import { colorAssetToSearchColors } from "@/lib/color-asset-search";
@@ -333,6 +335,7 @@ export function WorkspacePeekProvider({
   workspaceSlug: string;
   children: React.ReactNode;
 }) {
+  const queryClient = useQueryClient();
   const navigateOverlay = useWorkspaceOverlayNavigation();
   const routeLocation = useRouterState({ select: (state) => state.location });
   const pathname = parseWorkspaceAssetPath(
@@ -357,6 +360,40 @@ export function WorkspacePeekProvider({
   const targetRef = useRef(target);
   const pendingDemotionRef = useRef<PeekUrlState | undefined>(undefined);
   const targetCacheRef = useRef(new Map<string, PeekTarget>());
+  useEffect(() => {
+    return queryClient.getQueryCache().subscribe((event) => {
+      const key = event.query.queryKey;
+      if (key[0] !== "workspace-asset" || key[1] !== workspaceSlug) return;
+      const data = event.query.state.data as
+        | {
+            asset: {
+              id: string;
+              type: string;
+              title?: string | null;
+              hex?: string | null;
+              gradient?: ColorAsset["gradient"];
+            };
+          }
+        | undefined;
+      if (data?.asset.type !== "color") return;
+      const color = data.asset;
+      setTarget((current) => {
+        if (current?.type !== "color" || current.asset.id !== color.id)
+          return current;
+        const next = {
+          ...current,
+          asset: {
+            ...current.asset,
+            title: color.title,
+            hex: color.hex ?? null,
+            gradient: color.gradient,
+          },
+        };
+        targetCacheRef.current.set(color.id, next);
+        return next;
+      });
+    });
+  }, [queryClient, workspaceSlug]);
   const migratedWorkspaceRef = useRef<string | undefined>(undefined);
   const showRequestIdRef = useRef(0);
   const notePromotionHandlerRef = useRef<
@@ -505,8 +542,29 @@ export function WorkspacePeekProvider({
     if (!peekId) return;
     let active = true;
     void fetchPeekableAsset(workspaceSlug, peekId)
-      .then(({ asset, location }) => {
+      .then(({ asset: fetchedAsset, location }) => {
         if (!active) return;
+        const asset =
+          fetchedAsset.type === "color"
+            ? queryClient.setQueryData<PeekableAssetResponse>(
+                ["workspace-asset", workspaceSlug, fetchedAsset.id],
+                (current) => {
+                  const updating = queryClient.isMutating({
+                    mutationKey: ["update-color", workspaceSlug],
+                    exact: true,
+                    predicate: (mutation) =>
+                      (
+                        mutation.state.variables as
+                          | { assetId?: string }
+                          | undefined
+                      )?.assetId === fetchedAsset.id,
+                  });
+                  return updating && current
+                    ? current
+                    : { asset: fetchedAsset, location };
+                },
+              )!.asset
+            : fetchedAsset;
         const videoAsset =
           asset.type === "link" ? collectionNodeToAsset(asset) : undefined;
         let resolved: PeekTarget | undefined;
@@ -584,6 +642,7 @@ export function WorkspacePeekProvider({
     peekSearch.peekScope,
     peekSearch.peekDescendants,
     workspaceSlug,
+    queryClient,
   ]);
   useIsomorphicLayoutEffect(() => {
     document.documentElement.style.setProperty(

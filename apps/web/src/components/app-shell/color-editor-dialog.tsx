@@ -48,6 +48,7 @@ import {
 import { GLASS_FRAME_CLASS } from "@/lib/glass";
 import { cn } from "@/lib/utils";
 import type { ColorAsset } from "@/types/asset";
+import { InlineAssetTitle } from "@/components/board/inline-asset-title";
 
 type EditorMode = "solid" | "gradient";
 
@@ -149,6 +150,7 @@ export function ColorEditorDialog({
   open: controlledOpen,
   onOpenChange,
   onPreviewChange,
+  onColorDraftChange,
   onSaveStart,
   onSaveComplete,
   placement,
@@ -163,6 +165,7 @@ export function ColorEditorDialog({
   onPreviewChange?: (
     preview: Pick<ColorAsset, "hex" | "gradient"> | null,
   ) => void;
+  onColorDraftChange?: (changed: boolean) => void;
   onSaveStart?: (preview: Pick<ColorAsset, "hex" | "gradient">) => void;
   onSaveComplete?: () => void;
   placement?: BoardInsertionPlacement;
@@ -238,15 +241,20 @@ export function ColorEditorDialog({
   const savedStops = sortGradientStops(initialStops(color)).map(
     ({ color: stopColor, position }) => ({ color: stopColor, position }),
   );
-  const isSavedDraft =
+  const isSavedColor =
     isEditing &&
-    draftTitle === (color.title ?? "") &&
     mode === (savedGradient ? "gradient" : "solid") &&
     draftColorHex === (color.gradient?.from ?? color.hex) &&
     (!isGradient ||
       (gradientType === (savedGradient?.type ?? "linear") &&
         gradientAngle === savedGradient?.angle &&
         JSON.stringify(draftGradient?.stops) === JSON.stringify(savedStops)));
+  const isSavedDraft = isSavedColor && draftTitle === (color?.title ?? "");
+
+  useEffect(() => {
+    onColorDraftChange?.(Boolean(open && color && !isSavedColor));
+    return () => onColorDraftChange?.(false);
+  }, [color, isSavedColor, onColorDraftChange, open]);
 
   useEffect(() => {
     if (!color || !open || !onPreviewChange) return;
@@ -477,24 +485,29 @@ export function ColorEditorDialog({
         }
       >
         <DrawerHeader className="w-full !p-0 text-left">
-          <div className="flex w-full items-center justify-between gap-4 p-3">
-            <DrawerTitle className="font-sans text-sm leading-5 font-medium">
-              {isEditing ? "Edit color" : "New color"}
+          <div className="flex w-full items-center justify-between gap-3 p-3">
+            <DrawerTitle className="min-w-0 font-sans text-sm leading-5 font-medium">
+              {isEditing ? (
+                <InlineAssetTitle
+                  value={draftTitle}
+                  fallback="Color"
+                  onSave={setDraftTitle}
+                />
+              ) : (
+                "New color"
+              )}
             </DrawerTitle>
             <Tabs
               value={mode}
               onValueChange={(value) => setMode(value as EditorMode)}
               variant="segment"
-              className="shrink-0"
+              className="flex shrink-0"
             >
-              <TabsList aria-label="Color type">
-                <TabsTrigger value="solid" className="px-3 py-1.5 capitalize">
+              <TabsList aria-label="Color type" className="h-8 items-stretch">
+                <TabsTrigger value="solid" className="px-3 capitalize">
                   Solid
                 </TabsTrigger>
-                <TabsTrigger
-                  value="gradient"
-                  className="px-3 py-1.5 capitalize"
-                >
+                <TabsTrigger value="gradient" className="px-3 capitalize">
                   Gradient
                 </TabsTrigger>
               </TabsList>
@@ -503,24 +516,6 @@ export function ColorEditorDialog({
         </DrawerHeader>
 
         <div className="min-h-0 flex-1 overflow-x-clip overflow-y-auto rounded-xl border-y border-border bg-background pb-3">
-          {isEditing ? (
-            <div className="border-b border-border px-3 py-3">
-              <label
-                htmlFor="color-asset-title"
-                className="mb-1 block text-xs font-medium text-muted-foreground"
-              >
-                Title
-              </label>
-              <Input
-                id="color-asset-title"
-                value={draftTitle}
-                onChange={(event) => setDraftTitle(event.target.value)}
-                maxLength={255}
-                placeholder="Automatic color name"
-                aria-label="Color title"
-              />
-            </div>
-          ) : null}
           <div className="w-full">
             {isGradient ? (
               <div className="space-y-4 px-3 pt-3">

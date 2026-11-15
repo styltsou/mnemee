@@ -89,6 +89,7 @@ export function ColorDetailDrawer({
   onCloseComplete,
   onOpenImage,
   onEdit,
+  editingColor = false,
   onShowInBoard,
   view,
   onViewChange,
@@ -106,6 +107,7 @@ export function ColorDetailDrawer({
   onCloseComplete?: () => void;
   onOpenImage: (image: ImageAsset) => void;
   onEdit?: () => void;
+  editingColor?: boolean;
   onShowInBoard?: () => void;
   view?: "modal" | "full";
   onViewChange?: (view: "modal" | "full") => void;
@@ -162,8 +164,11 @@ export function ColorDetailDrawer({
   };
   const copiedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchColors = useMemo(
-    () => (displayedColor ? colorAssetToSearchColors(displayedColor) : []),
-    [displayedColor],
+    () =>
+      !editingColor && displayedColor
+        ? colorAssetToSearchColors(displayedColor)
+        : [],
+    [displayedColor, editingColor],
   );
   const effectiveScope = useMemo<ColorSearchScope>(
     () =>
@@ -237,6 +242,7 @@ export function ColorDetailDrawer({
         onDismissAll={onDismissAll}
         onCloseComplete={onCloseComplete}
         onEdit={onEdit}
+        editingColor={editingColor}
         onShowInBoard={onShowInBoard}
         onPeek={
           displayedColor || (loading && assetModalId)
@@ -438,7 +444,9 @@ export function ColorDetailDrawer({
               <div className="relative min-h-0 flex-1">
                 <ScrollArea className="size-full [&_[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:w-4 [&_[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:p-1 [&_[data-slot=scroll-area-thumb]]:w-2 [&_[data-slot=scroll-area-thumb]]:backdrop-blur-sm">
                   <div className="min-h-full px-4 pt-0 pb-4">
-                    {search.isLoading || search.isSearching ? (
+                    {editingColor ? (
+                      <ColorSearchPaused />
+                    ) : search.isLoading || search.isSearching ? (
                       <ColorResultsSkeleton twoColumns />
                     ) : search.isError ? (
                       <ColorSearchError onRetry={() => void search.refetch()} />
@@ -537,6 +545,7 @@ function ColorDetailModal({
   onDismissAll,
   onCloseComplete,
   onEdit,
+  editingColor,
   onShowInBoard,
   onPeek,
   copyValue,
@@ -567,6 +576,7 @@ function ColorDetailModal({
   onDismissAll?: () => void;
   onCloseComplete?: () => void;
   onEdit?: () => void;
+  editingColor: boolean;
   onShowInBoard?: () => void;
   onPeek?: () => void;
   copyValue: () => void;
@@ -894,7 +904,9 @@ function ColorDetailModal({
                 </div>
                 <ScrollArea className="mx-4 min-h-0 min-w-0 flex-1 rounded-t-lg sm:mx-5">
                   <div className="pb-5">
-                    {searching ? (
+                    {editingColor ? (
+                      <ColorSearchPaused />
+                    ) : searching ? (
                       <ColorResultsSkeleton />
                     ) : error ? (
                       <ColorSearchError onRetry={onRetry} />
@@ -1258,6 +1270,18 @@ function ColorDetailLoading({
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden px-4 pb-5 sm:px-5">
         <ColorResultsSkeleton />
       </div>
+    </div>
+  );
+}
+
+function ColorSearchPaused() {
+  return (
+    <div className="flex min-h-48 flex-col items-center justify-center text-center">
+      <ImageIcon className="size-5 text-muted-foreground" />
+      <p className="mt-3 text-sm font-medium">Previewing color</p>
+      <p className="mt-1 max-w-52 text-xs text-muted-foreground">
+        Relevant images will be available after saving.
+      </p>
     </div>
   );
 }

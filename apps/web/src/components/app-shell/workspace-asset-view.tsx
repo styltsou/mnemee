@@ -667,6 +667,7 @@ function WorkspaceAssetViewController({
   const queryClient = useQueryClient();
   const { showAssetInBoard } = useWorkspacePeek();
   const [colorEditorOpen, setColorEditorOpen] = useState(false);
+  const [colorDraftChanged, setColorDraftChanged] = useState(false);
   const [colorRenameOpen, setColorRenameOpen] = useState(false);
   const [colorPreview, setColorPreview] = useState<Pick<
     ColorAsset,
@@ -943,6 +944,7 @@ function WorkspaceAssetViewController({
           onShowInBoard={showAction}
           onOpenImage={(image) => openAsset(image.id)}
           onEdit={() => setColorEditorOpen(true)}
+          editingColor={colorEditorOpen && colorDraftChanged}
         />
       ) : null}
       {requestedType === "link" ? (
@@ -996,18 +998,12 @@ function WorkspaceAssetViewController({
           color={asset}
           open={colorEditorOpen}
           onPreviewChange={setColorPreview}
+          onColorDraftChange={setColorDraftChanged}
           onSaveStart={(preview) =>
             setSavingColorPreview({ assetId: asset.id, preview })
           }
           onSaveComplete={() => setSavingColorPreview(null)}
-          onOpenChange={(open) => {
-            setColorEditorOpen(open);
-            if (!open) {
-              void queryClient.invalidateQueries({
-                queryKey: workspaceAssetQueryKey(workspaceSlug, asset.id),
-              });
-            }
-          }}
+          onOpenChange={setColorEditorOpen}
         />
       ) : null}
       {asset?.type === "color" ? (

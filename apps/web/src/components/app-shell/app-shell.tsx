@@ -105,7 +105,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       ? "min-h-0 overflow-hidden rounded-xl bg-card"
                       : cn(
                           "gap-4 rounded-xl bg-card p-3 shadow-sm",
-                          isScrollablePage && "min-h-0 overflow-hidden",
+                          isScrollablePage && "min-h-0 overflow-hidden pb-0",
                         ),
                   )}
                 >

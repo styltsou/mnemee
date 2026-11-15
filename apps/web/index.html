@@ -4,6 +4,57 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/mnemee-favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <style>
+      html {
+        background-color: #fff;
+        color-scheme: light;
+      }
+      html.dark {
+        background-color: #0a0a0a;
+        color-scheme: dark;
+      }
+    </style>
+    <script>
+      (() => {
+        // Keep the storage keys in step with src/lib/appearance-cache.ts.
+        const prefix = "mnemee:appearance:v1:";
+        const isTheme = (value) => ["dark", "light", "system"].includes(value);
+        let theme;
+
+        try {
+          const account = localStorage.getItem(prefix + "active-account");
+          const key = prefix + (account === null ? "guest" : "user:" + account);
+          const raw = localStorage.getItem(key);
+          try {
+            const cached = JSON.parse(raw);
+            theme = cached?.pending?.theme ?? cached?.saved?.theme;
+          } catch {
+            // Ignore malformed cached data.
+          }
+          if (
+            !isTheme(theme) &&
+            localStorage.getItem(prefix + "legacy-owner") === account
+          ) {
+            theme = localStorage.getItem("theme");
+          }
+        } catch {
+          // Follow the device setting if browser storage is unavailable.
+        }
+
+        const resolved =
+          theme === "dark" || theme === "light"
+            ? theme
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.classList.add(resolved);
+        document.querySelector('link[rel="icon"]').href =
+          `/mnemee-favicon-${resolved}.svg`;
+        document.querySelector('meta[name="theme-color"]').content =
+          resolved === "dark" ? "#0a0a0a" : "#ffffff";
+      })();
+    </script>
     <!-- title managed by TanStack Router HeadContent -->
   </head>
   <body>

@@ -25,6 +25,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { savePendingAppearance, useAppearance } from "@/lib/appearance";
 import { SETTINGS_REQUEST_EVENT, closeSettings } from "@/lib/settings-dialog";
 import { useWorkspaceOverlayNavigation } from "@/components/app-shell/use-workspace-overlay-navigation";
 import {
@@ -148,6 +149,7 @@ function ThemePreview({ theme }: { theme: ThemeValue }) {
 function AppearanceSection() {
   const { theme, setTheme } = useTheme();
   const { pattern, setPattern } = useCanvasPattern();
+  const saveFailed = useAppearance((state) => state.saveFailed);
   const activeTheme: ThemeValue = theme === "system" ? "system" : theme;
 
   return (
@@ -273,6 +275,20 @@ function AppearanceSection() {
           </div>
         </div>
         <AssetNameSettings />
+        {saveFailed ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <p className="text-sm text-muted-foreground" role="status">
+              Couldn’t sync your appearance changes.
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void savePendingAppearance()}
+            >
+              Retry sync
+            </Button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

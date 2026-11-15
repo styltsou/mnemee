@@ -2,6 +2,7 @@ import { factory } from "@/factory";
 
 import sessionRoutes from "./session.routes";
 import onboardingTourRoutes from "./onboarding-tour.routes";
+import appearanceRoutes from "./appearance.routes";
 import collectionRoutes from "./collection.routes";
 import imageUploadRoutes from "./image-upload.routes";
 import assetRoutes from "./asset.routes";
@@ -22,6 +23,7 @@ export const apiRoutes = factory
   .createApp()
   .route("/", sessionRoutes)
   .route("/", onboardingTourRoutes)
+  .route("/", appearanceRoutes)
   .route("/", collectionRoutes)
   .route("/", noteMentionRoutes)
   .route("/", workspaceSearchRoutes)

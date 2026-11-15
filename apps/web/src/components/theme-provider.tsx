@@ -1,14 +1,13 @@
 import * as React from "react";
 
-import { useEventListener } from "@/hooks/use-event-listener";
+import { changeAppearance, useAppearance } from "@/lib/appearance";
+import type { Appearance } from "@/lib/appearance-cache";
 
-type Theme = "dark" | "light" | "system";
+type Theme = Appearance["theme"];
 type ResolvedTheme = "dark" | "light";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
-  defaultTheme?: Theme;
-  storageKey?: string;
   disableTransitionOnChange?: boolean;
 };
 
@@ -18,19 +17,10 @@ type ThemeProviderState = {
 };
 
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
-const THEME_VALUES: Theme[] = ["dark", "light", "system"];
 
 const ThemeProviderContext = React.createContext<
   ThemeProviderState | undefined
 >(undefined);
-
-function isTheme(value: string | null): value is Theme {
-  if (value === null) {
-    return false;
-  }
-
-  return THEME_VALUES.includes(value as Theme);
-}
 
 function getSystemTheme(): ResolvedTheme {
   if (window.matchMedia(COLOR_SCHEME_QUERY).matches) {
@@ -82,35 +72,24 @@ function disableTransitionsTemporarily() {
   };
 }
 
+function setTheme(theme: Theme) {
+  changeAppearance({ theme });
+}
+
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
-  storageKey = "theme",
   disableTransitionOnChange = true,
   ...props
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = React.useState<Theme>(() => {
-    const storedTheme = localStorage.getItem(storageKey);
-    if (isTheme(storedTheme)) {
-      return storedTheme;
-    }
-
-    return defaultTheme;
-  });
-
-  const setTheme = React.useCallback(
-    (nextTheme: Theme) => {
-      localStorage.setItem(storageKey, nextTheme);
-      setThemeState(nextTheme);
-    },
-    [storageKey],
-  );
+  const theme = useAppearance((state) => state.theme);
 
   const applyTheme = React.useCallback(
     (nextTheme: Theme) => {
       const root = document.documentElement;
       const resolvedTheme =
         nextTheme === "system" ? getSystemTheme() : nextTheme;
+      if (root.classList.contains(resolvedTheme)) return;
+
       const restoreTransitions = disableTransitionOnChange
         ? disableTransitionsTemporarily()
         : null;
@@ -126,7 +105,7 @@ export function ThemeProvider({
     [disableTransitionOnChange],
   );
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     applyTheme(theme);
 
     if (theme !== "system") {
@@ -145,29 +124,12 @@ export function ThemeProvider({
     };
   }, [theme, applyTheme]);
 
-  useEventListener("storage", (event) => {
-    if (event.storageArea !== localStorage) {
-      return;
-    }
-
-    if (event.key !== storageKey) {
-      return;
-    }
-
-    if (isTheme(event.newValue)) {
-      setThemeState(event.newValue);
-      return;
-    }
-
-    setThemeState(defaultTheme);
-  });
-
   const value = React.useMemo(
     () => ({
       theme,
       setTheme,
     }),
-    [theme, setTheme],
+    [theme],
   );
 
   return (

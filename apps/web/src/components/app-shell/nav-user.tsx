@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { authClient, signOut, type AuthUser } from "@/lib/auth-client";
 import { clearAuthStateCache } from "@/lib/auth-flow";
+import { setAppearanceAccount } from "@/lib/appearance";
 import { clearMediaSession } from "@/lib/media-session";
 import { formatPlatformShortcut } from "@/lib/platform";
 import { openSettings } from "@/lib/settings-dialog";
@@ -160,7 +161,8 @@ export function NavUser({
                   try {
                     await clearMediaSession();
                   } finally {
-                    await signOut();
+                    const { error } = await signOut();
+                    if (!error) setAppearanceAccount(null);
                   }
                   clearAuthStateCache();
                   await router.invalidate();

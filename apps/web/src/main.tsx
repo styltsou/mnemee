@@ -5,6 +5,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import * as Sentry from "@sentry/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiError } from "@/lib/api";
+import { listenForAppearanceChanges } from "@/lib/appearance";
 import { authHistoryTransitionTypes } from "@/components/auth/auth-view-transition";
 import { initializeSentry } from "@/lib/sentry";
 import { routeTree } from "./routeTree.gen";
@@ -64,6 +65,7 @@ declare module "@tanstack/react-router" {
 }
 
 initializeSentry(router);
+listenForAppearanceChanges();
 
 // Dev only: answer the auth API from an in-browser mock (see src/dev/auth-mock).
 if (AUTH_MOCK_ENABLED) installAuthMock(router);

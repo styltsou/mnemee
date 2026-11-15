@@ -1,4 +1,5 @@
 import { authClient } from "@/lib/auth-client";
+import { setAppearanceAccount } from "@/lib/appearance";
 import { clearMediaSession } from "@/lib/media-session";
 
 export const activeSessionsQueryKey = (userId?: string) =>
@@ -67,5 +68,6 @@ export async function endAuthSessions(action: SessionAction): Promise<boolean> {
     // Once revocation succeeds, a cookie-cleanup failure cannot undo it.
     await authClient.signOut().catch(() => undefined);
   }
+  if (endsCurrentSession) setAppearanceAccount(null);
   return endsCurrentSession;
 }

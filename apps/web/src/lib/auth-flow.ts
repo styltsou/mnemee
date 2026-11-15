@@ -6,6 +6,7 @@ import {
   type Workspace,
 } from "@/lib/auth-client";
 import { ensureMediaSession } from "@/lib/media-session";
+import { setAppearanceAccount } from "@/lib/appearance";
 
 export type AuthState = {
   session: AuthSession;
@@ -106,22 +107,27 @@ export async function getAuthState() {
     return authStatePromise;
   }
 
-  authStatePromise = readAuthState()
+  const request = readAuthState((userId) => {
+    if (authStatePromise === request) setAppearanceAccount(userId);
+  })
     .then((state) => {
-      authStateCache = {
-        value: state,
-        expiresAt: Date.now() + AUTH_STATE_TTL_MS,
-      };
+      if (authStatePromise === request) {
+        authStateCache = {
+          value: state,
+          expiresAt: Date.now() + AUTH_STATE_TTL_MS,
+        };
+      }
       return state;
     })
     .finally(() => {
-      authStatePromise = null;
+      if (authStatePromise === request) authStatePromise = null;
     });
 
-  return authStatePromise;
+  authStatePromise = request;
+  return request;
 }
 
-async function readAuthState() {
+async function readAuthState(onSession: (userId: string | null) => void) {
   const session = await getSession();
 
   // A session may disappear between the browser sending its cookie and the
@@ -130,10 +136,12 @@ async function readAuthState() {
   // like a signed-out state instead of allowing consumers to dereference it.
   if (!session?.session || !session.user) {
     Sentry.setUser(null);
+    onSession(null);
     return null;
   }
 
   Sentry.setUser({ id: session.user.id });
+  onSession(session.user.id);
 
   let workspaces: Workspace[];
   try {
@@ -142,6 +150,7 @@ async function readAuthState() {
     // The session can be revoked after getSession succeeds but before this
     // follow-up request. Redirecting to sign-in is the correct recovery.
     if (isUnauthorizedError(error)) {
+      onSession(null);
       return null;
     }
 

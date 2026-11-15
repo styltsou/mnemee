@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchPeekableAsset } from "@/api/collection/fetchers";
+import { ApiError } from "@/lib/api";
 
 type NamingFailure =
   | "missing_api_key"
@@ -53,12 +54,40 @@ export function watchGradientName(
   useGradientNaming.getState().setPending(assetId, true);
   void (async () => {
     try {
-      for (let attempt = 0; attempt < 12; attempt++) {
-        await new Promise((resolve) => setTimeout(resolve, 1_500));
+      while (activePolls.get(assetId) === generation) {
+        await new Promise((resolve) => setTimeout(resolve, 1_000));
         if (activePolls.get(assetId) !== generation) return;
+        if (document.visibilityState === "hidden") continue;
         try {
-          const { asset } = await fetchPeekableAsset(workspaceSlug, assetId);
-          if (asset.type === "color" && asset.title !== previousTitle) {
+          const fetched = await fetchPeekableAsset(workspaceSlug, assetId);
+          if (activePolls.get(assetId) !== generation) return;
+          if (
+            queryClient.isMutating({
+              mutationKey: ["update-color", workspaceSlug],
+              exact: true,
+              predicate: (mutation) =>
+                (mutation.state.variables as { assetId?: string } | undefined)
+                  ?.assetId === assetId,
+            })
+          )
+            continue;
+          const { asset } = fetched;
+          if (asset.type !== "color") return;
+          if (fingerprint && asset.naming?.fingerprint !== fingerprint) {
+            queryClient.setQueryData(
+              ["workspace-asset", workspaceSlug, assetId],
+              fetched,
+            );
+            return;
+          }
+          if (
+            asset.title !== previousTitle ||
+            asset.naming?.state === "succeeded"
+          ) {
+            queryClient.setQueryData(
+              ["workspace-asset", workspaceSlug, assetId],
+              fetched,
+            );
             await Promise.all([
               queryClient.invalidateQueries({
                 predicate: ({ queryKey }) =>
@@ -67,7 +96,13 @@ export function watchGradientName(
                   queryKey[1] === workspaceSlug,
               }),
               queryClient.invalidateQueries({
-                queryKey: ["workspace-asset", workspaceSlug, assetId],
+                queryKey: ["collectionGrid", workspaceSlug],
+              }),
+              queryClient.invalidateQueries({
+                queryKey: ["inboxGrid", workspaceSlug],
+              }),
+              queryClient.invalidateQueries({
+                queryKey: ["collections", workspaceSlug],
               }),
               queryClient.invalidateQueries({
                 queryKey: ["note-mentions", workspaceSlug],
@@ -78,22 +113,23 @@ export function watchGradientName(
             ]);
             return;
           }
-          if (
-            asset.type === "color" &&
-            asset.naming?.state === "failed" &&
-            (!fingerprint || asset.naming.fingerprint === fingerprint)
-          ) {
+          if (asset.naming?.state === "failed") {
+            queryClient.setQueryData(
+              ["workspace-asset", workspaceSlug, assetId],
+              fetched,
+            );
             showGradientNamingFailure(asset.naming.error);
             return;
           }
+          if (asset.naming?.state !== "queued") return;
+        } catch (error) {
           if (
-            asset.type === "color" &&
-            asset.naming?.state === "succeeded" &&
-            (!fingerprint || asset.naming.fingerprint === fingerprint)
+            error instanceof ApiError &&
+            error.status >= 400 &&
+            error.status < 500
           )
             return;
-        } catch {
-          // A temporary fetch error is covered by the bounded wait.
+          // Temporary network errors are retried while the job is active.
         }
       }
     } finally {

@@ -1,5 +1,5 @@
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
-import { XIcon } from "lucide-react";
+import { SparklesIcon, XIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import {
@@ -12,12 +12,16 @@ export function InlineAssetTitle({
   value,
   fallback,
   onSave,
+  onRegenerate,
   disabled = false,
+  titleClassName,
 }: {
   value: string;
   fallback: string;
   onSave: (value: string) => void;
+  onRegenerate?: () => void;
   disabled?: boolean;
+  titleClassName?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -101,14 +105,18 @@ export function InlineAssetTitle({
               <button
                 ref={titleButtonRef}
                 type="button"
-                disabled={disabled}
+                aria-disabled={disabled}
                 aria-label={`Edit title: ${value || fallback}`}
                 onClick={() => {
+                  if (disabled) return;
                   cancelled.current = false;
                   setDraft(value);
                   setEditing(true);
                 }}
-                className="relative h-full min-w-0 truncate rounded-lg px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={cn(
+                  "relative h-full min-w-0 truncate rounded-lg px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  titleClassName,
+                )}
               />
             }
           >
@@ -147,6 +155,27 @@ export function InlineAssetTitle({
         >
           <XIcon aria-hidden="true" className="size-4" />
         </button>
+      ) : null}
+      {!editing && onRegenerate ? (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                  titleButtonRef.current?.focus({ preventScroll: true });
+                  onRegenerate();
+                }}
+                aria-label="Regenerate title"
+                className="relative flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-[background-color,opacity,color] duration-75 group-focus-within/title:opacity-100 group-hover/title:opacity-100 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none [@media(hover:none)]:opacity-100"
+              />
+            }
+          >
+            <SparklesIcon aria-hidden="true" className="size-4" />
+          </TooltipTrigger>
+          <TooltipContent side="top">Regenerate title</TooltipContent>
+        </Tooltip>
       ) : null}
     </span>
   );

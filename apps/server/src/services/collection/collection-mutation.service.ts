@@ -427,6 +427,7 @@ export class CollectionMutationService {
       note: null,
       gradient,
       title: name,
+      nameEditedByUser: false,
       naming: namingStateFromQueue(namingResult),
       isFavorite: false,
       createdAt: color.createdAt.toISOString(),

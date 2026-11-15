@@ -1932,6 +1932,7 @@ export function applyColorDraftToContents(
           ...(draft.title === undefined
             ? {}
             : {
+                nameEditedByUser: Boolean(draft.title?.trim()),
                 title:
                   draft.title?.trim() ||
                   (isGradient ? colorGradientTitle(nextGradient!) : null),

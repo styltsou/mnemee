@@ -13,6 +13,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AssetDeleteShortcut } from "@/components/board/asset-delete-shortcut";
 import { AssetMoveShortcut } from "@/components/board/asset-move-shortcut";
+import { ColorAssetTitle } from "@/components/board/color-asset-title";
 import {
   ArrowLeftRightIcon,
   DownloadIcon,
@@ -364,31 +365,14 @@ export function WorkspacePeekProvider({
     return queryClient.getQueryCache().subscribe((event) => {
       const key = event.query.queryKey;
       if (key[0] !== "workspace-asset" || key[1] !== workspaceSlug) return;
-      const data = event.query.state.data as
-        | {
-            asset: {
-              id: string;
-              type: string;
-              title?: string | null;
-              hex?: string | null;
-              gradient?: ColorAsset["gradient"];
-            };
-          }
-        | undefined;
+      if (event.type !== "updated" || event.action.type !== "success") return;
+      const data = event.query.state.data as PeekableAssetResponse | undefined;
       if (data?.asset.type !== "color") return;
       const color = data.asset;
       setTarget((current) => {
         if (current?.type !== "color" || current.asset.id !== color.id)
           return current;
-        const next = {
-          ...current,
-          asset: {
-            ...current.asset,
-            title: color.title,
-            hex: color.hex ?? null,
-            gradient: color.gradient,
-          },
-        };
+        const next = { ...current, asset: color };
         targetCacheRef.current.set(color.id, next);
         return next;
       });
@@ -1280,7 +1264,7 @@ function WorkspacePeekSwapButton({ target }: { target: PeekTarget }) {
     activeNoteId !== undefined &&
     activeNoteId !== target.asset.id;
 
-  const handleSwap = useCallback(async () => {
+  const handleSwap = async () => {
     if (isSwapping) return;
     setIsSwapping(true);
     try {
@@ -1288,7 +1272,7 @@ function WorkspacePeekSwapButton({ target }: { target: PeekTarget }) {
     } finally {
       setIsSwapping(false);
     }
-  }, [isSwapping, swapNotes]);
+  };
 
   if (!canSwapNotes) return null;
 
@@ -2286,17 +2270,26 @@ function PeekColor({
           }
         />
         <div className="mt-5 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-lg font-medium">
-              {color.title?.trim() || color.hex?.toUpperCase() || "Color"}
-            </p>
+          <div className="min-w-0">
+            <div className="-ml-2 text-lg font-medium">
+              <ColorAssetTitle
+                key={color.id}
+                color={color}
+                workspaceSlug={workspaceSlug}
+              />
+            </div>
             {!gradient && color.hex ? (
               <p className="mt-1 font-mono text-xs text-muted-foreground">
                 {color.hex.toUpperCase()}
               </p>
             ) : null}
           </div>
-          <Button size="sm" variant="outline" onClick={copy}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0"
+            onClick={copy}
+          >
             Copy value
           </Button>
         </div>

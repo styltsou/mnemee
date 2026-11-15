@@ -311,17 +311,26 @@ export const UpdateColorSchema = z
     gradient: ColorGradientSchema.nullable().optional(),
     note: z.string().max(10_000).nullable().optional(),
     title: z.string().trim().max(255).nullable().optional(),
+    regenerateTitle: z.literal(true).optional(),
   })
   .superRefine((value, context) => {
     if (
       value.hex === undefined &&
       value.gradient === undefined &&
       value.note === undefined &&
-      value.title === undefined
+      value.title === undefined &&
+      !value.regenerateTitle
     ) {
       context.addIssue({
         code: "custom",
         message: "Provide at least one color field to update",
+      });
+    }
+    if (value.regenerateTitle && value.title !== undefined) {
+      context.addIssue({
+        code: "custom",
+        message: "Provide either a title or request regeneration",
+        path: ["title"],
       });
     }
     if (value.gradient === null && value.hex === undefined) {
@@ -342,6 +351,7 @@ export type UpdatedColor = {
   note: string | null;
   updatedAt: string;
   title: string | null;
+  nameEditedByUser: boolean;
   isFavorite: boolean;
   gradient?: z.infer<typeof ColorGradientSchema> | null;
   naming?: {
@@ -623,6 +633,7 @@ export const CollectionColorNodeSchema = z.object({
   note: z.string().nullable(),
   gradient: ColorGradientSchema.nullable().optional(),
   title: z.string().nullable(),
+  nameEditedByUser: z.boolean().optional(),
   naming: z
     .object({
       state: z.enum(["queued", "prompt", "none", "failed", "succeeded"]),

@@ -71,8 +71,13 @@ export function namingStateFromStored(
       error === "provider_unavailable" ||
       error === "internal_error")
   )
-    return { state: "failed", error };
-  if (status === "succeeded") return { state: "succeeded" };
+    return fingerprint
+      ? { state: "failed", fingerprint, error }
+      : { state: "failed", error };
+  if (status === "succeeded")
+    return fingerprint
+      ? { state: "succeeded", fingerprint }
+      : { state: "succeeded" };
   return undefined;
 }
 

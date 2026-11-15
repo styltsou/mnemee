@@ -2903,6 +2903,11 @@
             "type": ["string", "null"],
             "maxLength": 255,
             "description": "A typed title; null or an empty string clears it."
+          },
+          "regenerateTitle": {
+            "type": "boolean",
+            "const": true,
+            "description": "Use automatic naming for a custom title. Omit title when requesting regeneration."
           }
         }
       },
@@ -2910,8 +2915,20 @@
         "type": "object",
         "required": ["state"],
         "properties": {
-          "state": { "type": "string", "enum": ["queued", "prompt", "none"] },
-          "fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          "state": {
+            "type": "string",
+            "enum": ["queued", "prompt", "none", "failed", "succeeded"]
+          },
+          "fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "error": {
+            "type": "string",
+            "enum": [
+              "missing_api_key",
+              "usage_limit",
+              "provider_unavailable",
+              "internal_error"
+            ]
+          }
         }
       },
       "UpdatedColor": {
@@ -2923,6 +2940,7 @@
           "note",
           "updatedAt",
           "title",
+          "nameEditedByUser",
           "isFavorite"
         ],
         "properties": {
@@ -2932,6 +2950,7 @@
           "note": { "type": ["string", "null"] },
           "updatedAt": { "type": "string", "format": "date-time" },
           "title": { "type": ["string", "null"] },
+          "nameEditedByUser": { "type": "boolean" },
           "isFavorite": { "type": "boolean" },
           "gradient": {
             "oneOf": [

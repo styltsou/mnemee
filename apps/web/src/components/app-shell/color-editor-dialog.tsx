@@ -48,7 +48,6 @@ import {
 import { GLASS_FRAME_CLASS } from "@/lib/glass";
 import { cn } from "@/lib/utils";
 import type { ColorAsset } from "@/types/asset";
-import { InlineAssetTitle } from "@/components/board/inline-asset-title";
 
 type EditorMode = "solid" | "gradient";
 
@@ -181,7 +180,6 @@ export function ColorEditorDialog({
   const [draftHex, setDraftHex] = useState(color?.hex ?? DEFAULT_HEX);
   const [hexInput, setHexInput] = useState(color?.hex ?? DEFAULT_HEX);
   const hexInputFocusedRef = useRef(false);
-  const [draftTitle, setDraftTitle] = useState(color?.title ?? "");
   const [mode, setMode] = useState<EditorMode>(
     color?.gradient ? "gradient" : "solid",
   );
@@ -249,7 +247,6 @@ export function ColorEditorDialog({
       (gradientType === (savedGradient?.type ?? "linear") &&
         gradientAngle === savedGradient?.angle &&
         JSON.stringify(draftGradient?.stops) === JSON.stringify(savedStops)));
-  const isSavedDraft = isSavedColor && draftTitle === (color?.title ?? "");
 
   useEffect(() => {
     onColorDraftChange?.(Boolean(open && color && !isSavedColor));
@@ -305,7 +302,6 @@ export function ColorEditorDialog({
     const stops = initialStops(color);
     setDraftHex(color.hex ?? DEFAULT_HEX);
     setHexInput(color.hex ?? DEFAULT_HEX);
-    setDraftTitle(color.title ?? "");
     setMode(color.gradient ? "gradient" : "solid");
     setGradientStops(stops);
     setGradientType(color.gradient?.type ?? "linear");
@@ -397,9 +393,6 @@ export function ColorEditorDialog({
             assetId: color.id,
             ...(hex ? { hex } : {}),
             gradient,
-            ...(draftTitle === (color.title ?? "")
-              ? {}
-              : { title: draftTitle.trim() || null }),
           },
           {
             onSuccess: () => {
@@ -487,15 +480,7 @@ export function ColorEditorDialog({
         <DrawerHeader className="w-full !p-0 text-left">
           <div className="flex w-full items-center justify-between gap-3 p-3">
             <DrawerTitle className="min-w-0 font-sans text-sm leading-5 font-medium">
-              {isEditing ? (
-                <InlineAssetTitle
-                  value={draftTitle}
-                  fallback="Color"
-                  onSave={setDraftTitle}
-                />
-              ) : (
-                "New color"
-              )}
+              {isEditing ? "Edit color" : "New color"}
             </DrawerTitle>
             <Tabs
               value={mode}
@@ -947,7 +932,7 @@ export function ColorEditorDialog({
               {isEditing ? (
                 <Button
                   variant="outline"
-                  disabled={isPending || isSavedDraft}
+                  disabled={isPending || isSavedColor}
                   onClick={resetDraft}
                 >
                   Reset

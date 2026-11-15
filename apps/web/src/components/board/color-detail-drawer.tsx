@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea";
 import { AssetTimestampCard } from "@/components/board/asset-timestamp-card";
+import { ColorAssetTitle } from "@/components/board/color-asset-title";
 import { AssetViewerModeIcon } from "@/components/board/asset-viewer-mode-icon";
 import {
   AssetNotesButton,
@@ -68,8 +69,6 @@ import type { ColorAsset, ImageAsset } from "@/types/asset";
 import { useWorkspacePeek } from "@/components/app-shell/workspace-peek";
 import { useAssetFullscreenMorph } from "@/components/board/use-asset-fullscreen-morph";
 import { cn } from "@/lib/utils";
-import { useGradientNaming } from "@/lib/gradient-naming";
-import { GRADIENT_NAME_SHIMMER } from "@/lib/gradient-name-shimmer";
 
 const EMPTY_RESULTS: never[] = [];
 const COLOR_VIEWER_LAYOUT_TRANSITION = {
@@ -150,9 +149,6 @@ export function ColorDetailDrawer({
       },
     );
   }, [assetModalId, displayedColor, onClose, open, peekColor, scope]);
-  const naming = useGradientNaming((state) =>
-    Boolean(displayedColor && state.pending[displayedColor.id]),
-  );
   const [includeDescendants, setIncludeDescendants] = useState(false);
   const [copied, setCopied] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
@@ -325,16 +321,18 @@ export function ColorDetailDrawer({
                 </span>
               </button>
               <div className="min-w-0">
-                <DrawerTitle
-                  className={cn(
-                    "truncate text-base leading-tight font-medium",
-                    naming && GRADIENT_NAME_SHIMMER,
-                  )}
-                >
+                <DrawerTitle className="sr-only">
                   {displayedColor.title?.trim() ||
                     displayedColor.hex?.toUpperCase() ||
                     "Color"}
                 </DrawerTitle>
+                <div className="-ml-2 text-base leading-tight font-medium">
+                  <ColorAssetTitle
+                    key={displayedColor.id}
+                    color={displayedColor}
+                    workspaceSlug={workspaceSlug}
+                  />
+                </div>
                 {hasGradient ? (
                   <DrawerDescription className="sr-only">
                     Color details and relevant images.
@@ -607,9 +605,6 @@ function ColorDetailModal({
 }) {
   const title =
     color?.title?.trim() || color?.hex?.toUpperCase() || "Loading color";
-  const naming = useGradientNaming((state) =>
-    Boolean(color && state.pending[color.id]),
-  );
   const hasAlpha = Boolean(
     color?.hex?.length === 9 && !color.hex.endsWith("ff"),
   );
@@ -793,14 +788,13 @@ function ColorDetailModal({
             </TooltipContent>
           </Tooltip>
           {color ? (
-            <span
-              className={cn(
-                "max-w-[min(32rem,calc(100vw-14rem))] min-w-0 truncate px-1 text-sm font-medium text-foreground",
-                naming && GRADIENT_NAME_SHIMMER,
-              )}
-            >
-              {title}
-            </span>
+            <div className="max-w-lg min-w-0 text-sm font-medium text-foreground">
+              <ColorAssetTitle
+                key={color.id}
+                color={color}
+                workspaceSlug={workspaceSlug}
+              />
+            </div>
           ) : (
             <Skeleton
               className="mx-1 h-4 w-28 shrink-0 rounded-sm"

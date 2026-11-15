@@ -89,6 +89,7 @@ export function collectionNodeToAsset(node: CollectionNode): Asset {
       createdAt: node.createdAt,
       updatedAt: node.updatedAt,
       title: node.title,
+      nameEditedByUser: node.nameEditedByUser,
       isFavorite: node.isFavorite,
       clientId: node.clientId,
     };

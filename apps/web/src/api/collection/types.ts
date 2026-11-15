@@ -459,6 +459,7 @@ export type CollectionColorNode = {
   note: string | null;
   gradient?: ColorGradient | null;
   title: string | null;
+  nameEditedByUser?: boolean;
   naming?: {
     state: "queued" | "prompt" | "none" | "failed" | "succeeded";
     fingerprint?: string;
@@ -497,6 +498,7 @@ export type UpdateColorInput = {
   gradient?: ColorGradient | null;
   note?: string | null;
   title?: string | null;
+  regenerateTitle?: true;
 };
 
 export type UpdatedColor = Pick<
@@ -506,6 +508,7 @@ export type UpdatedColor = Pick<
   | "hex"
   | "note"
   | "title"
+  | "nameEditedByUser"
   | "isFavorite"
   | "gradient"
   | "updatedAt"

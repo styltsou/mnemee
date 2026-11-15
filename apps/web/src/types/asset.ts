@@ -130,6 +130,7 @@ export interface ColorAsset {
     stops?: Array<{ color: string; position: number }>;
   } | null;
   title?: string | null;
+  nameEditedByUser?: boolean;
   createdAt?: string;
   updatedAt?: string;
   isFavorite?: boolean;

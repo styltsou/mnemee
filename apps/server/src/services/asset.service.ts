@@ -1287,7 +1287,10 @@ export class AssetService implements IAssetService {
         "Video is not ready for download",
       );
     const ext = row.original.contentType === "video/webm" ? "webm" : "mp4";
-    const filename = `${sanitizeFilename(row.title ?? "video")}.${ext}`;
+    const name = sanitizeFilename(row.title?.trim() || "video");
+    const filename = name.toLowerCase().endsWith(`.${ext}`)
+      ? name
+      : `${name}.${ext}`;
     return this.objectStorageService.createPresignedDownloadUrl
       ? this.objectStorageService.createPresignedDownloadUrl(
           row.original.objectKey,

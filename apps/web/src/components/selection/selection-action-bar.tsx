@@ -54,11 +54,17 @@ import {
   GLASS_SURFACE_CLASS,
 } from "@/lib/glass";
 import { cn } from "@/lib/utils";
+import {
+  SELECTION_EASE,
+  SELECTION_ENTER_DURATION,
+  SELECTION_EXIT_DURATION,
+} from "./selection-motion";
 
 type SelectionActionBarProps = {
   count: number;
   layoutCount?: number;
   surface: "inbox" | "canvas" | "grid";
+  variant?: "floating" | "header";
   onClear: () => void;
   onMove?: () => void;
   moveDisabled?: boolean;
@@ -75,12 +81,12 @@ const BUTTON_GROUP_SURFACE_CLASS = cn(
   "relative z-10 rounded-md",
   GLASS_SURFACE_CLASS,
 );
-const BAR_EASE = [0.22, 1, 0.36, 1] as const;
 
 export function SelectionActionBar({
   count,
   layoutCount,
   surface,
+  variant = "floating",
   onClear,
   onMove,
   moveDisabled = false,
@@ -98,6 +104,8 @@ export function SelectionActionBar({
     onDelete: () => setDeleteDialogOpen(true),
   });
   const reduceMotion = useReducedMotion();
+  const isHeader = variant === "header";
+  const ActionGroup = isHeader ? "div" : ButtonGroup;
   const restingState = { transform: "translateY(0px)" };
   const hiddenState = {
     transform: reduceMotion ? "translateY(0px)" : "translateY(-4px)",
@@ -109,29 +117,55 @@ export function SelectionActionBar({
         {count >= 1 && showActions ? (
           <motion.div
             key="selection-bar"
-            initial={hiddenState}
+            initial={isHeader ? false : hiddenState}
             animate={restingState}
             role="toolbar"
             aria-label="Selection actions"
             className="flex w-fit flex-col items-center gap-1"
             transition={{
-              duration: reduceMotion ? 0 : 0.15,
-              ease: BAR_EASE,
+              duration: reduceMotion ? 0 : SELECTION_ENTER_DURATION,
+              ease: SELECTION_EASE,
             }}
           >
             <div
-              className={cn("relative w-fit", FLOATING_GLASS_BACKDROP_CLASS)}
+              className={cn(
+                "relative w-fit",
+                !isHeader && FLOATING_GLASS_BACKDROP_CLASS,
+              )}
             >
               <div
                 className={cn(
-                  "relative z-10 rounded-lg p-1",
-                  GLASS_FRAME_CLASS,
+                  "relative z-10",
+                  isHeader ? "flex items-center gap-2" : "rounded-lg p-1",
+                  !isHeader && GLASS_FRAME_CLASS,
                   className,
                 )}
               >
-                <div className="flex items-center">
-                  <div className={BUTTON_GROUP_SURFACE_CLASS}>
-                    <ButtonGroup>
+                {isHeader ? (
+                  <span
+                    className="text-sm font-medium whitespace-nowrap tabular-nums"
+                    role="status"
+                  >
+                    {count}
+                    <span className="sr-only sm:not-sr-only"> selected</span>
+                  </span>
+                ) : null}
+                <div
+                  className={cn(
+                    "flex shrink-0 items-center",
+                    isHeader && "gap-1",
+                  )}
+                >
+                  <div
+                    className={
+                      isHeader ? undefined : BUTTON_GROUP_SURFACE_CLASS
+                    }
+                  >
+                    <ActionGroup
+                      className={
+                        isHeader ? "flex items-center gap-1" : undefined
+                      }
+                    >
                       {onMove ? (
                         <Tooltip>
                           <TooltipTrigger
@@ -139,6 +173,7 @@ export function SelectionActionBar({
                               <Button
                                 type="button"
                                 variant="ghost"
+                                size={isHeader ? "icon-sm" : "default"}
                                 aria-label={
                                   surface === "inbox"
                                     ? "Move to collection"
@@ -167,11 +202,15 @@ export function SelectionActionBar({
                           <FolderInputIcon />
                         </PlaceholderAction>
                       )}
-                      <ButtonGroupSeparator />
-                      <PlaceholderAction label="Favorite">
-                        <HeartIcon />
-                      </PlaceholderAction>
-                      <ButtonGroupSeparator />
+                      {!isHeader ? (
+                        <>
+                          <ButtonGroupSeparator />
+                          <PlaceholderAction label="Favorite">
+                            <HeartIcon />
+                          </PlaceholderAction>
+                          <ButtonGroupSeparator />
+                        </>
+                      ) : null}
                       {onDelete ? (
                         <Tooltip>
                           <TooltipTrigger
@@ -180,6 +219,7 @@ export function SelectionActionBar({
                                 type="button"
                                 variant="ghost"
                                 aria-label="Delete selected"
+                                size={isHeader ? "icon-sm" : "default"}
                                 aria-keyshortcuts="Delete"
                                 onClick={() => setDeleteDialogOpen(true)}
                               />
@@ -196,7 +236,7 @@ export function SelectionActionBar({
                           <Trash2Icon />
                         </PlaceholderAction>
                       )}
-                    </ButtonGroup>
+                    </ActionGroup>
                   </div>
                   <AnimatePresence initial={false}>
                     {surface === "canvas" && (layoutCount ?? count) >= 2 ? (
@@ -208,13 +248,15 @@ export function SelectionActionBar({
                           opacity: 0,
                           width: 0,
                           transition: {
-                            duration: reduceMotion ? 0 : 0.1,
-                            ease: BAR_EASE,
+                            duration: reduceMotion
+                              ? 0
+                              : SELECTION_EXIT_DURATION,
+                            ease: SELECTION_EASE,
                           },
                         }}
                         transition={{
-                          duration: reduceMotion ? 0 : 0.15,
-                          ease: BAR_EASE,
+                          duration: reduceMotion ? 0 : SELECTION_ENTER_DURATION,
+                          ease: SELECTION_EASE,
                         }}
                         className="-m-1 overflow-hidden p-1"
                       >
@@ -263,34 +305,46 @@ export function SelectionActionBar({
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
-                  <div className={cn(BUTTON_GROUP_SURFACE_CLASS, "ml-1")}>
-                    <ButtonGroup>
+                  <div
+                    className={cn(
+                      !isHeader && cn(BUTTON_GROUP_SURFACE_CLASS, "ml-1"),
+                    )}
+                  >
+                    <ActionGroup>
                       <Tooltip>
                         <TooltipTrigger
                           render={
                             <Button
                               type="button"
                               variant="ghost"
-                              size="icon"
+                              size={isHeader ? "icon-sm" : "icon"}
                               aria-label="Clear selection"
+                              aria-keyshortcuts={
+                                isHeader ? "Escape" : undefined
+                              }
                               onClick={onClear}
                             />
                           }
                         >
                           <XIcon />
                         </TooltipTrigger>
-                        <TooltipContent>Clear selection</TooltipContent>
+                        <TooltipContent>
+                          Clear selection{" "}
+                          {isHeader ? <ShortcutKey>Esc</ShortcutKey> : null}
+                        </TooltipContent>
                       </Tooltip>
-                    </ButtonGroup>
+                    </ActionGroup>
                   </div>
                 </div>
-                <div className="flex items-center justify-between px-0 pt-1.5 pr-[3px] pb-0.5 text-[10px] leading-4 text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <ShortcutKey>Esc</ShortcutKey>
-                    <span>to close</span>
-                  </span>
-                  <span>{count} selected</span>
-                </div>
+                {!isHeader ? (
+                  <div className="flex items-center justify-between px-0 pt-1.5 pr-[3px] pb-0.5 text-[10px] leading-4 text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <ShortcutKey>Esc</ShortcutKey>
+                      <span>to close</span>
+                    </span>
+                    <span>{count} selected</span>
+                  </div>
+                ) : null}
               </div>
             </div>
           </motion.div>

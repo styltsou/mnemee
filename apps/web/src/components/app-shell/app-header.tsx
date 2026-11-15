@@ -1,5 +1,6 @@
 import { Fragment, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,17 +27,28 @@ import { CreateCollectionDialog } from "@/components/app-shell/create-collection
 import { useWorkspace } from "@/api/workspace";
 import { useCollectionContents } from "@/api/collection";
 import { titleFromSlug } from "@/lib/slug";
-import { getCollectionViewScope, usePersistedStore } from "@/store";
+import {
+  getCollectionViewScope,
+  usePersistedStore,
+  useTransientStore,
+} from "@/store";
 import { makeBoardKey } from "@/components/canvas/canvas-key";
 import { CollectionViewMenu } from "@/components/collections/collection-view-menu";
+import { GridSelectionActions } from "@/components/collections/grid-selection-actions";
+import { HeaderSelectionRecess } from "./header-selection-recess";
 import { GridDensityControl } from "@/components/asset-grid/grid-density-control";
 import { useCommittedPathname } from "./use-committed-pathname";
 import { mergeWorkspaceOverlaySearch } from "@/lib/workspace-overlay-search";
 import type { WorkspaceRouteSearch } from "@/routes/$workspaceSlug/route";
 import { getBreadcrumbLayout } from "./breadcrumb-layout";
+import { selectionIdsForScope } from "@/lib/selection";
+import { cn } from "@/lib/utils";
+import "./header-selection-reveal.css";
 
 type HeaderCrumb = { label: string; path?: string };
 const LABEL_CLASS = "block max-w-40 truncate";
+const AnimatedBreadcrumbItem = motion.create(BreadcrumbItem);
+const HEADER_EASE = [0.22, 1, 0.36, 1] as const;
 
 function CrumbLabel({
   label,
@@ -86,7 +98,8 @@ function CrumbLabel({
   );
 }
 
-function AppBreadcrumbs() {
+function AppBreadcrumbs({ selectionActive }: { selectionActive: boolean }) {
+  const reduceMotion = useReducedMotion();
   const pathname = useCommittedPathname();
   const workspaceSearch = useRouterState({
     select: (state) => state.location.search as WorkspaceRouteSearch,
@@ -138,6 +151,7 @@ function AppBreadcrumbs() {
       const { showRoot, tailCount } = getBreadcrumbLayout(
         widths,
         container.clientWidth,
+        selectionActive,
       );
       setLayout((previous) =>
         previous.showRoot === showRoot && previous.tailCount === tailCount
@@ -152,7 +166,7 @@ function AppBreadcrumbs() {
     return () => observer.disconnect();
     // Re-runs when labelsKey changes; it is not read inside the effect.
     // oxlint-disable-next-line react/exhaustive-effect-dependencies
-  }, [labelsKey]);
+  }, [labelsKey, selectionActive]);
   const tailStart = Math.max(1, crumbs.length - layout.tailCount);
   const hidden =
     crumbs.length > 1 ? crumbs.slice(layout.showRoot ? 1 : 0, tailStart) : [];
@@ -243,13 +257,25 @@ function AppBreadcrumbs() {
                 </>
               )}
               {(index > 0 || insertMenu) && separator}
-              <BreadcrumbItem className={current ? "min-w-0" : "shrink-0"}>
+              <AnimatedBreadcrumbItem
+                layout={reduceMotion ? false : "position"}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  layout: { duration: 0.2, ease: HEADER_EASE },
+                  opacity: {
+                    duration: reduceMotion ? 0 : 0.12,
+                    delay: reduceMotion ? 0 : 0.08,
+                  },
+                }}
+                className={current ? "min-w-0" : "shrink-0"}
+              >
                 <CrumbLabel
                   label={crumb.label}
                   current={current}
                   link={current ? undefined : linkFor(crumb)}
                 />
-              </BreadcrumbItem>
+              </AnimatedBreadcrumbItem>
             </Fragment>
           );
         })}
@@ -277,12 +303,49 @@ export function AppHeader() {
   const setCollectionView = usePersistedStore(
     (state) => state.setCollectionView,
   );
+  const boardKey = makeBoardKey(
+    workspaceSlug,
+    collectionSlug,
+    folderPath || undefined,
+  );
+  const selection = useTransientStore((state) => state.selection);
+  const selectedIds = selectionIdsForScope(selection, boardKey);
+  const hasGridSelection =
+    isBoardView && boardView === "grid" && selectedIds.length > 0;
+  const [retainSelectionSpace, setRetainSelectionSpace] = useState(false);
+  const selectionSpaceVisible = hasGridSelection || retainSelectionSpace;
 
   return (
     <header className="sticky top-0 z-20 flex h-12 min-w-0 shrink-0 items-center bg-sidebar transition-[height] duration-(--sidebar-duration) ease-(--sidebar-ease) group-has-[[data-slot=sidebar][data-state=collapsed]]/sidebar-wrapper:h-12 motion-reduce:transition-none md:h-14">
-      <div className="flex h-12 w-full min-w-0 items-center gap-2 px-2 md:px-0">
-        <SidebarTrigger />
-        <AppBreadcrumbs />
+      <div
+        className={cn(
+          "header-selection-layout flex h-full w-full min-w-0 items-center gap-2 px-2 md:px-0",
+          selectionSpaceVisible && "header-selection-layout-active",
+        )}
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <SidebarTrigger />
+          <AppBreadcrumbs selectionActive={selectionSpaceVisible} />
+        </div>
+        <AnimatePresence
+          initial={false}
+          onExitComplete={() => setRetainSelectionSpace(false)}
+        >
+          {hasGridSelection ? (
+            <HeaderSelectionRecess
+              key={boardKey}
+              onRevealStart={() => setRetainSelectionSpace(true)}
+            >
+              <GridSelectionActions
+                selectedIds={selectedIds}
+                boardKey={boardKey}
+                workspaceSlug={workspaceSlug}
+                collectionSlug={collectionSlug}
+                folderPath={folderPath || undefined}
+              />
+            </HeaderSelectionRecess>
+          ) : null}
+        </AnimatePresence>
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {collectionsSegment === "inbox" ? <GridDensityControl /> : null}
           {isCollectionsView ? (
@@ -300,12 +363,9 @@ export function AppHeader() {
           ) : null}
           {isBoardView ? (
             <CollectionViewMenu
-              boardKey={makeBoardKey(
-                workspaceSlug,
-                collectionSlug,
-                folderPath || undefined,
-              )}
+              boardKey={boardKey}
               value={boardView}
+              compact={selectionSpaceVisible}
               workspaceSlug={workspaceSlug}
               onChange={(view) => setCollectionView(collectionViewScope, view)}
             />

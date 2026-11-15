@@ -1,0 +1,40 @@
+.header-selection-layout {
+  position: relative;
+  isolation: isolate;
+}
+
+.header-selection-layout-active {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px auto;
+}
+
+/* The SVG edge morphs in place and overlaps the board by two pixels so the
+   header and board read as one continuous, borderless surface. */
+.header-selection-recess {
+  position: absolute;
+  bottom: 0;
+  height: 48px;
+  left: calc(100% - 180px);
+  width: 132px;
+  border: 0;
+  box-shadow: none;
+}
+
+.header-selection-layout-active > :first-child {
+  grid-column: 1;
+}
+
+.header-selection-layout-active > :last-child {
+  grid-column: 3;
+}
+
+@media (min-width: 640px) {
+  .header-selection-layout-active {
+    grid-template-columns: minmax(0, 1fr) 216px minmax(0, 1fr);
+  }
+
+  .header-selection-recess {
+    left: calc(50% - 108px);
+    width: 216px;
+  }
+}

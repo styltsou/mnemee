@@ -44,11 +44,13 @@ export function CollectionViewMenu({
   value,
   workspaceSlug,
   onChange,
+  compact = false,
 }: {
   boardKey: string;
   value: BoardView;
   workspaceSlug: string;
   onChange: (view: BoardView) => void;
+  compact?: boolean;
 }) {
   const isCanvasLocked = usePersistedStore(
     (state) => state.boardLocks[boardKey] ?? false,
@@ -114,7 +116,7 @@ export function CollectionViewMenu({
             />
           }
         >
-          <span>View</span>
+          <span className={compact ? "hidden sm:inline" : undefined}>View</span>
           <ChevronDownIcon />
         </DropdownMenuTrigger>
       </div>

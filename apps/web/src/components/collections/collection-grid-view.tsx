@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner";
 
 import {
-  useBulkDelete,
   useMoveCollectionNodesToFolder,
   type CollectionNode,
 } from "@/api/collection";
@@ -31,8 +30,6 @@ import {
   selectionMarqueeClassName,
   useMarqueeSelection,
 } from "@/components/board/use-marquee-selection";
-import { SelectionActionBar } from "@/components/selection/selection-action-bar";
-import { MoveToDialog } from "@/components/move-to-dialog";
 import { VirtualMasonry } from "@/components/asset-grid/virtual-masonry";
 import { EmptyStateShortcuts } from "@/components/asset-grid/empty-state-shortcuts";
 import { GridDensityControl } from "@/components/asset-grid/grid-density-control";
@@ -147,7 +144,6 @@ const CollectionGridContent = memo(function CollectionGridContent({
   const contentRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [contentWidth, setContentWidth] = useState(0);
-  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [activeDrag, setActiveDrag] = useState<GridNodeDragData>();
   const [pendingFolderDrop, setPendingFolderDrop] =
     useState<PendingFolderDrop>();
@@ -161,7 +157,6 @@ const CollectionGridContent = memo(function CollectionGridContent({
     (state) => state.toggleSelectedNode,
   );
   const clearSelection = useTransientStore((state) => state.clearSelection);
-  const bulkDelete = useBulkDelete(workspaceSlug);
   const moveNodesToFolder = useMoveCollectionNodesToFolder(
     workspaceSlug,
     collectionSlug,
@@ -439,24 +434,16 @@ const CollectionGridContent = memo(function CollectionGridContent({
           onPointerCancelCapture={marquee.onPointerCancelCapture}
           onClickCapture={marquee.consumeClick}
           onClick={(event) => {
-            if (event.target === event.currentTarget) clearSelection(boardKey);
+            if (
+              event.target instanceof Element &&
+              !event.target.closest(
+                "[data-grid-node-id], [data-grid-control], a, button, input, textarea, select, [contenteditable]:not([contenteditable='false'])",
+              )
+            ) {
+              clearSelection(boardKey);
+            }
           }}
         >
-          <div className="pointer-events-auto sticky top-5 z-20 mx-auto h-0 w-fit">
-            <SelectionActionBar
-              count={selectedIds.length}
-              surface="grid"
-              onClear={() => clearSelection(boardKey)}
-              onMove={() => setMoveDialogOpen(true)}
-              onDelete={() => {
-                bulkDelete.mutate(
-                  { nodeIds: selectedIds, collectionSlug },
-                  { onSuccess: () => clearSelection(boardKey) },
-                );
-              }}
-            />
-          </div>
-
           {isEmpty ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center">
               <div className="max-w-sm space-y-1.5">
@@ -564,17 +551,6 @@ const CollectionGridContent = memo(function CollectionGridContent({
               }}
             />
           ) : null}
-          <MoveToDialog
-            open={moveDialogOpen && selectedIds.length > 0}
-            onOpenChange={setMoveDialogOpen}
-            source={{
-              workspaceSlug,
-              sourceCollectionSlug: collectionSlug,
-              sourceFolderPath: folderPath,
-              nodeIds: selectedIds,
-            }}
-            onMoved={() => clearSelection(boardKey)}
-          />
         </div>
         {loadError ? (
           <div className="absolute inset-0 z-10">{loadError}</div>

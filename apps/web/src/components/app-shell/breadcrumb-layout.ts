@@ -1,5 +1,9 @@
 // Leave some air around the path, especially beside controls in narrow headers.
-export function getBreadcrumbLayout(widths: number[], containerWidth: number) {
+export function getBreadcrumbLayout(
+  widths: number[],
+  containerWidth: number,
+  preferTrailingSegments = false,
+) {
   const narrow = containerWidth < 480;
   const available = Math.max(0, containerWidth - (narrow ? 40 : 24));
   const maxCrumbs = narrow ? 3 : 5;
@@ -8,6 +12,18 @@ export function getBreadcrumbLayout(widths: number[], containerWidth: number) {
   const fullWidth =
     widths.reduce((sum, width) => sum + width, 0) +
     Math.max(0, count - 1) * separator;
+  if (preferTrailingSegments && (count > maxCrumbs || fullWidth > available)) {
+    // Reserve the overflow menu, then keep as much of the current path as fits.
+    let tailCount = Math.min(count - 1, maxCrumbs - 1);
+    while (tailCount > 1) {
+      const tailWidth = widths
+        .slice(-tailCount)
+        .reduce((sum, width) => sum + width, 0);
+      if (24 + tailWidth + tailCount * separator <= available) break;
+      tailCount--;
+    }
+    return { showRoot: false, tailCount };
+  }
   let showRoot = true;
   let tailCount = Math.min(count - 1, maxCrumbs - 1);
   if (count <= maxCrumbs && fullWidth <= available) {

@@ -158,6 +158,7 @@ export function AssetNameSettings() {
                 key={option.value}
                 type="button"
                 role="radio"
+                aria-label={option.label}
                 aria-checked={position === option.value}
                 tabIndex={position === option.value ? 0 : -1}
                 onClick={() => setPreferences({ position: option.value })}
@@ -197,7 +198,6 @@ export function AssetNameSettings() {
                 >
                   <PositionPreview position={option.value} pattern={pattern} />
                 </span>
-                <span className="mt-2 block text-center">{option.label}</span>
               </button>
             ))}
           </div>

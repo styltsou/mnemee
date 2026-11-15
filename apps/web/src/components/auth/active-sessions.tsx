@@ -263,6 +263,16 @@ export function ActiveSessions() {
               <AlertDialogTitle>{confirmationCopy.title}</AlertDialogTitle>
               <AlertDialogDescription>
                 {confirmationCopy.description}
+                {current?.user.email ? (
+                  <>
+                    {" "}
+                    Account:{" "}
+                    <strong className="font-semibold break-all">
+                      {current.user.email}
+                    </strong>
+                    .
+                  </>
+                ) : null}
               </AlertDialogDescription>
             </AlertDialogHeader>
             {error ? (

@@ -142,9 +142,13 @@ export function NavUser({
         <AlertDialogContent size="sm">
           <AlertDialogBody>
             <AlertDialogHeader>
-              <AlertDialogTitle>Sign out</AlertDialogTitle>
+              <AlertDialogTitle>Sign out?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to sign out?
+                You are logged in as{" "}
+                <strong className="font-semibold break-all">
+                  {user.email}
+                </strong>
+                . Are you sure you want to sign out?
               </AlertDialogDescription>
             </AlertDialogHeader>
           </AlertDialogBody>

@@ -16,7 +16,20 @@ import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { isUuid } from "@mnemee/id-shared";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+import { configureEnv } from "@/config/env";
+import { CollectionMutationService } from "@/services/collection/collection-mutation.service";
+import { ImageUploadService } from "@/services/image-upload.service";
+import { ObjectStorageService } from "@/services/object-storage.service";
+
+vi.mock("@/db", () => ({
+  get db() {
+    return boardDb;
+  },
+}));
+
+let boardDb: ReturnType<typeof drizzle>;
 
 const migrations = fileURLToPath(new URL("../../drizzle/", import.meta.url));
 const migrationName = "20261115141408_uuid_entity_ids";
@@ -261,3 +274,67 @@ it("supports an empty database through the Drizzle migration runner", async () =
     rmSync(migrationDirectory, { recursive: true, force: true });
   }
 }, 30_000);
+
+describe("board writes after UUID cutover", () => {
+  let database: PGlite;
+
+  beforeAll(async () => {
+    database = new PGlite({ extensions: { cube, btree_gist, pg_trgm } });
+    boardDb = drizzle({ client: database });
+    configureEnv({
+      NODE_ENV: "test",
+      DATABASE_URL: "unused",
+      BETTER_AUTH_SECRET: "uuid-migration-test-secret-at-least-32-characters",
+      BETTER_AUTH_URL: "http://localhost:3000",
+      RESEND_API_KEY: "test",
+      S3_BUCKET: "mnemee-uuid-migration-test",
+      S3_ACCESS_KEY_ID: "test",
+      S3_SECRET_ACCESS_KEY: "test",
+    });
+    await applyHistoricalMigrations(database);
+    await database.exec(`
+      INSERT INTO "user" (id, name, email) VALUES ('u', 'Owner', 'owner@example.test');
+      INSERT INTO organization (id, name, slug, created_at) VALUES ('o', 'Workspace', 'workspace', now());
+      INSERT INTO collections (organization_id, name, slug) VALUES ('o', 'Board', 'board');
+      INSERT INTO folders (organization_id, name, slug) VALUES ('o', 'Folder', 'folder');
+      INSERT INTO collection_nodes (organization_id, collection_id, node_type, folder_id,
+        path_folder_ids, path_folder_slugs, path_folder_names, front_index)
+        VALUES ('o', 1, 'folder', 1, ARRAY[1], ARRAY['folder'], ARRAY['Folder'], 7);
+    `);
+    await database.transaction(async (tx) => {
+      await tx.exec(migration);
+    });
+  }, 60_000);
+
+  afterAll(async () => {
+    await database.close();
+  });
+
+  it("creates a color above existing items in a migrated board", async () => {
+    const color = await new CollectionMutationService().createColor(
+      "o",
+      "u",
+      "board",
+      { hex: "#123456" },
+    );
+    expect(isUuid(color.id.slice("color-".length))).toBe(true);
+    expect(color.frontIndex).toBe(8);
+  });
+
+  it("initiates a direct image upload inside a migrated board folder", async () => {
+    const uploads = new ImageUploadService(new ObjectStorageService());
+    const upload = await uploads.createDirectImageUpload("o", "u", "board", {
+      fileName: "image.png",
+      contentType: "image/png",
+      sizeBytes: 100,
+      width: 10,
+      height: 10,
+      parentFolderPath: "folder",
+    });
+    expect(isUuid(upload.id)).toBe(true);
+    expect(upload.image).toMatchObject({ frontIndex: 0 });
+    await expect(
+      uploads.getDirectImageUploadStatus("o", "board", upload.id),
+    ).resolves.toMatchObject({ status: "pending" });
+  });
+});

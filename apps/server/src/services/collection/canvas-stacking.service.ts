@@ -114,8 +114,10 @@ export async function lockCanvasStack(
   collectionId: string,
   parentFolderId: string | null,
 ) {
+  const scope = `mnemee:canvas-stack:${collectionId}:${parentFolderId ?? "root"}`;
+  // Use PostgreSQL's bigint lock overload to serialize writes within this canvas.
   await tx.execute(
-    sql`select pg_advisory_xact_lock(${collectionId}, ${parentFolderId ?? 0})`,
+    sql`select pg_advisory_xact_lock(hashtextextended(${scope}, 0))`,
   );
 }
 

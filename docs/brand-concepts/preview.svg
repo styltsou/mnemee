@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 806" role="img" aria-labelledby="title description">
+  <title id="title">Three early Mnemee logo concepts</title>
+  <desc id="description">Offset frames, spatial M, and index point shown as symbols, wordmarks, and small favicon tests.</desc>
+  <defs>
+    <symbol id="offset-frames" viewBox="0 0 64 64">
+      <path fill="#151515" d="M13 12h26a5 5 0 0 1 5 5v25a5 5 0 0 1-5 5H13a5 5 0 0 1-5-5V17a5 5 0 0 1 5-5Zm3 8v19h20V20H16Z" fill-rule="evenodd"/>
+      <path fill="#fff" d="M27 5h24a8 8 0 0 1 8 8v27a8 8 0 0 1-8 8H27a8 8 0 0 1-8-8V13a8 8 0 0 1 8-8Z"/>
+      <path fill="#151515" d="M27 5h24a8 8 0 0 1 8 8v27a8 8 0 0 1-8 8H27a8 8 0 0 1-8-8V13a8 8 0 0 1 8-8Zm0 8v27h24V13H27Z" fill-rule="evenodd"/>
+    </symbol>
+    <symbol id="spatial-m" viewBox="0 0 64 64">
+      <path d="M10 50V14l22 24 22-24v36" fill="none" stroke="#151515" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="index-point" viewBox="0 0 64 64">
+      <path d="M48 14H18a6 6 0 0 0-6 6v26a6 6 0 0 0 6 6h30" fill="none" stroke="#151515" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M43 19h11v11H43z" fill="#151515"/>
+    </symbol>
+  </defs>
+  <rect width="1120" height="806" fill="#f3f3ef"/>
+  <text x="64" y="68" fill="#151515" font-family="Inter, Arial, sans-serif" font-size="29" font-weight="650">Mnemee / early marks</text>
+  <text x="64" y="99" fill="#666" font-family="Inter, Arial, sans-serif" font-size="15">Three directions · monochrome first · shown at logo and favicon sizes</text>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <g transform="translate(64 132)">
+      <rect width="992" height="190" rx="22" fill="#fff"/>
+      <text x="28" y="42" fill="#151515" font-size="19" font-weight="650">01  Offset frames</text>
+      <text x="28" y="69" fill="#777" font-size="14">References gathered into a composition</text>
+      <use href="#offset-frames" x="282" y="50" width="95" height="95"/>
+      <text x="399" y="117" fill="#151515" font-size="48" font-weight="650" letter-spacing="-2">mnemee</text>
+      <line x1="809" y1="34" x2="809" y2="156" stroke="#e8e8e5"/>
+      <rect x="837" y="63" width="64" height="64" rx="13" fill="#f3f3ef"/>
+      <use href="#offset-frames" x="850" y="76" width="38" height="38"/>
+      <rect x="925" y="80" width="30" height="30" rx="6" fill="#f3f3ef"/>
+      <use href="#offset-frames" x="932" y="87" width="16" height="16"/>
+      <text x="838" y="151" fill="#999" font-size="12">32 px</text>
+      <text x="926" y="151" fill="#999" font-size="12">16 px</text>
+    </g>
+
+    <g transform="translate(64 338)">
+      <rect width="992" height="190" rx="22" fill="#fff"/>
+      <text x="28" y="42" fill="#151515" font-size="19" font-weight="650">03  Spatial M</text>
+      <text x="28" y="69" fill="#777" font-size="14">A folded path drawn from the name</text>
+      <use href="#spatial-m" x="282" y="50" width="95" height="95"/>
+      <text x="399" y="117" fill="#151515" font-size="48" font-weight="650" letter-spacing="-2">mnemee</text>
+      <line x1="809" y1="34" x2="809" y2="156" stroke="#e8e8e5"/>
+      <rect x="837" y="63" width="64" height="64" rx="13" fill="#f3f3ef"/>
+      <use href="#spatial-m" x="850" y="76" width="38" height="38"/>
+      <rect x="925" y="80" width="30" height="30" rx="6" fill="#f3f3ef"/>
+      <use href="#spatial-m" x="932" y="87" width="16" height="16"/>
+      <text x="838" y="151" fill="#999" font-size="12">32 px</text>
+      <text x="926" y="151" fill="#999" font-size="12">16 px</text>
+    </g>
+
+    <g transform="translate(64 544)">
+      <rect width="992" height="190" rx="22" fill="#fff"/>
+      <text x="28" y="42" fill="#151515" font-size="19" font-weight="650">04  Index point</text>
+      <text x="28" y="69" fill="#777" font-size="14">One findable point in an open canvas</text>
+      <use href="#index-point" x="282" y="50" width="95" height="95"/>
+      <text x="399" y="117" fill="#151515" font-size="48" font-weight="650" letter-spacing="-2">mnemee</text>
+      <line x1="809" y1="34" x2="809" y2="156" stroke="#e8e8e5"/>
+      <rect x="837" y="63" width="64" height="64" rx="13" fill="#f3f3ef"/>
+      <use href="#index-point" x="850" y="76" width="38" height="38"/>
+      <rect x="925" y="80" width="30" height="30" rx="6" fill="#f3f3ef"/>
+      <use href="#index-point" x="932" y="87" width="16" height="16"/>
+      <text x="838" y="151" fill="#999" font-size="12">32 px</text>
+      <text x="926" y="151" fill="#999" font-size="12">16 px</text>
+    </g>
+  </g>
+  <text x="64" y="777" fill="#999" font-family="Inter, Arial, sans-serif" font-size="13">Concept sketches · not production assets</text>
+</svg>

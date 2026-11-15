@@ -61,6 +61,7 @@ import {
 } from "@/lib/delete-shortcut";
 import { isPersistedSelectableAsset } from "@/lib/selection";
 import { useTransientStore } from "@/store";
+import { isMoveShortcut } from "@/lib/move-shortcut";
 
 function PeekShortcut() {
   return (
@@ -525,6 +526,19 @@ export function AssetContextMenu({
         <ContextMenuTrigger
           onKeyDown={(event) => {
             if (
+              event.currentTarget.contains(event.target as Node) &&
+              isMoveShortcut(event.nativeEvent) &&
+              moveSource &&
+              isPersistedSelectableAsset(asset) &&
+              !isDeleteSurfaceBlocked(event.target, "board") &&
+              useTransientStore.getState().selection.nodeIds.length === 0
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              setMoveDialogOpen(true);
+              return;
+            }
+            if (
               !(event.target instanceof Node) ||
               !event.currentTarget.contains(event.target) ||
               !isDeleteShortcut(event.nativeEvent)
@@ -583,6 +597,17 @@ export function AssetContextMenu({
           data-canvas-menu={canvasBoardKey}
           onKeyDown={(event) => {
             if (
+              isMoveShortcut(event.nativeEvent) &&
+              moveSource &&
+              isPersistedSelectableAsset(asset)
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              contextMenuActionsRef.current?.close();
+              setMoveDialogOpen(true);
+              return;
+            }
+            if (
               !isDeleteShortcut(event.nativeEvent) ||
               !isPersistedSelectableAsset(asset)
             )
@@ -607,7 +632,7 @@ export function AssetContextMenu({
               </ContextMenuItem>
               {moveSource ? (
                 <ContextMenuItem onClick={() => setMoveDialogOpen(true)}>
-                  Move to...
+                  Move to... <ContextMenuShortcut>M</ContextMenuShortcut>
                 </ContextMenuItem>
               ) : null}
             </>
@@ -626,7 +651,7 @@ export function AssetContextMenu({
               </ContextMenuItem>
               {moveSource ? (
                 <ContextMenuItem onClick={() => setMoveDialogOpen(true)}>
-                  Move to...
+                  Move to... <ContextMenuShortcut>M</ContextMenuShortcut>
                 </ContextMenuItem>
               ) : null}
             </>
@@ -689,7 +714,7 @@ export function AssetContextMenu({
               </ContextMenuItem>
               {moveSource ? (
                 <ContextMenuItem onClick={() => setMoveDialogOpen(true)}>
-                  Move to...
+                  Move to... <ContextMenuShortcut>M</ContextMenuShortcut>
                 </ContextMenuItem>
               ) : null}
               {showRefreshPreview ? (

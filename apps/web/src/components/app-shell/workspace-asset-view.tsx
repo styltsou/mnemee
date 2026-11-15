@@ -25,6 +25,7 @@ import { fetchPeekableAsset } from "@/api/collection/fetchers";
 import type { PeekableAssetResponse } from "@/api/collection/types";
 import { ColorDetailDrawer } from "@/components/board/color-detail-drawer";
 import { AssetDeleteShortcut } from "@/components/board/asset-delete-shortcut";
+import { AssetMoveShortcut } from "@/components/board/asset-move-shortcut";
 import { isPeekAssetPaneActive } from "@/lib/asset-pane-focus";
 import { NoteDetailDrawer } from "@/components/board/note-detail-drawer";
 import { ImageAssetViewer } from "@/components/board/image-asset-viewer";
@@ -792,6 +793,14 @@ function WorkspaceAssetViewController({
         enabled={presentation.open && !loading && !colorEditorOpen}
         ownsFocus={() => !isPeekAssetPaneActive()}
         onDeleted={closeAsset}
+      />
+      <AssetMoveShortcut
+        key={`move-${assetId}`}
+        workspaceSlug={workspaceSlug}
+        asset={asset}
+        location={location}
+        enabled={presentation.open && !loading && !colorEditorOpen}
+        ownsFocus={() => !isPeekAssetPaneActive()}
       />
       {requestedType === "note" ? (
         <NoteDetailDrawer

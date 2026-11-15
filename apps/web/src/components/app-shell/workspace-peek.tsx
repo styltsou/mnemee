@@ -11,6 +11,7 @@ import {
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AssetDeleteShortcut } from "@/components/board/asset-delete-shortcut";
+import { AssetMoveShortcut } from "@/components/board/asset-move-shortcut";
 import {
   ArrowLeftRightIcon,
   DownloadIcon,
@@ -1392,6 +1393,15 @@ function WorkspacePeekPanel({
           enabled={activeTarget?.asset.id === target.asset.id}
           ownsFocus={isPeekAssetPaneActive}
           onDeleted={closePeek}
+        />
+        <AssetMoveShortcut
+          key={`move-${target.asset.id}`}
+          workspaceSlug={workspaceSlug}
+          asset={target.asset}
+          location={target.location}
+          enabled={activeTarget?.asset.id === target.asset.id}
+          ownsFocus={isPeekAssetPaneActive}
+          onMoved={closePeek}
         />
         {target.type === "note" ? (
           <PeekNote

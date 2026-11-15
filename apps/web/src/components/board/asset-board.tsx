@@ -92,6 +92,7 @@ export function AssetBoard({
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadMoreInFlightRef = useRef(false);
+  const selectAllRequestRef = useRef(0);
   const [contentWidth, setContentWidth] = useState(0);
   const eligibleIds = useMemo(
     () =>
@@ -131,10 +132,21 @@ export function AssetBoard({
   const marquee = useMarqueeSelection({
     surfaceRef,
     eligibleNodeIds: eligibleIds,
+    shouldStart: (event) =>
+      !(event.target instanceof Element) ||
+      !event.target.closest("[data-selection-node-id]"),
     onReplace: (nodeIds) => {
       if (scopeKey) replaceSelection(scopeKey, nodeIds);
     },
   });
+
+  useEffect(() => {
+    return () => {
+      selectAllRequestRef.current += 1;
+    };
+    // Invalidate pending requests when the scope or filter-dependent callback changes.
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
+  }, [scopeKey, onSelectAll]);
 
   useEffect(() => {
     if (!scopeKey) return;
@@ -230,14 +242,24 @@ export function AssetBoard({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isSelectionShortcutBlocked(event.target)) return;
       if (event.key === "Escape") {
+        selectAllRequestRef.current += 1;
         clearSelection(scopeKey);
         return;
       }
       if (isSelectionShortcut(event)) {
         event.preventDefault();
         if (onSelectAll) {
+          const requestId = ++selectAllRequestRef.current;
+          const selectionAtStart = useTransientStore.getState().selection;
           void onSelectAll()
-            .then((nodeIds) => replaceSelection(scopeKey, nodeIds))
+            .then((nodeIds) => {
+              if (
+                requestId === selectAllRequestRef.current &&
+                useTransientStore.getState().selection === selectionAtStart
+              ) {
+                replaceSelection(scopeKey, nodeIds);
+              }
+            })
             .catch(() => undefined);
         } else {
           replaceSelection(scopeKey, eligibleIds);
@@ -253,8 +275,13 @@ export function AssetBoard({
     // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
       ref={surfaceRef}
-      className="relative min-h-0"
+      className={
+        inboxContext
+          ? "relative min-h-[calc(100svh-11.25rem)] md:min-h-[calc(100svh-11.75rem)]"
+          : "relative min-h-0"
+      }
       onPointerDownCapture={(event) => {
+        selectAllRequestRef.current += 1;
         if (focusRequestId !== undefined) onDismissFocusedAsset?.();
         marquee.onPointerDownCapture(event);
       }}
@@ -265,7 +292,13 @@ export function AssetBoard({
         marquee.consumeClick(event);
       }}
       onClick={(event) => {
-        if (event.target === event.currentTarget && scopeKey)
+        if (
+          scopeKey &&
+          event.target instanceof Element &&
+          !event.target.closest(
+            "[data-asset-card-id], a, button, input, textarea, select, [contenteditable]:not([contenteditable='false'])",
+          )
+        )
           clearSelection(scopeKey);
       }}
       onContextMenuCapture={(event) => {

@@ -318,9 +318,11 @@ export function AppHeader() {
   const replaceSelection = useTransientStore((state) => state.replaceSelection);
   const pruneMovedFromSelection = (movedIds: readonly string[]) => {
     const movedIdSet = new Set(movedIds);
+    const currentSelection = useTransientStore.getState().selection;
+    if (currentSelection.scopeKey !== selectionScope) return;
     replaceSelection(
       selectionScope,
-      selectedIds.filter((id) => !movedIdSet.has(id)),
+      currentSelection.nodeIds.filter((id) => !movedIdSet.has(id)),
     );
   };
   const [retainSelectionSpace, setRetainSelectionSpace] = useState(false);

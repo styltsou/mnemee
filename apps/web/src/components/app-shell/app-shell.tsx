@@ -101,7 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div
                   className={cn(
                     "flex min-w-0 flex-1 flex-col",
-                    isBoardView
+                    isBoardView || isInbox
                       ? "min-h-0 overflow-hidden rounded-xl bg-card"
                       : cn(
                           "gap-4 rounded-xl bg-card p-3 shadow-sm",
@@ -111,12 +111,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   {isScrollablePage ? (
                     <ScrollArea
-                      className="-mr-2 min-h-0 min-w-0 flex-1"
-                      contentClassName="flex min-h-full flex-col pr-2"
+                      className={
+                        isInbox
+                          ? "h-full min-h-0 w-full min-w-0 flex-1 rounded-[inherit]"
+                          : "-mr-3 min-h-0 min-w-0 flex-1"
+                      }
+                      contentClassName={
+                        isInbox
+                          ? "flex min-h-full flex-col"
+                          : "flex min-h-full flex-col pr-3"
+                      }
                       viewportClassName={
                         isInbox
-                          ? "outline-none focus-visible:outline-none"
+                          ? "[scrollbar-width:none] outline-none focus-visible:outline-none [&::-webkit-scrollbar]:hidden"
                           : undefined
+                      }
+                      verticalScrollbarClassName="w-[5px] p-0"
+                      verticalScrollbarStyle={
+                        isInbox ? { top: 5, bottom: 5, right: 3 } : { right: 3 }
                       }
                     >
                       {children}

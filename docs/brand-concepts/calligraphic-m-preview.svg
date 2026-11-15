@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 558" role="img" aria-labelledby="title description">
+  <title id="title">Mnemee drawn m concept in light and dark</title>
+  <desc id="description">A restrained, gestural lowercase m used alone and as the first letter of the Mnemee wordmark.</desc>
+  <defs>
+    <symbol id="mark" viewBox="0 0 64 64">
+      <path d="M6 45c6-7 8-18 12-25 2 8-4 23 0 25 7 4 12-24 20-24 10 0-7 22 0 24 7 3 12-24 20-24 6 0 1 16-1 24" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+  <rect width="1080" height="558" fill="#efefed"/>
+  <text x="48" y="57" fill="#151515" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="630">A drawn m for Mnemee</text>
+  <text x="48" y="86" fill="#656562" font-family="Inter, Arial, sans-serif" font-size="15">A loose gesture, held inside the same quiet type and surfaces as the product.</text>
+
+  <g color="#151515" font-family="Inter, Arial, sans-serif">
+    <rect x="48" y="120" width="480" height="346" rx="16" fill="#fff"/>
+    <text x="78" y="159" fill="#777" font-size="12" font-weight="600" letter-spacing="1.8">LIGHT</text>
+    <use href="#mark" x="80" y="190" width="104" height="104"/>
+    <use href="#mark" x="236" y="216" width="62" height="62"/>
+    <text x="292" y="260" fill="#151515" font-size="49" font-weight="650" letter-spacing="-2.5">nemee</text>
+    <line x1="78" y1="314" x2="498" y2="314" stroke="#e9e9e6"/>
+    <rect x="82" y="348" width="70" height="70" rx="14" fill="#151515"/>
+    <g color="#fff"><use href="#mark" x="94" y="361" width="46" height="46"/></g>
+    <rect x="197" y="366" width="34" height="34" rx="8" fill="#151515"/>
+    <g color="#fff"><use href="#mark" x="202" y="372" width="24" height="24"/></g>
+    <text x="82" y="443" fill="#999" font-size="12">32 px</text>
+    <text x="198" y="443" fill="#999" font-size="12">16 px</text>
+  </g>
+
+  <g color="#f1f3ee" font-family="Inter, Arial, sans-serif">
+    <rect x="552" y="120" width="480" height="346" rx="16" fill="#151515"/>
+    <text x="582" y="159" fill="#a7aca4" font-size="12" font-weight="600" letter-spacing="1.8">DARK</text>
+    <use href="#mark" x="584" y="190" width="104" height="104"/>
+    <use href="#mark" x="740" y="216" width="62" height="62"/>
+    <text x="796" y="260" fill="#f1f3ee" font-size="49" font-weight="650" letter-spacing="-2.5">nemee</text>
+    <line x1="582" y1="314" x2="1002" y2="314" stroke="#30302e"/>
+    <rect x="586" y="348" width="70" height="70" rx="14" fill="#f1f3ee"/>
+    <g color="#151515"><use href="#mark" x="598" y="361" width="46" height="46"/></g>
+    <rect x="701" y="366" width="34" height="34" rx="8" fill="#f1f3ee"/>
+    <g color="#151515"><use href="#mark" x="706" y="372" width="24" height="24"/></g>
+    <text x="586" y="443" fill="#a7aca4" font-size="12">32 px</text>
+    <text x="702" y="443" fill="#a7aca4" font-size="12">16 px</text>
+  </g>
+  <text x="48" y="517" fill="#777" font-family="Inter, Arial, sans-serif" font-size="14">The mark draws an m in one movement. The favicon uses the same shape in an app-style tile.</text>
+  <text x="48" y="541" fill="#999" font-family="Inter, Arial, sans-serif" font-size="13">Concept sketch · not a production asset</text>
+</svg>

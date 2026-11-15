@@ -93,6 +93,7 @@ function InboxPage() {
     useState<BoardShowRequest>();
   const selectedColorHexes =
     filterBar.filterType === "Color" ? filterBar.selectedColors : [];
+  const colorFilterKey = selectedColorHexes.join(",");
   const isTypeFilterActive = selectedAssetTypes.length > 0;
   const colorSearch = useColorImageSearch(
     workspaceSlug,
@@ -175,6 +176,11 @@ function InboxPage() {
   );
   const handleSelectAll = useCallback(async () => {
     try {
+      if (colorFilterKey) {
+        if (colorSearch.isSearching || !colorSearch.data)
+          throw new Error("Color results are not ready");
+        return colorSearch.data.results.map((result) => result.image.id);
+      }
       const contents = await fetchInboxContents(
         workspaceSlug,
         selectedAssetTypes,
@@ -187,7 +193,13 @@ function InboxPage() {
       toast.error("Couldn't select all inbox items.");
       throw new Error("Inbox selection failed");
     }
-  }, [selectedAssetTypes, workspaceSlug]);
+  }, [
+    colorFilterKey,
+    colorSearch.data,
+    colorSearch.isSearching,
+    selectedAssetTypes,
+    workspaceSlug,
+  ]);
 
   const handleLoadMore = useCallback(() => {
     void fetchNextPage();
@@ -216,7 +228,10 @@ function InboxPage() {
         collectionPath=""
         target="inbox"
       >
-        <div className="relative min-h-0" aria-busy={isLayoutPending}>
+        <div
+          className="relative min-h-0 px-5 pt-5 pb-20"
+          aria-busy={isLayoutPending}
+        >
           <StableAssetBoard
             assets={displayAssets}
             inboxContext={inboxContext}

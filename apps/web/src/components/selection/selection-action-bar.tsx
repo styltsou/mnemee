@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDeleteShortcut } from "@/hooks/use-delete-shortcut";
+import { useMoveShortcut } from "@/hooks/use-move-shortcut";
 import {
   AlignCenterHorizontalIcon,
   AlignCenterVerticalIcon,
@@ -103,6 +104,10 @@ export function SelectionActionBar({
     enabled: count > 0 && Boolean(onDelete) && !deleteDialogOpen,
     onDelete: () => setDeleteDialogOpen(true),
   });
+  useMoveShortcut({
+    enabled: count > 0 && Boolean(onMove) && !moveDisabled && !deleteDialogOpen,
+    onMove: () => onMove?.(),
+  });
   const reduceMotion = useReducedMotion();
   const isHeader = variant === "header";
   const ActionGroup = isHeader ? "div" : ButtonGroup;
@@ -180,6 +185,7 @@ export function SelectionActionBar({
                                     : "Move selected"
                                 }
                                 disabled={moveDisabled}
+                                aria-keyshortcuts="M"
                                 onClick={onMove}
                               />
                             }
@@ -189,7 +195,8 @@ export function SelectionActionBar({
                           <TooltipContent>
                             {surface === "inbox"
                               ? "Move to collection"
-                              : "Move selected"}
+                              : "Move selected"}{" "}
+                            <ShortcutKey>M</ShortcutKey>
                           </TooltipContent>
                         </Tooltip>
                       ) : (

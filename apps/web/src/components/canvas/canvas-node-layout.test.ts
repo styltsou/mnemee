@@ -275,10 +275,10 @@ describe("infinite canvas node placement", () => {
     ];
 
     expect(arrangeNodesInGrid(nodes)).toEqual([
-      { x: 100, y: 452 },
-      { x: 412, y: 100 },
+      { x: 100, y: 460 },
+      { x: 420, y: 100 },
       { x: 100, y: 100 },
-      { x: 412, y: 452 },
+      { x: 420, y: 460 },
     ]);
   });
 
@@ -293,7 +293,7 @@ describe("infinite canvas node placement", () => {
       {
         ...note,
         id: "top-right",
-        position: { x: 412, y: 100 },
+        position: { x: 420, y: 100 },
         layoutHeight: 80,
       },
       {
@@ -312,9 +312,9 @@ describe("infinite canvas node placement", () => {
 
     expect(arrangeNodesInGrid(nodes)).toEqual([
       { x: 100, y: 100 },
-      { x: 412, y: 100 },
-      { x: 100, y: 312 },
-      { x: 412, y: 312 },
+      { x: 420, y: 100 },
+      { x: 100, y: 320 },
+      { x: 420, y: 320 },
     ]);
   });
 
@@ -326,7 +326,7 @@ describe("infinite canvas node placement", () => {
 
     expect(arrangeNodesInGrid(selected)).toEqual([
       { x: 48, y: 48 },
-      { x: 360, y: 48 },
+      { x: 368, y: 48 },
     ]);
   });
 
@@ -336,7 +336,7 @@ describe("infinite canvas node placement", () => {
       {
         ...note,
         id: "short-one",
-        position: { x: 412, y: 100 },
+        position: { x: 420, y: 100 },
         layoutHeight: 100,
       },
       {
@@ -355,9 +355,9 @@ describe("infinite canvas node placement", () => {
 
     expect(compactNodesInMasonry(nodes)).toEqual([
       { x: 100, y: 100 },
-      { x: 412, y: 100 },
-      { x: 412, y: 232 },
-      { x: 412, y: 364 },
+      { x: 420, y: 100 },
+      { x: 420, y: 240 },
+      { x: 420, y: 380 },
     ]);
   });
 
@@ -379,15 +379,15 @@ describe("infinite canvas node placement", () => {
 
     expect(makeNodesInRow(nodes, "start")).toEqual([
       { x: 100, y: 100 },
-      { x: 412, y: 100 },
+      { x: 420, y: 100 },
     ]);
     expect(makeNodesInRow(nodes, "center")).toEqual([
       { x: 100, y: 250 },
-      { x: 412, y: 150 },
+      { x: 420, y: 150 },
     ]);
     expect(makeNodesInRow(nodes, "end")).toEqual([
       { x: 100, y: 400 },
-      { x: 412, y: 200 },
+      { x: 420, y: 200 },
     ]);
   });
 
@@ -409,15 +409,15 @@ describe("infinite canvas node placement", () => {
 
     expect(makeNodesInColumn(nodes, "start")).toEqual([
       { x: 100, y: 100 },
-      { x: 100, y: 452 },
+      { x: 100, y: 460 },
     ]);
     expect(makeNodesInColumn(nodes, "center")).toEqual([
       { x: 350, y: 100 },
-      { x: 250, y: 452 },
+      { x: 250, y: 460 },
     ]);
     expect(makeNodesInColumn(nodes, "end")).toEqual([
       { x: 600, y: 100 },
-      { x: 400, y: 452 },
+      { x: 400, y: 460 },
     ]);
   });
 });

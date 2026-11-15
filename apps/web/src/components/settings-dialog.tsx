@@ -336,7 +336,8 @@ export function SettingsDialog() {
       }}
     >
       <DialogContent
-        className="top-0 left-0 h-dvh max-w-none translate-x-0 rounded-none bg-background md:top-1/2 md:left-1/2 md:h-[min(680px,85dvh)] md:max-w-[min(900px,calc(100vw-3rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-lg md:bg-popover/80"
+        className="top-0 left-0 z-[120] h-dvh max-w-none translate-x-0 rounded-none bg-background md:top-1/2 md:left-1/2 md:h-[min(680px,85dvh)] md:max-w-[min(900px,calc(100vw-3rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-lg md:bg-popover/80"
+        overlayClassName="z-[120]"
         initialFocus={titleRef}
         finalFocus={() => {
           // Only return focus to a real, still-mounted opener (e.g. the user

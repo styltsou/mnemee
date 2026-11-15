@@ -621,8 +621,8 @@ export function CommandPalette() {
             ? "Search assets, folders, and collections."
             : "Search app commands and destinations."
         }
-        className="top-[18vh] max-w-[44rem] transition-none data-ending-style:scale-100 data-ending-style:opacity-100 data-starting-style:scale-100 data-starting-style:opacity-100"
-        overlayClassName="transition-none data-ending-style:opacity-100 data-starting-style:opacity-100"
+        className="top-[18vh] z-[120] max-w-[44rem] transition-none data-ending-style:scale-100 data-ending-style:opacity-100 data-starting-style:scale-100 data-starting-style:opacity-100"
+        overlayClassName="z-[120] transition-none data-ending-style:opacity-100 data-starting-style:opacity-100"
       >
         <DialogBody className="overflow-hidden bg-background/50 p-0">
           <div className="p-1.5">

@@ -171,6 +171,7 @@ export function VideoAssetViewer({
         fast
       >
         <DrawerContent
+          data-command-palette-allowed="true"
           initialFocus={playerFocusRef}
           className="gap-0 overflow-hidden border-border/70 bg-background p-0 text-foreground shadow-2xl"
           style={
@@ -232,6 +233,7 @@ export function VideoAssetViewer({
       onOpenChangeComplete={(next) => !next && onCloseComplete()}
     >
       <DialogContent
+        data-command-palette-allowed="true"
         ref={fullscreenPanelRef}
         initialFocus={playerFocusRef}
         data-workspace-asset-modal={assetModalId}

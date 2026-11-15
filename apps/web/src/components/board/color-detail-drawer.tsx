@@ -294,6 +294,7 @@ export function ColorDetailDrawer({
     >
       {displayedColor ? (
         <DrawerContent
+          data-command-palette-allowed="true"
           initialFocus={false}
           className={drawerClassName}
           style={drawerStyle}
@@ -504,6 +505,7 @@ export function ColorDetailDrawer({
         </DrawerContent>
       ) : loading ? (
         <DrawerContent
+          data-command-palette-allowed="true"
           initialFocus={false}
           className={drawerClassName}
           style={drawerStyle}
@@ -648,6 +650,7 @@ function ColorDetailModal({
       onOpenChangeComplete={(next) => !next && onCloseComplete?.()}
     >
       <DialogContent
+        data-command-palette-allowed="true"
         ref={fullscreenPanelRef}
         initialFocus={false}
         data-workspace-asset-modal={assetModalId}

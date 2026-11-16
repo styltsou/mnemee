@@ -87,10 +87,9 @@ h1, h2 { font-weight: 560; letter-spacing: 0; }
 	font-weight: 600;
 	line-height: 1;
 	white-space: nowrap;
-	transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+	transition: background 100ms cubic-bezier(.23, 1, .32, 1), border-color 100ms cubic-bezier(.23, 1, .32, 1), scale 100ms cubic-bezier(.23, 1, .32, 1);
 }
 
-.button:active { transform: translateY(1px); }
 .button--primary { color: #fff; background: var(--ink); border-color: var(--ink); }
 .button--quiet { background: rgb(255 255 255 / 52%); border-color: var(--line); }
 
@@ -112,7 +111,11 @@ h1, h2 { font-weight: 560; letter-spacing: 0; }
 	line-height: 1;
 	white-space: nowrap;
 	user-select: none;
-	transition: background 100ms ease-out, color 100ms ease-out, border-color 100ms ease-out, box-shadow 100ms ease-out;
+	transition: background 100ms cubic-bezier(.23, 1, .32, 1), color 100ms cubic-bezier(.23, 1, .32, 1), border-color 100ms cubic-bezier(.23, 1, .32, 1), box-shadow 100ms cubic-bezier(.23, 1, .32, 1), scale 100ms cubic-bezier(.23, 1, .32, 1);
+}
+/* Match the app's subtle pointer press feedback across all button variants. */
+@media (prefers-reduced-motion: no-preference) {
+	:is(.button, .app-button):active:not(:disabled, [aria-disabled='true'], :focus-visible):not([data-slot='button-group'] *) { scale: .985; }
 }
 .app-button--compact { height: 32px; }
 .app-button--primary {

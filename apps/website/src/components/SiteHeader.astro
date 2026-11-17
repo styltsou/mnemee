@@ -55,6 +55,11 @@ const { loginHref, signupHref } = Astro.props;
 	.desktop-nav a, .text-link { color: var(--ink-muted); font-size: 13px; font-weight: 500; transition: color 140ms ease; }
 	.desktop-nav a[aria-current='location'], .mobile-menu-nav a[aria-current='location'] { color: var(--ink); }
 
+	@media (min-width: 1600px) {
+		.desktop-nav a { font-size: 15px; }
+		.desktop-actions .app-button { height: 36px; padding-inline: 12px; font-size: 15px; }
+	}
+
 	.mobile-menu-toggle, .mobile-menu-content { display: none; }
 
 	@media (hover: hover) {

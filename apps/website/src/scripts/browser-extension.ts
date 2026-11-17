@@ -33,31 +33,31 @@ if (scene && stage && panel && cursor && preview && windowMock && extensionButto
 	const configure = () => {
 		reset();
 		if (!motion.matches) return;
-		initialHeight = panel.getBoundingClientRect().height;
-		const available = window.innerHeight - 84;
 		// Leave very short screens in their natural, scrollable layout.
-		if (available < 420) return;
+		if (window.innerHeight - 84 < 420) return;
+		scene.dataset.active = '';
+		const available = stage.getBoundingClientRect().height;
+		initialHeight = panel.getBoundingClientRect().height;
 		// A panel a little taller than the screen (split-screen laptops, small tablets) gets a shorter browser preview so the
 		// whole scene still fits and plays; only if even that cannot make it fit does it fall back to the static layout.
 		if (initialHeight > available) {
 			const visualHeight = visual?.getBoundingClientRect().height ?? 0;
 			const shrunk = visualHeight - (initialHeight - available);
-			if (!visual || shrunk < 230) return;
+			if (!visual || shrunk < 230) { reset(); return; }
 			visual.style.height = `${shrunk}px`;
 			initialHeight = panel.getBoundingClientRect().height;
-			if (initialHeight > available + 1) { visual.style.removeProperty('height'); return; }
+			if (initialHeight > available + 1) { reset(); return; }
 		}
 		scene.style.setProperty('--extension-inset', `${(available - initialHeight) / 2}px`);
-		scene.dataset.active = '';
 		render();
 	};
 	const render = () => {
 		frame = 0;
 		if (!scene.hasAttribute('data-active')) return;
-		const travel = Math.max(1, scene.offsetHeight - stage.offsetHeight);
+		const endHeight = stage.getBoundingClientRect().height;
+		const travel = Math.max(1, scene.offsetHeight - endHeight);
 		const progress = clamp((68 - scene.getBoundingClientRect().top) / travel);
 		const grow = smooth(progress / .30);
-		const endHeight = window.innerHeight - 84;
 		panel.style.height = `${initialHeight + (endHeight - initialHeight) * grow}px`;
 		// The tall browser stays fixed in size; its lower article is revealed as it rises into the expanding frame.
 		const travelUp = Math.min(window.innerWidth <= 820 ? 18 : 100, (endHeight - initialHeight) * .7);

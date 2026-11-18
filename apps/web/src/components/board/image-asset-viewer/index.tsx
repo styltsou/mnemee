@@ -1059,6 +1059,7 @@ function ImageViewerModalHeaderControls({
   onClose,
   onExpand,
   onPeek,
+  peekDisabled,
   onShowInBoard,
   loading,
   titleLoading,
@@ -1068,6 +1069,7 @@ function ImageViewerModalHeaderControls({
   onClose: () => void;
   onExpand: () => void;
   onPeek?: () => void;
+  peekDisabled?: boolean;
   onShowInBoard?: () => void;
   loading: boolean;
   titleLoading: boolean;
@@ -1105,6 +1107,7 @@ function ImageViewerModalHeaderControls({
                 size="icon-sm"
                 className={VIEWER_HEADER_ICON_BUTTON_CLASS}
                 aria-label="Peek image"
+                disabled={peekDisabled}
                 onClick={onPeek}
               />
             }
@@ -1568,7 +1571,8 @@ export function ImageAssetViewer({
   }, [flushImageNote, onShowInBoard]);
 
   useEffect(() => {
-    if (!open || !asset || !location || isMobile) return;
+    if (!open || !asset || !location || isMobile || cropMode || isSavingCrop)
+      return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.repeat ||
@@ -1583,7 +1587,7 @@ export function ImageAssetViewer({
     };
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [asset, handlePeek, isMobile, location, open]);
+  }, [asset, cropMode, handlePeek, isMobile, isSavingCrop, location, open]);
 
   useEffect(() => {
     return () => {
@@ -2216,9 +2220,7 @@ export function ImageAssetViewer({
                     </Tooltip>
                     {(location || (loading && assetModalId)) &&
                     (!asset || !asset.uploadStatus) &&
-                    !isMobile &&
-                    !cropMode &&
-                    !isSavingCrop ? (
+                    !isMobile ? (
                       <Tooltip>
                         <TooltipTrigger
                           render={
@@ -2228,6 +2230,7 @@ export function ImageAssetViewer({
                               size="icon-sm"
                               className={headerControlButtonClass}
                               aria-label="Peek image"
+                              disabled={cropMode || isSavingCrop}
                               onClick={requestPeek}
                             />
                           }
@@ -2294,12 +2297,11 @@ export function ImageAssetViewer({
                 onExpand={toggleExpanded}
                 loading={loading || !asset}
                 titleLoading={!asset}
+                peekDisabled={cropMode || isSavingCrop}
                 onPeek={
                   (location || (loading && assetModalId)) &&
                   (!asset || !asset.uploadStatus) &&
-                  !isMobile &&
-                  !cropMode &&
-                  !isSavingCrop
+                  !isMobile
                     ? requestPeek
                     : undefined
                 }

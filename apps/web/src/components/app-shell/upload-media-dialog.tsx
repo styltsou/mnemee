@@ -718,7 +718,7 @@ export function UploadMediaDialog({
       ))}
       <button
         aria-label="Add more images or videos"
-        className="flex aspect-square items-center justify-center rounded-md border border-dashed border-border/80 bg-background/45 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+        className="flex aspect-square items-center justify-center rounded-md bg-muted/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
         disabled={isInteractionDisabled}
         type="button"
         onClick={() => fileInputRef.current?.click()}
@@ -791,7 +791,11 @@ export function UploadMediaDialog({
                     </p>
                   ) : null}
                   <div
-                    className="rounded-lg border border-dashed border-border/80 transition-colors data-[dragging=true]:border-primary/60 data-[dragging=true]:bg-primary/5 data-[empty=true]:hover:bg-muted/45"
+                    className={cn(
+                      "rounded-lg transition-colors data-[dragging=true]:bg-primary/5 data-[dragging=true]:ring-1 data-[dragging=true]:ring-primary/60",
+                      selectedFiles.length === 0 &&
+                        "border border-dashed border-border/80 hover:bg-muted/45",
+                    )}
                     data-dragging={isDraggingFiles || undefined}
                     data-empty={selectedFiles.length === 0 || undefined}
                     onDragLeave={handleDragLeave}

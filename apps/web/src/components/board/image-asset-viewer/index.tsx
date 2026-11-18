@@ -68,6 +68,7 @@ import { copyImageToClipboard } from "@/lib/clipboard";
 import { GLASS_FRAME_CLASS, GLASS_ISLAND_CLASS } from "@/lib/glass";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ImageUnavailable } from "@/components/ui/image-unavailable";
 import { useImageNoteEditor } from "./use-image-note-editor";
 import type { AssetLocation } from "@/api/collection";
 import { useWorkspacePeek } from "@/components/app-shell/workspace-peek";
@@ -578,6 +579,7 @@ function ProgressiveViewerImage({
   const maxViewerImageHeight = MAX_VIEWER_IMAGE_WIDTH / aspectRatio;
   const [shouldLoadOriginal, setShouldLoadOriginal] = useState(false);
   const [isPreviewReady, setIsPreviewReady] = useState(false);
+  const [failedPreview, setFailedPreview] = useState<string>();
   const [isOriginalReady, setIsOriginalReady] = useState(false);
   const [hover, setHover] = useState<{
     x: number;
@@ -837,9 +839,18 @@ function ProgressiveViewerImage({
         loading="eager"
         decoding="async"
         onLoad={() => setIsPreviewReady(true)}
-        onError={() => setIsPreviewReady(true)}
-        className="size-full rounded-[inherit] object-cover"
+        onError={() => {
+          setFailedPreview(displayUrl);
+          setIsPreviewReady(true);
+        }}
+        className={cn(
+          "size-full rounded-[inherit] object-cover",
+          failedPreview === displayUrl && "invisible",
+        )}
       />
+      {failedPreview === displayUrl && !isOriginalReady ? (
+        <ImageUnavailable />
+      ) : null}
       {hasSeparateOriginal && shouldLoadOriginal && originalUrl ? (
         <img
           src={originalUrl}

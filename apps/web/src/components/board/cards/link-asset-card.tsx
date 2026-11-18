@@ -1,7 +1,8 @@
-import { Globe2Icon, ImageOffIcon, UserRoundIcon } from "lucide-react";
+import { Globe2Icon, UserRoundIcon } from "lucide-react";
 import { useState, type ComponentProps, type MouseEvent } from "react";
 
 import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { ImageUnavailable } from "@/components/ui/image-unavailable";
 import { ImageSkeleton } from "@/components/ui/image-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hasSelectionModifier } from "@/lib/selection";
@@ -93,18 +94,7 @@ function LinkThumbnail({
 }
 
 function LinkPreviewUnavailable({ compact = false }: { compact?: boolean }) {
-  return (
-    <div
-      role="img"
-      aria-label="Preview unavailable"
-      className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-muted-foreground"
-    >
-      <ImageOffIcon className={compact ? "size-5" : "size-6"} />
-      <span className={compact ? "text-[10px]" : "text-xs"}>
-        Preview unavailable
-      </span>
-    </div>
-  );
+  return <ImageUnavailable compact={compact} />;
 }
 
 function LinkFavicon({

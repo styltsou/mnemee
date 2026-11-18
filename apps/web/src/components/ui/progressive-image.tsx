@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ComponentProps } from "react";
 import { motion, type MotionStyle } from "motion/react";
 import { ImageSkeleton } from "@/components/ui/image-skeleton";
+import { ImageUnavailable } from "@/components/ui/image-unavailable";
 import {
   reportImageDecoded,
   reportImageFailed,
@@ -31,6 +32,7 @@ type ProgressiveImageProps = Omit<
   blurDataURL?: string | null;
   fallbackClassName?: string;
   placeholderClassName?: string;
+  unavailableFallback?: boolean;
   style?: MotionStyle;
 };
 
@@ -43,6 +45,7 @@ export function ProgressiveImage({
   alt = "",
   className,
   placeholderClassName,
+  unavailableFallback = false,
   style,
   loading = "lazy",
   onLoad,
@@ -50,6 +53,14 @@ export function ProgressiveImage({
   ...props
 }: ProgressiveImageProps) {
   const [decodedSrc, setDecodedSrc] = useState<string | null>(null);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [failedFallbackSrc, setFailedFallbackSrc] = useState<string | null>(
+    null,
+  );
+  const unavailable =
+    unavailableFallback &&
+    failedSrc === src &&
+    (!fallbackSrc || failedFallbackSrc === fallbackSrc);
   const reusedDecodedSource = decodedImageSources.has(src);
   const isDecoded = decodedSrc === src || reusedDecodedSource;
   const previousDecodedSrc =
@@ -102,6 +113,7 @@ export function ProgressiveImage({
   >(
     (event) => {
       onError?.(event);
+      setFailedSrc(src);
       reportImageFailed({ src, loading, reusedDecodedSource });
       if (!fallbackSrc && !previousDecodedSrc) setDecodedSrc(src);
     },
@@ -114,6 +126,8 @@ export function ProgressiveImage({
       src,
     ],
   );
+
+  if (unavailable) return <ImageUnavailable compact />;
 
   return (
     <>
@@ -156,6 +170,7 @@ export function ProgressiveImage({
           alt=""
           aria-hidden="true"
           loading={loading}
+          onError={() => setFailedFallbackSrc(fallbackSrc)}
           className={cn(
             className,
             "pointer-events-none transition-opacity duration-150 ease-out motion-reduce:transition-none",

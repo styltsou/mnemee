@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { releaseLocalImagePreviewAfterRemoteLoad } from "@/lib/local-image-preview";
 import { MediaAssetFrame } from "./media-asset-frame";
 import { getMediaAssetName } from "@/lib/asset-name-preferences";
+import { useState } from "react";
+import { ImageUnavailable } from "@/components/ui/image-unavailable";
 
 export function ImageAssetCard({
   asset,
@@ -24,6 +26,7 @@ export function ImageAssetCard({
 }) {
   const reduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
+  const [failedSrc, setFailedSrc] = useState<string>();
 
   return (
     <MediaAssetFrame
@@ -61,23 +64,28 @@ export function ImageAssetCard({
       >
         <div
           data-asset-card-hero="image"
-          className="absolute inset-0 overflow-hidden rounded-[6px]"
+          className="absolute inset-0 overflow-hidden rounded-[6px] bg-muted"
         >
-          <ProgressiveImage
-            src={asset.url}
-            fallbackSrc={asset.localPreviewUrl}
-            revokeFallbackBlob={false}
-            onLoad={() =>
-              releaseLocalImagePreviewAfterRemoteLoad(
-                queryClient,
-                asset.localPreviewUrl,
-              )
-            }
-            blurDataURL={asset.uploadStatus ? undefined : asset.blurDataURL}
-            alt={asset.alt ?? ""}
-            className="absolute inset-0 h-full w-full rounded-[inherit] object-cover"
-            loading="lazy"
-          />
+          {failedSrc === asset.url && !asset.localPreviewUrl ? (
+            <ImageUnavailable alt={asset.alt || undefined} />
+          ) : (
+            <ProgressiveImage
+              src={asset.url}
+              fallbackSrc={asset.localPreviewUrl}
+              revokeFallbackBlob={false}
+              onLoad={() =>
+                releaseLocalImagePreviewAfterRemoteLoad(
+                  queryClient,
+                  asset.localPreviewUrl,
+                )
+              }
+              blurDataURL={asset.uploadStatus ? undefined : asset.blurDataURL}
+              alt={asset.alt ?? ""}
+              className="absolute inset-0 h-full w-full rounded-[inherit] object-cover"
+              loading="lazy"
+              onError={() => setFailedSrc(asset.url)}
+            />
+          )}
         </div>
         <AnimatePresence initial={false}>
           {asset.uploadStatus ? (

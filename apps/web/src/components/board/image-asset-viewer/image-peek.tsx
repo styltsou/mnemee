@@ -155,6 +155,7 @@ export function ImagePeek({
           }}
         >
           <ProgressiveImage
+            unavailableFallback
             src={imageUrl}
             revokeFallbackBlob={false}
             onLoad={() =>

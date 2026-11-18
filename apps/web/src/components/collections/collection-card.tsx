@@ -526,6 +526,7 @@ function CollectionPreviewCard({
           className="block h-auto max-h-[75cqh] w-auto max-w-[62cqw] opacity-0"
         />
         <ProgressiveImage
+          unavailableFallback
           src={preview.url}
           blurDataURL={preview.blurDataURL}
           alt=""

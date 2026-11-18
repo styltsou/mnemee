@@ -25,9 +25,10 @@ export function FolderPreviewRow({
         preview.type === "image" && preview.url ? (
           <div
             key={preview.assetId}
-            className="size-8 shrink-0 overflow-hidden rounded-[3px] bg-muted"
+            className="relative size-8 shrink-0 overflow-hidden rounded-[3px] bg-muted"
           >
             <ProgressiveImage
+              unavailableFallback
               src={preview.url}
               blurDataURL={preview.blurDataURL}
               alt=""

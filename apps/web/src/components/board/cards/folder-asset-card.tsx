@@ -224,6 +224,7 @@ function FolderPreviewCard({
           }
         />
         <ProgressiveImage
+          unavailableFallback
           src={preview.displayUrl ?? preview.url}
           fallbackSrc={
             preview.type === "video" &&

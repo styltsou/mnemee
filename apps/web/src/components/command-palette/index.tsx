@@ -307,6 +307,9 @@ export function CommandPalette() {
           viewPath.slice(1).join("/") || undefined,
         )
       : undefined;
+  const isCanvasLocked = usePersistedStore((state) =>
+    boardKey ? (state.boardLocks[boardKey] ?? false) : false,
+  );
   const areAlignmentGuidesEnabled = usePersistedStore((state) =>
     workspaceSlug
       ? (state.workspaceAlignmentGuides[workspaceSlug] ?? true)
@@ -510,7 +513,7 @@ export function CommandPalette() {
         return;
       case "canvas-text-tool":
       case "canvas-arrow-tool":
-        if (!boardKey || collectionView !== "canvas") return;
+        if (!boardKey || collectionView !== "canvas" || isCanvasLocked) return;
         handleOpenChange(false);
         setCanvasTool(
           boardKey,

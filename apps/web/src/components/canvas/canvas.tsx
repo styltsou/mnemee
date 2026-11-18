@@ -162,6 +162,9 @@ import {
 const VIEWPORT_ANIMATION_DURATION = 150;
 type CanvasFlowNode = CanvasNode | CanvasTextFlowNode;
 const nodeTypes: NodeTypes = { asset: CanvasCard, text: CanvasTextNode };
+// React Flow otherwise disables pointer events when nodes cannot be dragged
+// and its built-in selection is disabled; cards handle their own clicks.
+const preserveNodePointerEvents = () => {};
 
 type CanvasProps = {
   workspaceSlug: string;
@@ -384,13 +387,19 @@ function CanvasSurface({
   const arrowPointerStartRef = useRef<XYPosition | undefined>(undefined);
   const suppressDrawClickRef = useRef(false);
   const handledCreationRequestRef = useRef<number | undefined>(undefined);
-  const activeTool = useTransientStore(
+  const selectedTool = useTransientStore(
     (state) => state.canvasTools[boardKey] ?? "select",
   );
+  const activeTool = isCanvasLocked ? "select" : selectedTool;
   const creationRequest = useTransientStore(
     (state) => state.canvasCreationRequests[boardKey],
   );
   const setCanvasTool = useTransientStore((state) => state.setCanvasTool);
+  useEffect(() => {
+    if (isCanvasLocked && selectedTool !== "select") {
+      setCanvasTool(boardKey, "select");
+    }
+  }, [boardKey, isCanvasLocked, selectedTool, setCanvasTool]);
   const { mutate: createCanvasTextMutation } = useCreateCanvasText(
     workspaceSlug,
     collectionSlug,
@@ -1653,7 +1662,7 @@ function CanvasSurface({
   const renderedFlowNodes = useMemo(() => {
     const exitingById = new Map(exitingNodes.map((node) => [node.id, node]));
     const liveIds = new Set(flowNodes.map((node) => node.id));
-    return [
+    const nodes = [
       ...flowNodes.map((node) => {
         if (node.type !== "text") return exitingById.get(node.id) ?? node;
         return resolveCanvasTextHandoff(
@@ -1664,7 +1673,16 @@ function CanvasSurface({
       }),
       ...exitingNodes.filter((node) => !liveIds.has(node.id)),
     ];
-  }, [editingTextId, exitingNodes, flowNodes, pendingTextContent]);
+    return isCanvasLocked
+      ? nodes.map((node) => ({ ...node, draggable: false }))
+      : nodes;
+  }, [
+    editingTextId,
+    exitingNodes,
+    flowNodes,
+    isCanvasLocked,
+    pendingTextContent,
+  ]);
   const editingTextNode = editingTextId
     ? flowNodes.find(
         (node): node is CanvasTextFlowNode =>
@@ -2515,6 +2533,7 @@ function CanvasSurface({
         data-canvas-tool={activeTool}
         nodes={renderedFlowNodes}
         nodeTypes={nodeTypes}
+        onNodeClick={preserveNodePointerEvents}
         onNodesChange={handleNodesChange}
         defaultViewport={storedViewport ?? DEFAULT_CANVAS_VIEWPORT}
         minZoom={CANVAS_MIN_ZOOM}

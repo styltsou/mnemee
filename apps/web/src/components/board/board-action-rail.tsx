@@ -31,6 +31,7 @@ import { makeBoardKey, useBoardInsertionPlacement } from "@/components/canvas";
 import {
   getPexelsBrowserScope,
   useSessionStore,
+  usePersistedStore,
   useTransientStore,
 } from "@/store";
 import { CreateFolderDialog } from "@/components/app-shell/create-folder-dialog";
@@ -74,6 +75,9 @@ export function BoardActionRail({
   );
   const activeTool = useTransientStore(
     (state) => state.canvasTools[boardKey] ?? "select",
+  );
+  const isCanvasLocked = usePersistedStore(
+    (state) => state.boardLocks[boardKey] ?? false,
   );
   const setCanvasTool = useTransientStore((state) => state.setCanvasTool);
   const openPexelsBrowser = useSessionStore(
@@ -272,6 +276,7 @@ export function BoardActionRail({
                               size="icon-lg"
                               variant="ghost"
                               aria-label="Text tool"
+                              disabled={isCanvasLocked}
                               aria-pressed={activeTool === "text"}
                               data-active={activeTool === "text" || undefined}
                               className={cn(
@@ -304,6 +309,7 @@ export function BoardActionRail({
                               size="icon-lg"
                               variant="ghost"
                               aria-label="Arrow tool"
+                              disabled={isCanvasLocked}
                               aria-pressed={activeTool === "arrow"}
                               data-active={activeTool === "arrow" || undefined}
                               className={cn(

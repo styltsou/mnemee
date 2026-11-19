@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRightIcon, LoaderCircleIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -423,14 +423,7 @@ export function DestinationDialog({
             disabled={!canMove || isPending}
             onClick={onMove}
           >
-            {isPending ? (
-              <>
-                <LoaderCircleIcon className="size-4 animate-spin" />
-                Moving
-              </>
-            ) : (
-              `Move ${count === 1 ? "item" : `${count} items`}`
-            )}
+            {`Move ${count === 1 ? "item" : `${count} items`}`}
           </Button>
         </DialogFooter>
       </DialogContent>

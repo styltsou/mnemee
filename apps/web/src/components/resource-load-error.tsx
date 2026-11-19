@@ -1,4 +1,4 @@
-import { CircleAlertIcon, LoaderCircleIcon, RotateCwIcon } from "lucide-react";
+import { CircleAlertIcon, RotateCwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -37,12 +37,13 @@ export function ResourceLoadError({
             Check your connection and try again.
           </p>
         </div>
-        <Button disabled={isRetrying} size="lg" onClick={onRetry}>
-          {isRetrying ? (
-            <LoaderCircleIcon className="animate-spin" />
-          ) : (
-            <RotateCwIcon />
-          )}
+        <Button
+          pending={isRetrying}
+          disabled={isRetrying}
+          size="lg"
+          onClick={onRetry}
+        >
+          <RotateCwIcon />
           Try again
         </Button>
       </div>

@@ -13,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { LoaderCircleIcon } from "lucide-react";
 import { useCreateCollection } from "@/api/collection";
 import { useWorkspaceOverlayNavigation } from "./use-workspace-overlay-navigation";
 import { emitOnboardingTourAction } from "@/lib/onboarding-tour";
@@ -95,26 +94,11 @@ export function CreateCollectionDialog({
           <DialogFooter>
             <DialogClose render={<Button variant="outline">Cancel</Button>} />
             <Button
+              pending={createCollection.isPending || isNavigating}
               disabled={createCollection.isPending || isNavigating}
               type="submit"
             >
-              {createCollection.isPending ? (
-                <>
-                  <LoaderCircleIcon className="size-4 animate-spin" />
-                  Creating
-                </>
-              ) : (
-                <>
-                  {isNavigating ? (
-                    <>
-                      <LoaderCircleIcon className="size-4 animate-spin" />
-                      Opening
-                    </>
-                  ) : (
-                    "Create"
-                  )}
-                </>
-              )}
+              Create
             </Button>
           </DialogFooter>
         </form>

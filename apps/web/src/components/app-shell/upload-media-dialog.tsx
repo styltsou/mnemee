@@ -986,6 +986,7 @@ export function UploadMediaDialog({
               Cancel
             </DialogClose>
             <Button
+              pending={isSubmitting}
               disabled={
                 isInteractionDisabled ||
                 mode === "cloud" ||
@@ -993,7 +994,7 @@ export function UploadMediaDialog({
               }
               type="submit"
             >
-              {isSubmitting ? "Uploading" : "Upload"}
+              Upload
             </Button>
           </DialogFooter>
         </form>

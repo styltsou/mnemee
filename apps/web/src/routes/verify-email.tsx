@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import {
   createFileRoute,
@@ -165,10 +166,11 @@ function VerifyEmailPage() {
           </AuthSlot>
           <AuthSlot name="submit">
             <AuthActionButton
+              pending={isVerifying}
               disabled={isVerifying || code.length !== OTP_LENGTH}
               type="submit"
             >
-              {isVerifying ? "Verifying email" : "Verify email"}
+              Verify email
             </AuthActionButton>
           </AuthSlot>
         </form>
@@ -181,14 +183,17 @@ function VerifyEmailPage() {
         >
           <span>
             Didn&apos;t get it?{" "}
-            <button
-              className="font-medium text-foreground underline decoration-transparent underline-offset-4 transition-[text-decoration-color] duration-150 ease-[ease] hover:decoration-current disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+            <Button
+              variant="link"
+              size="xs"
+              pending={isSending}
+              className="h-auto p-0 align-baseline text-sm"
               disabled={isSending || cooldown > 0}
               onClick={() => void resend()}
               type="button"
             >
               <ResendCodeLabel seconds={cooldown} />
-            </button>
+            </Button>
           </span>
         </AuthSlot>
       </div>

@@ -58,10 +58,11 @@ export function NoteSaveFeedback({
           type="button"
           size="sm"
           variant="outline"
+          pending={loadingServerNote}
           disabled={loadingServerNote}
           onClick={onReviewServer}
         >
-          {loadingServerNote ? "Loading…" : "Compare versions"}
+          Compare versions
         </Button>
         <Button type="button" size="sm" variant="ghost" onClick={onClose}>
           Close
@@ -81,6 +82,7 @@ export function NoteSaveFeedback({
             size="sm"
             variant="destructive"
             className="mt-3"
+            pending={loadingServerNote}
             disabled={loadingServerNote}
             onClick={onReplaceServer}
           >

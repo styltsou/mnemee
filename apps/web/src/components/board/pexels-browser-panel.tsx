@@ -963,17 +963,14 @@ export function PexelsBrowserPanel({
                                 : "Add selected photos to board"
                             }
                             className="shrink-0 px-2.5"
+                            pending={createImage.isPending}
                             disabled={createImage.isPending}
                             onClick={() => void addSelected()}
                             variant="default"
                             size="sm"
                           >
-                            {createImage.isPending ? (
-                              <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            ) : (
-                              <ImportIcon />
-                            )}
-                            {createImage.isPending ? "Adding…" : "Import"}
+                            <ImportIcon />
+                            Import
                           </Button>
                         </div>
                       </motion.div>

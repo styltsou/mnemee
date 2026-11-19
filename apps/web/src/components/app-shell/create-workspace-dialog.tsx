@@ -99,8 +99,12 @@ export function CreateWorkspaceDialog({
           </DialogBody>
           <DialogFooter>
             <DialogClose render={<Button variant="outline">Cancel</Button>} />
-            <Button disabled={isSubmitting} type="submit">
-              {isSubmitting ? "Creating" : "Create"}
+            <Button
+              pending={isSubmitting}
+              disabled={isSubmitting}
+              type="submit"
+            >
+              Create
             </Button>
           </DialogFooter>
         </form>

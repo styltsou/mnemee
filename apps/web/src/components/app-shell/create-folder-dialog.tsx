@@ -14,7 +14,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { LoaderCircleIcon } from "lucide-react";
 import { slugFromTitle } from "@/lib/slug";
 
 export function CreateFolderDialog({
@@ -110,14 +109,7 @@ export function CreateFolderDialog({
           <DialogFooter>
             <DialogClose render={<Button variant="outline">Cancel</Button>} />
             <Button disabled={isSubmitting} type="submit">
-              {isSubmitting ? (
-                <>
-                  <LoaderCircleIcon className="size-4 animate-spin" />
-                  Creating
-                </>
-              ) : (
-                "Create"
-              )}
+              Create
             </Button>
           </DialogFooter>
         </form>

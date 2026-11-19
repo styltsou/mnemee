@@ -188,14 +188,12 @@ function SignupPage() {
             </>
           ) : null}
           <AuthSlot name="submit">
-            <AuthActionButton disabled={isSubmitting} type="submit">
-              <span>
-                {isSubmitting
-                  ? "Creating account"
-                  : passwordStep
-                    ? "Create account"
-                    : "Continue"}
-              </span>
+            <AuthActionButton
+              pending={isSubmitting}
+              disabled={isSubmitting}
+              type="submit"
+            >
+              <span>{passwordStep ? "Create account" : "Continue"}</span>
             </AuthActionButton>
           </AuthSlot>
         </form>

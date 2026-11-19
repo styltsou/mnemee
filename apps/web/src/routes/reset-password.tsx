@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import {
   createFileRoute,
@@ -228,10 +229,11 @@ function ResetPasswordPage() {
               </AuthSlot>
               <AuthSlot name="submit">
                 <AuthActionButton
+                  pending={isSubmitting}
                   disabled={isSubmitting || code.length !== OTP_LENGTH}
                   type="submit"
                 >
-                  {isSubmitting ? "Checking code" : "Continue"}
+                  Continue
                 </AuthActionButton>
               </AuthSlot>
             </form>
@@ -243,14 +245,17 @@ function ResetPasswordPage() {
               className="mt-5 text-center text-sm text-muted-foreground"
             >
               Didn&apos;t get it?{" "}
-              <button
-                className="font-medium text-foreground underline decoration-transparent underline-offset-4 transition-[text-decoration-color] duration-150 ease-[ease] hover:decoration-current disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+              <Button
+                variant="link"
+                size="xs"
+                pending={isSending}
+                className="h-auto p-0 align-baseline text-sm"
                 disabled={isSending || cooldown > 0}
                 onClick={() => void resend()}
                 type="button"
               >
                 <ResendCodeLabel seconds={cooldown} />
-              </button>
+              </Button>
             </AuthSlot>
           </>
         ) : (
@@ -301,8 +306,12 @@ function ResetPasswordPage() {
                 <AuthError message={error} />
               </AuthSlot>
               <AuthSlot name="submit">
-                <AuthActionButton disabled={isSubmitting} type="submit">
-                  {isSubmitting ? "Resetting password" : "Reset password"}
+                <AuthActionButton
+                  pending={isSubmitting}
+                  disabled={isSubmitting}
+                  type="submit"
+                >
+                  Reset password
                 </AuthActionButton>
               </AuthSlot>
             </form>

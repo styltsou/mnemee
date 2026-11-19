@@ -106,8 +106,12 @@ function ForgotPasswordPage() {
             <AuthError message={error} />
           </AuthSlot>
           <AuthSlot name="submit">
-            <AuthActionButton disabled={isSending} type="submit">
-              {isSending ? "Sending code" : "Send code"}
+            <AuthActionButton
+              pending={isSending}
+              disabled={isSending}
+              type="submit"
+            >
+              Send code
             </AuthActionButton>
           </AuthSlot>
         </form>

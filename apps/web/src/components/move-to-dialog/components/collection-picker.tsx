@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import {
   ArrowLeftIcon,
@@ -163,8 +164,11 @@ export function CollectionPicker({
             }}
           >
             <div className="flex items-center gap-1.5">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
+                pending={pending}
                 aria-label="Back to collection list"
                 tabIndex={-1}
                 className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors duration-100 hover:bg-foreground/10 hover:text-foreground"
@@ -174,12 +178,8 @@ export function CollectionPicker({
                   setError(undefined);
                 }}
               >
-                {pending ? (
-                  <LoaderCircleIcon className="size-4 animate-spin" />
-                ) : (
-                  <ArrowLeftIcon className="size-4" />
-                )}
-              </button>
+                <ArrowLeftIcon className="size-4" />
+              </Button>
               <div className="relative flex-1">
                 <Input
                   // Deliberate: focus the field as soon as this opens.

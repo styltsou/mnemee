@@ -191,8 +191,12 @@ function LoginPage() {
             <AuthError message={error} />
           </AuthSlot>
           <AuthSlot name="submit">
-            <AuthActionButton disabled={isSubmitting} type="submit">
-              <span>{isSubmitting ? "Signing in" : "Sign in"}</span>
+            <AuthActionButton
+              pending={isSubmitting}
+              disabled={isSubmitting}
+              type="submit"
+            >
+              <span>Sign in</span>
             </AuthActionButton>
           </AuthSlot>
         </form>

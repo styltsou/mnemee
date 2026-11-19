@@ -2613,6 +2613,7 @@ export function ImageAssetViewer({
                                 variant="default"
                                 size="sm"
                                 onClick={handleApplyCrop}
+                                pending={isSavingCrop}
                                 disabled={isSavingCrop}
                               />
                             }

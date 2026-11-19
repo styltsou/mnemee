@@ -50,3 +50,70 @@ describe("Button interaction styling", () => {
     expect(groupHtml).toContain("bg-border/60");
   });
 });
+
+describe("Button pending behavior", () => {
+  it("disables a pending action and preserves its label and accessible busy state", () => {
+    const html = renderToStaticMarkup(
+      <Button pending disabled={false}>
+        Save changes
+      </Button>,
+    );
+    expect(html).toContain('disabled=""');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain("Save changes");
+    expect(html).not.toContain("Saving");
+  });
+
+  it("keeps the same spinner and label structure mounted in both states", () => {
+    for (const pending of [false, true]) {
+      const html = renderToStaticMarkup(
+        <Button pending={pending}>Save</Button>,
+      );
+      expect(html.match(/data-slot="button-spinner"/g)).toHaveLength(1);
+      expect(html.match(/data-slot="button-label"/g)).toHaveLength(1);
+      expect(html).toContain('aria-hidden="true"');
+    }
+  });
+
+  it("keeps an idle pending-capable action enabled", () => {
+    const html = renderToStaticMarkup(<Button pending={false}>Save</Button>);
+    expect(html).not.toContain('disabled=""');
+    expect(html).not.toContain('aria-busy="true"');
+  });
+
+  it("does not add pending UI to optimistic actions", () => {
+    const html = renderToStaticMarkup(<Button>Delete</Button>);
+    expect(html).not.toContain("button-spinner");
+    expect(html).not.toContain(" aria-busy=");
+  });
+
+  it("keeps icon-only actions named while busy", () => {
+    const html = renderToStaticMarkup(
+      <Button size="icon" pending aria-label="Upload photo">
+        +
+      </Button>,
+    );
+    expect(html).toContain('aria-label="Upload photo"');
+    expect(html).toContain('aria-busy="true"');
+  });
+});
+
+describe("Button text alignment", () => {
+  it("keeps adjacent text and numbers in one trimmed label", () => {
+    const html = renderToStaticMarkup(<Button>Move {3} items</Button>);
+    expect(html).toContain("Move 3 items");
+    expect(html.match(/data-slot="button-text"/g)).toHaveLength(1);
+  });
+
+  it("preserves label content inside fragments and existing spans", () => {
+    const html = renderToStaticMarkup(
+      <Button pending={false}>
+        <>
+          <span className="truncate">Save changes</span>
+        </>
+      </Button>,
+    );
+    expect(html).toContain("Save changes");
+    expect(html).toContain("truncate");
+  });
+});

@@ -1,9 +1,4 @@
-import {
-  LoaderCircleIcon,
-  MonitorIcon,
-  SmartphoneIcon,
-  TabletIcon,
-} from "lucide-react";
+import { MonitorIcon, SmartphoneIcon, TabletIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { listActiveSessions } from "@/lib/auth-sessions";
 import { describeSessionDevice } from "@/lib/session-device";
@@ -65,6 +60,7 @@ export function ActiveSessionRow({
       </div>
       {!isCurrent ? (
         <Button
+          pending={pending}
           className="self-center"
           variant="outline"
           size="sm"
@@ -72,12 +68,6 @@ export function ActiveSessionRow({
           aria-label={`Sign out of ${device.name} — ${device.label}`}
           onClick={onSignOut}
         >
-          {pending ? (
-            <LoaderCircleIcon
-              aria-hidden="true"
-              className="motion-safe:animate-spin"
-            />
-          ) : null}
           Sign out
         </Button>
       ) : null}

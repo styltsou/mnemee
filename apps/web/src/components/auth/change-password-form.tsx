@@ -1,5 +1,4 @@
 import { useRef, useState, type FormEvent } from "react";
-import { LoaderCircleIcon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PasswordField } from "@/components/auth/password-field";
 import { PasswordStrengthFeedback } from "@/components/auth/password-strength-feedback";
@@ -149,18 +148,13 @@ export function ChangePasswordForm({ email }: { email: string }) {
         ) : null}
         <div className="flex justify-end gap-2">
           <Button
+            pending={pending}
             type="submit"
             disabled={
               pending || !currentPassword || !newPassword || !confirmPassword
             }
           >
-            {pending ? (
-              <LoaderCircleIcon
-                aria-hidden="true"
-                className="size-4 motion-safe:animate-spin"
-              />
-            ) : null}
-            {pending ? "Changing password…" : "Change password"}
+            Change password
           </Button>
         </div>
       </form>

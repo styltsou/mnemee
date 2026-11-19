@@ -66,7 +66,7 @@ export function DeleteCollectionDialog({
               }
             }}
           >
-            {deletion.isPending ? "Deleting…" : "Delete collection"}
+            Delete collection
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

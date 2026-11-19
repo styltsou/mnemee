@@ -33,7 +33,6 @@ import {
   ChevronsUpDownIcon,
   CompassIcon,
   LifeBuoyIcon,
-  LoaderCircleIcon,
   LogOutIcon,
   SendIcon,
   SettingsIcon,
@@ -157,6 +156,7 @@ export function NavUser({
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
+              pending={isSigningOut}
               disabled={isSigningOut}
               onClick={async () => {
                 if (isSigningOut) return;
@@ -176,10 +176,7 @@ export function NavUser({
                 }
               }}
             >
-              {isSigningOut ? (
-                <LoaderCircleIcon className="animate-spin" />
-              ) : null}
-              <span>{isSigningOut ? "Signing out" : "Sign out"}</span>
+              <span>Sign out</span>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

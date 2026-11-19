@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CircleCheckIcon, LoaderCircleIcon } from "lucide-react";
+import { CircleCheckIcon } from "lucide-react";
 import { AvatarPicker } from "@/components/auth/avatar-picker";
 import { ChangePasswordForm } from "@/components/auth/change-password-form";
 import { ActiveSessions } from "@/components/auth/active-sessions";
@@ -108,17 +108,12 @@ export function AccountSettings() {
               ) : null}
               {linked === false ? (
                 <Button
+                  pending={pending}
                   variant="outline"
                   onClick={linkGoogle}
                   disabled={pending}
                 >
-                  {pending ? (
-                    <LoaderCircleIcon
-                      aria-hidden="true"
-                      className="size-4 motion-safe:animate-spin"
-                    />
-                  ) : null}
-                  {pending ? "Connecting…" : "Connect Google"}
+                  Connect Google
                 </Button>
               ) : null}
               {accounts.isError && linked === undefined ? (

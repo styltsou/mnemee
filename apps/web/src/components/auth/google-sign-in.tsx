@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { LoaderCircleIcon } from "lucide-react";
 import {
   AuthActionButton,
   AuthError,
@@ -92,14 +91,11 @@ export function GoogleSignIn({
       <div className="relative">
         <AuthActionButton
           type="button"
+          pending={pending}
           disabled={pending}
           onClick={handleSignIn}
         >
-          {pending ? (
-            <LoaderCircleIcon className="animate-spin" />
-          ) : (
-            <GoogleIcon />
-          )}
+          <GoogleIcon />
           Continue with Google
         </AuthActionButton>
         {lastUsed ? (

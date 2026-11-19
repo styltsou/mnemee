@@ -86,7 +86,7 @@ export function AssetDeleteShortcut({
               onDeleted();
             }}
           >
-            {deletion.isPending ? "Deleting…" : "Delete"}
+            Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

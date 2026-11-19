@@ -5,7 +5,7 @@ import {
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
-import { LoaderCircleIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthPageLayout } from "@/components/auth/auth-page-layout";
 import { AuthSlot } from "@/components/auth/auth-slot";
@@ -100,15 +100,14 @@ function OnboardingPage() {
         </AuthSlot>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <AuthSlot name="submit">
-          <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting ? (
-              <LoaderCircleIcon className="animate-spin" />
-            ) : (
-              <PlusIcon />
-            )}
-            <span>
-              {isSubmitting ? "Creating workspace" : "Create workspace"}
-            </span>
+          <Button
+            className="w-full"
+            pending={isSubmitting}
+            disabled={isSubmitting}
+            type="submit"
+          >
+            <PlusIcon />
+            <span>Create workspace</span>
           </Button>
         </AuthSlot>
       </form>

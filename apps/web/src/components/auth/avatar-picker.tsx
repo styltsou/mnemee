@@ -1,6 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { useEffect, useRef, useState } from "react";
-import { LoaderCircleIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -259,27 +260,23 @@ export function AvatarPicker() {
           <Tooltip>
             <TooltipTrigger
               render={
-                <button
+                <Button
                   aria-label={
                     uploading
                       ? "Uploading profile photo"
                       : "Upload a profile photo"
                   }
                   className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-muted p-0 text-muted-foreground hover:bg-foreground/20 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  size="icon"
+                  variant="ghost"
+                  pending={uploading}
                   disabled={uploading}
                   onClick={() => inputRef.current?.click()}
                   type="button"
                 />
               }
             >
-              {uploading ? (
-                <LoaderCircleIcon
-                  aria-hidden="true"
-                  className="size-4 motion-safe:animate-spin"
-                />
-              ) : (
-                <PlusIcon aria-hidden="true" className="size-4" />
-              )}
+              <PlusIcon aria-hidden="true" className="size-4" />
             </TooltipTrigger>
             <TooltipContent>Upload a profile photo</TooltipContent>
           </Tooltip>

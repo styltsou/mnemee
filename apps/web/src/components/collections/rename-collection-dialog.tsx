@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { LoaderCircleIcon } from "lucide-react";
 
 import { useRenameCollection } from "@/api/collection";
 import { getUserFacingApiErrorMessage } from "@/lib/api";
@@ -88,17 +87,11 @@ export function RenameCollectionDialog({
           <DialogFooter>
             <DialogClose render={<Button variant="outline">Cancel</Button>} />
             <Button
+              pending={renameCollection.isPending}
               disabled={renameCollection.isPending || !name.trim()}
               type="submit"
             >
-              {renameCollection.isPending ? (
-                <>
-                  <LoaderCircleIcon className="size-4 animate-spin" />
-                  Saving
-                </>
-              ) : (
-                "Save"
-              )}
+              Save
             </Button>
           </DialogFooter>
         </form>

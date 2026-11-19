@@ -39,7 +39,7 @@ export function OnboardingTour({
   const [failedAction, setFailedAction] = useState<OnboardingTourAction | null>(
     null,
   );
-  const { mutate, isPending } = useMutation({
+  const { mutate, isPending, variables } = useMutation({
     mutationFn: recordOnboardingTourAction,
     scope: { id: `onboarding-tour:${userId}` },
     onSuccess: async (next, action) => {
@@ -144,6 +144,7 @@ export function OnboardingTour({
             size="icon-sm"
             variant="ghost"
             aria-label="Skip getting started"
+            pending={isPending && variables?.type === "skip"}
             disabled={isPending}
             onClick={() => mutate({ type: "skip" })}
           >
@@ -160,14 +161,17 @@ export function OnboardingTour({
         {failedAction ? (
           <div className="mt-3 flex items-center gap-2 text-xs text-destructive">
             <span>Progress could not be saved.</span>
-            <button
+            <Button
               type="button"
-              className="font-medium underline"
+              variant="link"
+              size="xs"
+              pending={isPending && variables === failedAction}
+              className="h-auto p-0 text-xs font-medium underline"
               disabled={isPending}
               onClick={() => mutate(failedAction)}
             >
               Retry
-            </button>
+            </Button>
           </div>
         ) : null}
         <div className="mt-4 flex items-center justify-between gap-3">
@@ -203,14 +207,17 @@ export function OnboardingTour({
               Go to your collection
             </Link>
           )}
-          <button
+          <Button
             type="button"
-            className="text-xs text-muted-foreground hover:text-foreground"
+            variant="link"
+            size="xs"
+            pending={isPending && variables?.type === "skip"}
+            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
             disabled={isPending}
             onClick={() => mutate({ type: "skip" })}
           >
             Skip tour
-          </button>
+          </Button>
         </div>
       </section>
     </>

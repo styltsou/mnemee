@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LoaderCircleIcon } from "lucide-react";
 import { ActiveSessionRow } from "@/components/auth/active-session-row";
 import {
   AlertDialog,
@@ -201,6 +200,7 @@ export function ActiveSessions() {
               <Button
                 variant="outline"
                 size="sm"
+                pending={!needsRecentSignIn && sessions.isFetching}
                 disabled={pending !== null || sessions.isFetching}
                 onClick={() => {
                   if (needsRecentSignIn) confirmSignOut({ type: "current" });
@@ -215,15 +215,10 @@ export function ActiveSessions() {
             <Button
               variant="outline"
               size="sm"
+              pending={pending === "others"}
               disabled={pending !== null || !current || !hasOtherSessions}
               onClick={() => confirmSignOut({ type: "others" })}
             >
-              {pending === "others" ? (
-                <LoaderCircleIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                />
-              ) : null}
               Sign out other sessions
             </Button>
             <Button
@@ -286,18 +281,13 @@ export function ActiveSessions() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
+              pending={pending !== null}
               disabled={pending !== null}
               onClick={() => {
                 void signOut(confirmation.action, confirmation.pendingKey);
               }}
             >
-              {pending ? (
-                <LoaderCircleIcon
-                  aria-hidden="true"
-                  className="motion-safe:animate-spin"
-                />
-              ) : null}
-              {pending ? "Signing out…" : confirmationCopy.buttonText}
+              {confirmationCopy.buttonText}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

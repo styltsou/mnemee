@@ -84,7 +84,7 @@ export function RenameColorDialog({
           <DialogFooter>
             <DialogClose render={<Button variant="outline">Cancel</Button>} />
             <Button type="submit" disabled={updateColor.isPending}>
-              {updateColor.isPending ? "Saving…" : "Save"}
+              Save
             </Button>
           </DialogFooter>
         </form>

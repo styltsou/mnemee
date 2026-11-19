@@ -323,102 +323,120 @@ describe("WorkspaceSearchService", () => {
     });
   });
 
-  it("returns signed preview media and favicon URLs for link results", async () => {
-    selectMock.mockImplementationOnce(() =>
-      queryReturning([
-        {
-          ...imageRow,
-          assetId: "00000000-0000-4000-8000-00000000001f",
-          assetType: "link" as const,
-          title: null,
-          imageAlt: null,
-          imageNote: null,
-          imageBlurDataURL: null,
-          imageVariants: null,
-          linkOriginalUrl: "https://example.com/article",
-          linkResourceId: "00000000-0000-4000-8000-000000000007",
-          linkHostname: "example.com",
-          linkTitle: "Example article",
-          linkDescription: null,
-          linkSiteName: null,
-          linkResourceKind: "web_page",
-          linkResolverKey: "generic-html",
-        },
-      ]),
-    );
-    selectMock.mockImplementationOnce(() => queryReturning([]));
-    selectMock.mockImplementationOnce(() => queryReturning([]));
-    selectMock.mockImplementationOnce(() =>
-      queryWhereReturning([
-        {
-          resourceId: "00000000-0000-4000-8000-000000000007",
-          role: "preview",
-          variants: {
-            preview: {
-              objectKey: "workspace-1/7/link-preview.webp",
-              width: 320,
-              height: 180,
-              contentType: "image/webp",
-              sizeBytes: 500,
-            },
-          },
-        },
-        {
-          resourceId: "00000000-0000-4000-8000-000000000007",
-          role: "icon",
-          variants: {
-            preview: {
-              objectKey: "workspace-1/7/icon-preview.webp",
-              width: 64,
-              height: 64,
-              contentType: "image/webp",
-              sizeBytes: 500,
-            },
-          },
-        },
-      ]),
-    );
-
-    const createPresignedGetUrls = vi.fn().mockResolvedValue(
-      new Map([
-        [
-          "workspace-1/7/link-preview.webp",
-          {
-            key: "workspace-1/7/link-preview.webp",
-            url: "https://signed.example/7-preview",
-            expiresAt: new Date("2026-01-02T00:00:00.000Z"),
-          },
-        ],
-        [
-          "workspace-1/7/icon-preview.webp",
-          {
-            key: "workspace-1/7/icon-preview.webp",
-            url: "https://signed.example/7-favicon",
-            expiresAt: new Date("2026-01-02T00:00:00.000Z"),
-          },
-        ],
-      ]),
-    );
-    const service = new WorkspaceSearchService({
-      objectStorageService: {
-        createPresignedGetUrls,
-      } as unknown as IObjectStorageService,
-    });
-
-    const response = await service.search("workspace-1", {
-      q: "example",
-      limit: 20,
-      recent: [],
-    });
-
-    expect(createPresignedGetUrls).toHaveBeenCalledWith([
-      "workspace-1/7/link-preview.webp",
-      "workspace-1/7/icon-preview.webp",
-    ]);
-    expect(response.results[0]?.preview).toMatchObject({
-      url: "https://signed.example/7-preview",
-      faviconUrl: "https://signed.example/7-favicon",
+  it.each([
+    {
+      url: "https://example.com/article",
       hostname: "example.com",
-    });
-  });
+      kind: "web_page",
+      resolver: "generic-html",
+    },
+    {
+      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      hostname: "www.youtube.com",
+      kind: "video",
+      resolver: "youtube-data-api",
+    },
+  ])(
+    "returns signed thumbnails, blur data and favicons for $hostname",
+    async ({ url, hostname, kind, resolver }) => {
+      selectMock.mockImplementationOnce(() =>
+        queryReturning([
+          {
+            ...imageRow,
+            assetId: "00000000-0000-4000-8000-00000000001f",
+            assetType: "link" as const,
+            title: null,
+            imageAlt: null,
+            imageNote: null,
+            imageBlurDataURL: null,
+            imageVariants: null,
+            linkOriginalUrl: url,
+            linkResourceId: "00000000-0000-4000-8000-000000000007",
+            linkHostname: hostname,
+            linkTitle: "Example article",
+            linkDescription: null,
+            linkSiteName: null,
+            linkResourceKind: kind,
+            linkResolverKey: resolver,
+          },
+        ]),
+      );
+      selectMock.mockImplementationOnce(() => queryReturning([]));
+      selectMock.mockImplementationOnce(() => queryReturning([]));
+      selectMock.mockImplementationOnce(() =>
+        queryWhereReturning([
+          {
+            resourceId: "00000000-0000-4000-8000-000000000007",
+            role: "preview",
+            blurDataURL: "data:image/webp;base64,link-blur",
+            variants: {
+              preview: {
+                objectKey: "workspace-1/7/link-preview.webp",
+                width: 320,
+                height: 180,
+                contentType: "image/webp",
+                sizeBytes: 500,
+              },
+            },
+          },
+          {
+            resourceId: "00000000-0000-4000-8000-000000000007",
+            role: "icon",
+            variants: {
+              preview: {
+                objectKey: "workspace-1/7/icon-preview.webp",
+                width: 64,
+                height: 64,
+                contentType: "image/webp",
+                sizeBytes: 500,
+              },
+            },
+          },
+        ]),
+      );
+
+      const createPresignedGetUrls = vi.fn().mockResolvedValue(
+        new Map([
+          [
+            "workspace-1/7/link-preview.webp",
+            {
+              key: "workspace-1/7/link-preview.webp",
+              url: "https://signed.example/7-preview",
+              expiresAt: new Date("2026-01-02T00:00:00.000Z"),
+            },
+          ],
+          [
+            "workspace-1/7/icon-preview.webp",
+            {
+              key: "workspace-1/7/icon-preview.webp",
+              url: "https://signed.example/7-favicon",
+              expiresAt: new Date("2026-01-02T00:00:00.000Z"),
+            },
+          ],
+        ]),
+      );
+      const service = new WorkspaceSearchService({
+        objectStorageService: {
+          createPresignedGetUrls,
+        } as unknown as IObjectStorageService,
+      });
+
+      const response = await service.search("workspace-1", {
+        q: "example",
+        limit: 20,
+        recent: [],
+      });
+
+      expect(createPresignedGetUrls).toHaveBeenCalledWith([
+        "workspace-1/7/link-preview.webp",
+        "workspace-1/7/icon-preview.webp",
+      ]);
+      expect(response.results[0]?.preview).toMatchObject({
+        url: "https://signed.example/7-preview",
+        blurDataURL: "data:image/webp;base64,link-blur",
+        faviconUrl: "https://signed.example/7-favicon",
+        hostname,
+      });
+    },
+  );
 });

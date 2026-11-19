@@ -55,7 +55,7 @@ function LinkThumbnail({
 
   return (
     <>
-      {!ready ? (
+      {!ready && !props.blurDataURL ? (
         <ImageSkeleton
           data-slot="youtube-thumbnail-loading"
           className="absolute inset-0 rounded-none"
@@ -64,13 +64,13 @@ function LinkThumbnail({
       <div
         data-slot="youtube-thumbnail-content"
         className="absolute inset-0 transition-opacity duration-150 ease-out motion-reduce:transition-none"
-        style={{ opacity: ready ? 1 : 0 }}
+        style={{ opacity: ready || props.blurDataURL ? 1 : 0 }}
       >
         <ProgressiveImage
           {...props}
           src={source}
           fallbackSrc={undefined}
-          className={cn(className, "!transition-transform")}
+          className={cn(className, "!transition-[opacity,transform]")}
           onLoad={async (event) => {
             await waitForThumbnail(event.currentTarget);
             setLoadedSrc(source);

@@ -232,8 +232,30 @@ describe("LinkAssetCard", () => {
     expect(html).not.toContain('data-slot="optimistic-link-preview"');
     expect(html).not.toContain('aria-label="Loading video description"');
     expect(html).toContain("group-hover:scale-[1.05]");
-    expect(html).toContain("!transition-transform");
+    expect(html).toContain("!transition-[opacity,transform]");
     expect(html).not.toContain("!transition-none");
+  });
+
+  it("keeps the YouTube blur placeholder visible while the stored thumbnail loads", () => {
+    const html = renderToStaticMarkup(
+      <LinkAssetCard
+        asset={{
+          ...asset,
+          previewImage: {
+            url: "https://media.example/stored-thumbnail.webp",
+            blurDataURL: "data:image/webp;base64,blur",
+            width: 960,
+            height: 540,
+          },
+        }}
+      />,
+    );
+
+    expect(html).toContain('src="data:image/webp;base64,blur"');
+    expect(html).toContain('style="opacity:1"');
+    expect(html).not.toContain('data-slot="youtube-thumbnail-loading"');
+    expect(html).not.toContain("animate-image-shimmer");
+    expect(html).not.toContain('viewBox="0 0 68 48"');
   });
 
   it("shows a shimmer while the stored YouTube rendition loads", () => {
@@ -322,6 +344,25 @@ describe("LinkCardPreview", () => {
     expect(html).not.toContain('viewBox="0 0 68 48"');
   });
 
+  it.each([undefined, "collection"] as const)(
+    "shows the blur placeholder in %s YouTube previews while loading",
+    (variant) => {
+      const html = renderToStaticMarkup(
+        <LinkCardPreview
+          variant={variant}
+          preview={{
+            videoId: "dQw4w9WgXcQ",
+            url: "https://media.example/thumbnail.webp",
+            blurDataURL: "data:image/webp;base64,blur",
+          }}
+        />,
+      );
+      expect(html).toContain('src="data:image/webp;base64,blur"');
+      expect(html).toContain('style="opacity:1"');
+      expect(html).not.toContain("animate-image-shimmer");
+    },
+  );
+
   it("keeps the YouTube play badge hidden while its thumbnail loads", () => {
     const html = renderToStaticMarkup(
       <LinkCardPreview
@@ -406,7 +447,7 @@ describe("LinkCardPreview", () => {
     );
 
     expect(html).toContain("line-clamp-2 text-xs leading-relaxed");
-    expect(html).not.toContain("line-clamp-3");
+    expect(html).not.toContain('<p class="line-clamp-3');
     expect(html).toContain("A thorough writeup about the topic.");
   });
 

@@ -219,6 +219,7 @@ async function searchAssets(
           resourceId: externalResourceMedia.resourceId,
           role: externalResourceMedia.role,
           variants: externalResourceMedia.variants,
+          blurDataURL: externalResourceMedia.blurDataURL,
         })
         .from(externalResourceMedia)
         .where(
@@ -233,14 +234,17 @@ async function searchAssets(
     : [];
   const resourceMediaKeys = new Map<
     string,
-    { preview?: string; icon?: string }
+    { preview?: string; icon?: string; blurDataURL?: string }
   >();
   for (const row of resourceMediaRows) {
     const variant =
       row.variants.preview ?? row.variants.master ?? row.variants.display;
     if (!variant?.objectKey) continue;
     const current = resourceMediaKeys.get(row.resourceId) ?? {};
-    if (row.role === "preview") current.preview = variant.objectKey;
+    if (row.role === "preview") {
+      current.preview = variant.objectKey;
+      if (row.blurDataURL) current.blurDataURL = row.blurDataURL;
+    }
     if (row.role === "icon") current.icon = variant.objectKey;
     resourceMediaKeys.set(row.resourceId, current);
   }
@@ -339,6 +343,9 @@ async function searchAssets(
               : type === "link" && row.linkHostname
                 ? {
                     ...(previewUrl ? { url: previewUrl } : {}),
+                    ...(resourceMedia?.blurDataURL
+                      ? { blurDataURL: resourceMedia.blurDataURL }
+                      : {}),
                     hostname: row.linkHostname,
                     ...(faviconUrl ? { faviconUrl } : {}),
                   }

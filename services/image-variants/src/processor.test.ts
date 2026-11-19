@@ -29,14 +29,17 @@ describe("image rendition profiles", () => {
     expect(result.blurDataURL).toMatch(/^data:image\/webp;base64,/);
   });
 
-  it("creates one display thumbnail for new link previews", async () => {
+  it("creates a display thumbnail and tiny blur placeholder for new link previews", async () => {
     const result = await processImageVariants(
       await testImage(1_200, 600),
       "link-preview-v2",
     );
     expect(result.variants.map((variant) => variant.role)).toEqual(["display"]);
     expect(result.variants[0]?.width).toBe(960);
-    expect(result.blurDataURL).toBeNull();
+    expect(result.blurDataURL).toMatch(/^data:image\/webp;base64,/);
+    const blur = Buffer.from(result.blurDataURL!.split(",")[1]!, "base64");
+    expect((await sharp(blur).metadata()).width).toBe(8);
+    expect(blur.byteLength).toBeLessThan(500);
   });
 
   it("uses the isolated icon profile", async () => {

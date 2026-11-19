@@ -13,8 +13,6 @@ import {
   MoonIcon,
   CornerDownLeftIcon,
   DeleteIcon,
-  ExternalLinkIcon,
-  PlayIcon,
   NotebookPenIcon,
   PanelLeftIcon,
   PanelsTopLeftIcon,
@@ -85,7 +83,10 @@ import { fetchPeekableAsset } from "@/api/collection/fetchers";
 import { collectionNodeToAsset } from "@/lib/asset-transform";
 import { getUserFacingApiErrorMessage } from "@/lib/api";
 import { useRecentWorkspaceAssetIds } from "@/lib/workspace-recent-assets";
-import { cn } from "@/lib/utils";
+import {
+  LinkSearchResultPreview,
+  VideoThumbnailPlayOverlay,
+} from "./search-result-thumbnail";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { toast } from "sonner";
 
@@ -1033,7 +1034,9 @@ function SearchResultPreview({ result }: { result: WorkspaceSearchResult }) {
   if (result.type === "link") {
     return (
       <LinkSearchResultPreview
+        key={result.preview?.url}
         previewUrl={result.preview?.url}
+        blurDataURL={result.preview?.blurDataURL}
         faviconUrl={result.preview?.faviconUrl}
         isVideo={result.isVideo}
       />
@@ -1094,67 +1097,6 @@ function SearchResultPreview({ result }: { result: WorkspaceSearchResult }) {
   return (
     <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
       <Icon className="size-4" />
-    </span>
-  );
-}
-
-function LinkSearchResultPreview({
-  previewUrl,
-  faviconUrl,
-  isVideo = false,
-}: {
-  previewUrl?: string;
-  faviconUrl?: string;
-  isVideo?: boolean;
-}) {
-  const [failedPreview, setFailedPreview] = useState(false);
-  const [failedFavicon, setFailedFavicon] = useState(false);
-  const imageUrl =
-    previewUrl && !failedPreview
-      ? previewUrl
-      : faviconUrl && !failedFavicon
-        ? faviconUrl
-        : undefined;
-  const Icon = isVideo ? VideoIcon : ExternalLinkIcon;
-
-  return (
-    <span
-      className={cn(
-        "relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background",
-        !(isVideo && imageUrl === faviconUrl) &&
-          "border border-border/60 shadow-sm",
-      )}
-    >
-      {imageUrl ? (
-        <>
-          <img
-            src={imageUrl}
-            alt=""
-            className={
-              imageUrl === faviconUrl
-                ? "size-full object-contain p-1"
-                : "size-full object-cover"
-            }
-            onError={() => {
-              if (imageUrl === previewUrl) setFailedPreview(true);
-              else setFailedFavicon(true);
-            }}
-          />
-          {isVideo ? <VideoThumbnailPlayOverlay /> : null}
-        </>
-      ) : (
-        <Icon className="size-4 text-foreground" />
-      )}
-    </span>
-  );
-}
-
-function VideoThumbnailPlayOverlay() {
-  return (
-    <span className="absolute inset-0 flex items-center justify-center">
-      <span className="flex size-4 items-center justify-center rounded-full bg-black/65 text-white shadow-sm">
-        <PlayIcon className="size-2 fill-current" />
-      </span>
     </span>
   );
 }

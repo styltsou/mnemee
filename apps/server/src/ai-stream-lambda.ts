@@ -67,7 +67,10 @@ export const handler = awslambda.streamifyResponse(
         headers: {
           ...headers,
           "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
+          // The client's Sentry tracing adds trace headers to every request to
+          // the API host, which this endpoint shares. Without them listed here
+          // the browser blocks the request ("Failed to fetch").
+          "Access-Control-Allow-Headers": "Content-Type, Baggage, Sentry-Trace",
         },
       });
       stream.write("ok");
